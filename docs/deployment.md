@@ -40,6 +40,23 @@ The deployment artifact deliberately excludes `config/local.neon`, so the
 workflow cannot perform this cleanup and must never replace that protected
 file.
 
+## Installation language
+
+The user-interface language is selected once for the whole installation by
+the `parameters.locale` value. Supported values are `cs`, `en`, `de`, and
+`nl`; versioned configuration defaults to `cs`. To select another language,
+set the value in the protected `config/local.neon`, validate the application on
+staging, and clear the Nette cache through the normal deployment procedure.
+
+Keep production on `cs` until every UI slice and the acceptance matrix in
+`docs/localization-plan.md` are complete. The other values are accepted while
+the translation infrastructure is developed, but untranslated legacy text
+deliberately remains Czech during the incremental rollout.
+
+The deployment artifact excludes `config/local.neon` and therefore cannot
+change the production language by itself. A production locale change is a
+reviewed protected-configuration operation, not a database migration.
+
 ## GitHub environment setup
 
 Create a `production` environment after the GitHub repository is public and:

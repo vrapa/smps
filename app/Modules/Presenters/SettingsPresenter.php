@@ -54,7 +54,7 @@ class SettingsPresenter extends BasePresenter
 
     protected function createComponentProfileForm(): Form
     {
-        $form = new Form();
+        $form = $this->createForm();
 
         $form->addText('name', 'Jméno:')
             ->setRequired('Jméno musíte zadat !')
@@ -100,7 +100,7 @@ class SettingsPresenter extends BasePresenter
 
     protected function createComponentPasswordForm(): Form
     {
-        $form = new Form();
+        $form = $this->createForm();
 
         $form->addPassword('password', 'Nové heslo:')
             ->setRequired('Zvolte si heslo')
