@@ -288,7 +288,7 @@ safety, and the confirmed MIT License.
   a complete schema baseline exists.
 - [x] Add current-tree and history secret scanning.
 - [x] Build a deploy artifact from the exact tested commit.
-- [ ] Protect the default branch and require the relevant checks.
+- [x] Protect the default branch and require the relevant checks.
 
 Done when every pull request is checked without access to production secrets.
 
@@ -309,9 +309,10 @@ at `de55ba6` over the tracked tree and all locally reachable history. On
 public history, and all locally reachable private history.
 
 The private GitHub release candidate ran every job successfully on 2026-09-11.
-GitHub Free rejected branch protection while the repository was private, so
-the protection checkbox remains open and must be completed immediately after
-the visibility change, before accepting any further commit.
+GitHub Free rejected branch protection while the repository was private. After
+publication, `main` was immediately protected with all five CI jobs required,
+strict status checks, linear history, administrator enforcement, conversation
+resolution, and force-push and deletion disabled.
 
 ## 10. Safe GitHub production deployment
 
@@ -368,7 +369,7 @@ wide production secrets are explicitly forbidden; see `docs/deployment.md`.
 - [x] Confirm the MIT License and repository documentation are complete.
 - [x] Verify clean installation from an empty checkout and fresh database.
 - [x] Verify private GitHub CI and the exact release artifact.
-- [ ] Set the GitHub repository visibility to public after every other
+- [x] Set the GitHub repository visibility to public after every other
   publication item is complete, then immediately protect `main` before
   accepting any further change.
 - [ ] Configure the protected public-repository `production` environment, then
@@ -418,6 +419,11 @@ has a Git tree identical to its selected release source, and contains exactly
 one root commit. Checksum-verified Gitleaks scans of its tree, its public
 history, and all locally reachable private history found no leaks. GitHub CI
 independently repeated the public history scan successfully.
+
+The verified root snapshot was published at `vrapa/smps` on 2026-09-11. Branch
+protection was enabled immediately after the visibility change and before any
+further repository commit. No production environment, deployment credential,
+migration, or deployment was created or run as part of publication.
 
 ## Working agreement
 
