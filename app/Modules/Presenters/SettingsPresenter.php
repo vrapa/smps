@@ -75,7 +75,7 @@ class SettingsPresenter extends BasePresenter
         $form->addCheckbox('notificationsEnabled', 'Notifikace mailem aktivní');
 
         $form->addSubmit('send', 'Uložit údaje');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'profileFormSucceeded'];
         $this->formToBootstrap3($form);
 
@@ -111,7 +111,7 @@ class SettingsPresenter extends BasePresenter
             ->addRule(Form::EQUAL, 'Hesla se neshodují', $form['password']);
 
         $form->addSubmit('send', 'Uložit změnu hesla');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'passwordFormSucceeded'];
 
         $this->formToBootstrap3($form);

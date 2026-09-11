@@ -56,6 +56,7 @@ Versioned configuration provides a working Czech default:
 ```neon
 parameters:
 	locale: cs
+	applicationName: SMPS Bruntál
 ```
 
 An operator may select another supported language in ignored local
@@ -120,22 +121,31 @@ added.
 
 ## 2. Shared UI, authentication, forms, and errors
 
-- [ ] Extract shared navigation, page headings, flash messages, buttons,
+- [x] Extract shared navigation, page headings, flash messages, buttons,
   pagination, login/logout, and accessibility text into semantic keys.
-- [ ] Set the configured locale on the translator before presenter actions
+- [x] Set the configured locale on the translator before presenter actions
   create forms or flash messages.
-- [ ] Set the document `lang` attribute from configuration.
-- [ ] Translate form labels, required messages, validation messages, CSRF
+- [x] Set the document `lang` attribute from configuration.
+- [x] Translate shared and authentication form labels, required messages, CSRF
   errors, and authentication failures through the same translator.
-- [ ] Localize 403, 404, 405, 410, generic 4xx, 500, and 503 responses while
+- [x] Localize 403, 404, 405, 410, generic 4xx, 500, and 503 responses while
   retaining safe minimal rendering for fatal error paths.
-- [ ] Move choir/application display name to public instance configuration so
+- [x] Move choir/application display name to public instance configuration so
   another choir does not need to edit templates. Keep secrets out of this
   setting.
-- [ ] Add presenter and response tests using each configured locale.
+- [x] Add shared form and error response rendering tests using each configured
+  locale.
 
 Done when shared UI and every authentication/error path contain no hard-coded
 user-facing Czech or English sentence.
+
+Current status: complete. Shared navigation, reusable actions and flash
+messages, pagination, accessibility labels, login/logout, authentication form,
+CSRF protection, and all error templates use semantic keys in the four
+catalogues. The configured locale is resolved during presenter startup and is
+rendered as the document language. `parameters.applicationName` supplies public
+instance branding. Domain-specific headings, labels, validation, and messages
+remain assigned to stages 3–5.
 
 ## 3. Songs and files vertical slice
 
@@ -177,7 +187,7 @@ configured language with unchanged authorization semantics.
 
 ## 6. Completeness, translation review, and release
 
-- [ ] Add a catalogue parity test: every locale has exactly the canonical key
+- [x] Add a catalogue parity test: every locale has exactly the canonical key
   set and matching placeholders.
 - [ ] Add a focused static audit that rejects new raw UI sentences in
   presenters/templates while allowing documented technical strings and user

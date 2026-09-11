@@ -59,8 +59,8 @@
 							Volby
 						</button>
 						<ul class="dropdown-menu">
-							<li><a class="dropdown-item" n:href="show, 'id'=> $listedUser->getId()">Náhled</a></li>
-							<li><a class="dropdown-item" n:href="edit, 'id'=> $listedUser->getId()">Úpravy</a></li>
+                            <li><a class="dropdown-item" n:href="show, 'id'=> $listedUser->getId()">{_'common.preview'}</a></li>
+                            <li><a class="dropdown-item" n:href="edit, 'id'=> $listedUser->getId()">{_'common.edit'}</a></li>
 							<li>
 								{var $deleteFormName = 'deleteForm-' . $listedUser->getId()}
 								{form $deleteFormName, class: d-inline}
@@ -83,7 +83,7 @@
 		    <div class="panel panel-default">
 			<div class="panel-body text-center">
 			    
-			    <a n:href="create" class="btn btn-info" role="button">Přidej položku</a>
+			    <a n:href="create" class="btn btn-info" role="button">{_'common.add_item'}</a>
 			    
 			    
 			</div>

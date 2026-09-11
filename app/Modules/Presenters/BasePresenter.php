@@ -2,6 +2,7 @@
 
 namespace App\Modules\Presenters;
 
+use App\Configuration\PublicSettings;
 use App\Localization\CatalogTranslator;
 use App\Localization\SupportedLocale;
 use Exception;
@@ -19,6 +20,9 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
     #[Inject]
     public CatalogTranslator $translator;
 
+    #[Inject]
+    public PublicSettings $publicSettings;
+
     public function beforeRender(): void
     {
         parent::beforeRender();
@@ -26,11 +30,16 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
         $translator = $this->getTranslator();
         $this->getTemplate()->setTranslator($translator, $translator->getLocale());
         $this->getTemplate()->locale = $translator->getLocale();
+        $this->getTemplate()->applicationName = $this->getPublicSettings()->getApplicationName();
     }
 
     protected function startup(): void
     {
         parent::startup();
+
+        // Resolve and validate the configured locale before actions create
+        // forms, flash messages, or other translated UI output.
+        $this->getTranslator();
 
         if (!$this->getUser()->isLoggedIn() && !in_array($this->getName(), ['Authentication'], true)) {
             $this->redirect('Authentication:login', ['backlink' => $this->storeRequest()]);
@@ -120,5 +129,14 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
         }
 
         return $this->translator;
+    }
+
+    private function getPublicSettings(): PublicSettings
+    {
+        if (!isset($this->publicSettings)) {
+            $this->publicSettings = new PublicSettings('SMPS Bruntál');
+        }
+
+        return $this->publicSettings;
     }
 }

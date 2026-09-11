@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Presenters;
 
+use App\Localization\CatalogTranslator;
 use Nette;
 use Nette\Application\Responses;
 use Nette\Http;
@@ -15,9 +16,9 @@ final class ErrorPresenter implements Nette\Application\IPresenter
 
     public function __construct(
         private ILogger $logger,
+        private CatalogTranslator $translator,
     ) {
     }
-
 
     public function run(Nette\Application\Request $request): Nette\Application\Response
     {
@@ -31,6 +32,7 @@ final class ErrorPresenter implements Nette\Application\IPresenter
         $this->logger->log($exception, ILogger::EXCEPTION);
         return new Responses\CallbackResponse(function (Http\IRequest $httpRequest, Http\IResponse $httpResponse): void {
             if (preg_match('#^text/html(?:;|$)#', (string) $httpResponse->getHeader('Content-Type'))) {
+                $translator = $this->translator;
                 require dirname(__DIR__) . '/templates/Error/500.phtml';
             }
         });

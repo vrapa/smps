@@ -23,7 +23,7 @@ class FormFactory
     {
         $form = new Form();
         $form->setTranslator($this->translator);
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         return $form;
     }
 }

@@ -2,11 +2,16 @@
 
 declare(strict_types=1);
 
+$errorLocale = isset($translator) ? $translator->getLocale() : 'en';
+$errorTitle = isset($translator) ? $translator->translate('error.503.title') : '503';
+$errorMessage = isset($translator) ? $translator->translate('error.503.message') : '';
+
 header('HTTP/1.1 503 Service Unavailable');
 header('Retry-After: 300'); // 5 minutes in seconds
 
 ?>
 <!DOCTYPE html>
+<html lang="<?= htmlspecialchars($errorLocale, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
 <meta charset="utf-8">
 <meta name="robots" content="noindex">
 <meta name="generator" content="Nette Framework">
@@ -17,8 +22,11 @@ header('Retry-After: 300'); // 5 minutes in seconds
 	p { font: 21px/1.5 Georgia,serif; margin: 1.5em 0 }
 </style>
 
-<title>Site is temporarily down for maintenance</title>
+<title><?= htmlspecialchars($errorTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></title>
 
-<h1>We're Sorry</h1>
+<h1><?= htmlspecialchars($errorTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></h1>
 
-<p>The site is temporarily down for maintenance. Please try again in a few minutes.</p>
+<?php if ($errorMessage !== ''): ?>
+<p><?= htmlspecialchars($errorMessage, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
+<?php endif ?>
+</html>

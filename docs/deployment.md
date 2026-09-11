@@ -57,6 +57,11 @@ The deployment artifact excludes `config/local.neon` and therefore cannot
 change the production language by itself. A production locale change is a
 reviewed protected-configuration operation, not a database migration.
 
+The public name shown in the navigation and browser title is configured by
+`parameters.applicationName`. It defaults to `SMPS Bruntál`; another choir can
+override it in `config/local.neon` without changing a template. The value is
+public display text, not a place for credentials or other private data.
+
 ## GitHub environment setup
 
 Create a `production` environment after the GitHub repository is public and:

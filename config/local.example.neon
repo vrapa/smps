@@ -11,6 +11,9 @@ parameters:
     # Installation-wide UI language: cs, en, de, or nl. Keep cs until all
     # localization-plan UI stages are complete.
     locale: cs
+    # Public name displayed in the navigation and browser title. This is not a
+    # secret and lets another choir reuse the application without editing code.
+    applicationName: SMPS Bruntál
     doctrine:
         host: 127.0.0.1
         user: root
