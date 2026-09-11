@@ -1,0 +1,87 @@
+stages:
+  - syntax_check
+  - code_quality
+  - deploy
+
+syntax_checker:
+  stage: syntax_check
+  image: php:8.3
+  before_script:
+    - apt-get update -y && apt-get install -y git unzip
+    - chmod +x gitlab-ci/syntax_check.sh  # Zajistí, že skript má spustitelná práva
+  script:
+    - gitlab-ci/syntax_check.sh
+  parallel:
+    matrix:
+      #- PHP_VERSION: '8.1'
+      #- PHP_VERSION: '8.2'
+      - PHP_VERSION: '8.3'
+      #- PHP_VERSION: '8.4'
+  allow_failure: false
+  only:
+    - merge_requests
+    - master
+
+QoC:
+  stage: code_quality
+  image: php:8.3
+  before_script:
+    - apt-get update -y && apt-get install -y libpng-dev libzip-dev zip
+    - docker-php-ext-install gd
+    - docker-php-ext-install zip
+    - curl -sS https://getcomposer.org/installer | php
+    - mv composer.phar /usr/local/bin/composer
+    - composer install
+  script:
+    - vendor/bin/phpcs --standard=PSR1 app
+    - vendor/bin/phpstan analyse --level=0 --memory-limit=512M app
+    - vendor/bin/latte-lint app
+    - vendor/bin/neon-lint app/config
+    # když budou problémy, můžeme zablokovat
+    #- composer outdated --locked --strict --direct
+  allow_failure: false
+  only:
+    - merge_requests
+    - master
+
+
+deploy_production:
+  stage: deploy
+  image: php:8.3
+  before_script:
+    - apt-get update && apt-get install -y lftp
+  script:
+    #DEPLOY
+    - echo "Deploying to master server..."
+    - lftp -c "set ftp:ssl-allow no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_HOST; mirror -Rnev -F ./app -O ./public_html/_sub/smps --parallel=10 --exclude-glob config/*.local.neon --exclude config/phinx.yaml"
+    - echo "Deploying db migrate to master server..."
+    - lftp -c "set ftp:ssl-allow no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_HOST; mirror -Rnev -F ./db -O ./public_html/_sub/smps --parallel=10"
+    - echo "Deploying config to master server (without secrets)..."
+    - lftp -c "set ftp:ssl-allow no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_HOST; mirror -Rnev -F ./config -O ./public_html/_sub/smps --parallel=10 --exclude-glob *.local.neon --exclude phinx.yaml"
+    - echo "Deploying next files..."
+    - lftp -c "set ftp:ssl-allow no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_HOST; put ./README.md -o ./public_html/_sub/smps/README.md"
+    - lftp -c "set ftp:ssl-allow no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_HOST; put ./www/index.php -o ./public_html/_sub/smps/www/index.php"
+
+    #CLEAR CACHE
+    - echo "Clearing cache on master server..."
+    - lftp -c "set ftp:ssl-allow no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_HOST; rm -r ./public_html/_sub/smps/temp/cache" || true
+  only:
+    - master
+
+deploy_master_vendor:
+  stage: deploy
+  image: php:8.3
+  before_script:
+    - apt-get update && apt-get install -y lftp libpng-dev libzip-dev zip
+    - docker-php-ext-install gd
+    - docker-php-ext-install zip
+    - curl -sS https://getcomposer.org/installer | php
+    - mv composer.phar /usr/local/bin/composer
+    - composer install --no-dev --optimize-autoloader
+  script:
+    #DEPLOY
+    - echo "Deploying vendor to master server..."
+    - lftp -c "set ftp:ssl-allow no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_HOST; mirror -Re -F ./vendor -O ./public_html/_sub/smps --parallel=10"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+

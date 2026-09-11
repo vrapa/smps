@@ -1,0 +1,19 @@
+{if $user->isInRole('admin')}
+    <table class="table table-striped table-hover" n:inner-foreach="$files as $file">
+        <tr>
+            <td class="col-sm-9">{$file->getDescription()}</td>
+            <td class="col-sm-3">
+                <a class="btn btn-primary btn-sm" n:href="fileDownload! $file->getId()" role="button">Stáhnout</a>
+                {var $deleteFormName = 'fileDeleteForm-' . $file->getId()}
+                {form $deleteFormName, class: d-inline}
+                    {input send, class: 'btn btn-danger btn-sm'}
+                {/form}
+            </td>
+            <td></td>
+        </tr>
+    </table>
+{else}
+    <div class="list-group" n:inner-foreach="$files as $file">
+        <a n:href="fileDownload! $file->getId()" class="list-group-item list-group-item-action">{$file->getDescription()}</a>
+    </div>
+{/if}

@@ -1,0 +1,26 @@
+extensions:
+    # Odkomentujte len ak používate anotácie namiesto php8 atribútov
+    # doctrine.annotations: Nettrine\Annotations\DI\AnnotationsExtension
+    doctrine.dbal: Nettrine\DBAL\DI\DbalExtension
+    doctrine.dbal.console: Nettrine\DBAL\DI\DbalConsoleExtension
+    doctrine.orm: Nettrine\ORM\DI\OrmExtension
+    doctrine.orm.attributes: Nettrine\ORM\DI\OrmAttributesExtension
+    # Odkomentujte len ak používate anotácie namiesto php8 atribútov
+    # doctrine.orm.annotations: Nettrine\ORM\DI\OrmAnnotationsExtension
+    doctrine.orm.console: Nettrine\ORM\DI\OrmConsoleExtension
+    doctrine.cache: Nettrine\Cache\DI\CacheExtension
+
+doctrine.orm.attributes: # Ak používate stále anotácie, upravte na doctrine.orm.annotations
+    mapping:
+        App\Model: %appDir%/Model # Adresár kde sa začnú hľadať entity
+
+doctrine.dbal:
+    debug:
+        panel: %debugMode%
+    connection:
+        driver: pdo_mysql
+        host: %doctrine.host%
+        user: %doctrine.user%
+        password: %doctrine.password%
+        dbname: %doctrine.dbname%
+        charset: utf8mb4

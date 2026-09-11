@@ -1,0 +1,191 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: Secret history scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install checksum-verified Gitleaks
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error \
+            --output /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  /tmp/gitleaks.tar.gz' \
+            | sha256sum --check --strict
+          tar --extract --gzip --file /tmp/gitleaks.tar.gz --directory /tmp gitleaks
+
+      - name: Scan current tree and Git history
+        run: /tmp/gitleaks git --redact=100 --no-banner --exit-code=1 .
+
+  quality:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.3']
+
+    steps:
+      - name: Check out the tested commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@b604ade2a87db23f8871b7182e69ec5e75effb45 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer metadata
+        run: composer validate --strict --no-check-publish
+
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Audit locked dependencies
+        run: composer audit --locked --abandoned=report
+
+      - name: Check PHP syntax
+        shell: bash
+        run: find app bin db tests www -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run tests
+        run: php vendor/bin/phpunit
+
+      - name: Check coding standard
+        run: php vendor/bin/phpcs
+
+      - name: Run static analysis
+        run: php vendor/bin/phpstan analyse --configuration phpstan.neon --memory-limit=512M --no-progress
+
+      - name: Lint Latte templates
+        run: php vendor/bin/latte-lint app
+
+      - name: Lint NEON configuration
+        run: php vendor/bin/neon-lint config
+
+  database:
+    name: Database integration
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_DATABASE: smps_test
+          MARIADB_USER: smps_test
+          MARIADB_PASSWORD: smps_test
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Check out the tested commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@b604ade2a87db23f8871b7182e69ec5e75effb45 # v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare isolated test configuration
+        shell: bash
+        run: |
+          cp config/test.example.neon config/test.neon
+          cp config/phinx.example.php config/phinx.php
+          sed --in-place "s/password: ''/password: smps_test/" config/test.neon
+          sed --in-place "/'testing' => \[/,/^        \],/ s/'pass' => ''/'pass' => 'smps_test'/" config/phinx.php
+          php -r '$config = require "config/phinx.php"; $name = $config["environments"]["testing"]["name"] ?? ""; if (!str_ends_with($name, "_test")) { fwrite(STDERR, "Refusing non-test database.\n"); exit(1); }'
+
+      - name: Build fresh test schema
+        run: php vendor/bin/phinx migrate --environment testing --configuration config/phinx.php
+
+      - name: Validate Doctrine schema
+        run: SMPS_ENV=test php bin/console orm:validate-schema
+
+      - name: Run database integration tests
+        run: SMPS_ENV=test SMPS_DATABASE_TESTS=1 php vendor/bin/phpunit
+
+  artifact:
+    name: Build deploy artifact
+    needs: [secrets, quality, database]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the tested commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@b604ade2a87db23f8871b7182e69ec5e75effb45 # v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Install production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Assemble artifact
+        shell: bash
+        run: |
+          mkdir build
+          tar --create --gzip --file "build/smps-${GITHUB_SHA}.tar.gz" \
+            --exclude='config/local.neon' \
+            --exclude='config/phinx.yaml' \
+            --exclude='config/phinx.php' \
+            --exclude='www/dokumenty' \
+            --exclude='www/images/carousel' \
+            --exclude='log' \
+            --exclude='temp' \
+            app bin config db vendor www \
+            composer.json composer.lock README.md THIRD_PARTY_NOTICES.md
+
+      - name: Reject protected runtime files
+        shell: bash
+        run: |
+          if tar --list --gzip --file "build/smps-${GITHUB_SHA}.tar.gz" \
+            | grep --extended-regexp '^(config/(local\.neon|phinx\.(yaml|php))|www/(dokumenty|images/carousel)(/|$)|log(/|$)|temp(/|$))'; then
+            echo 'Protected runtime file found in deploy artifact.' >&2
+            exit 1
+          fi
+
+      - name: Upload tested artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: smps-${{ github.sha }}
+          path: build/smps-${{ github.sha }}.tar.gz
+          if-no-files-found: error
+          retention-days: 14

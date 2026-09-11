@@ -1,0 +1,64 @@
+{* This is the welcome page, you can delete it *}
+
+{block content}
+
+    <div class="col-sm-12 text-left">
+        {include ../heading.latte}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <nav class="navbar">
+                        <ul class="nav navbar-nav">
+                            <li><a n:href="default">Zpět na seznam</a></li>
+                        </ul>
+                    </nav>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">{$song->getTitle()}</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-body-secondary">{$song->getAuthor()}</h6>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-12">
+                    <h4>Noty - sbor</h4>
+                    {include partials/list-files.latte, files: $choirSheetMusic}
+                    {if $user->isInRole('admin')}
+                        {control choirSheetMusicUploadForm}
+                    {/if}
+                </div>
+                <div class="col-md-12">
+                    <h4>Noty - orchestr</h4>
+                    {include partials/list-files.latte, files: $orchestraSheetMusic}
+                    {if $user->isInRole('admin')}
+                        {control orchestraSheetMusicUploadForm}
+                    {/if}
+                </div>
+                <div class="col-md-12">
+                    <h4>Nahrávky</h4>
+                    {include partials/list-files.latte, files: $recordings}
+                    {if $user->isInRole('admin')}
+                        {control recordingsUploadForm}
+                    {/if}
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    </div>
+
+
+
+
+
+
+
+
+{/block}
+

@@ -1,0 +1,15 @@
+search:
+	-
+		in: %appDir%
+		classes:
+			- *Factory
+			- *Facade
+
+
+services:
+	- App\Router\RouterFactory::createRouter
+	- App\Model\UserAuthenticator
+	- App\Services\UserService
+	- App\Services\ConcertSongService
+	- App\Services\SongFileStorage
+	- App\Services\MailService

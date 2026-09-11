@@ -1,0 +1,98 @@
+{* This is the welcome page, you can delete it *}
+
+{block content}
+
+<div class="col-sm-12 text-left"> 
+    {include ../../../templates/heading.latte}
+    <div class="container">
+	<div class="row">
+	    <div class="col-md-12">
+		<!-- <div class="alert alert-info"> 
+		    Please Wait...</div>-->
+		<div class="alert alert-success" style="display:none;">
+		    <span class="glyphicon glyphicon-ok"></span> Drag table row and cange Order</div>
+		<table class="table table-hover">
+		    <thead>
+				<tr>
+					<th>
+						Login
+					</th>
+					<th>
+						Email
+					</th>
+					<th>
+						Jméno
+					</th>
+					<th>
+						Příjmení
+					</th>
+					<th>
+						Notifikace
+					</th>
+					<th>
+						Úpravy
+					</th>
+				</tr>
+		    </thead>
+		    <tbody>
+
+			<tr n:foreach="$users as $listedUser" >
+			    <td>
+					{$listedUser->getUsername()}
+			    </td>
+			    <td>
+					{$listedUser->getEmail()}
+			    </td>
+			    <td>
+					{$listedUser->getName()}
+			    </td>
+			    <td>
+					{$listedUser->getSurname()}
+			    </td>
+			    <td>
+					{$listedUser->areNotificationsEnabled() ? 'Ano' : 'Ne'}
+			    </td>
+
+			    <td>
+					<div class="dropdown">
+						<button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+							Volby
+						</button>
+						<ul class="dropdown-menu">
+							<li><a class="dropdown-item" n:href="show, 'id'=> $listedUser->getId()">Náhled</a></li>
+							<li><a class="dropdown-item" n:href="edit, 'id'=> $listedUser->getId()">Úpravy</a></li>
+							<li>
+								{var $deleteFormName = 'deleteForm-' . $listedUser->getId()}
+								{form $deleteFormName, class: d-inline}
+									{input send, class: 'dropdown-item'}
+								{/form}
+							</li>
+						</ul>
+					</div>
+			    </td>
+
+			</tr>
+
+		    </tbody>
+		</table>
+	    </div>
+	</div>
+    </div>
+				
+				
+		    <div class="panel panel-default">
+			<div class="panel-body text-center">
+			    
+			    <a n:href="create" class="btn btn-info" role="button">Přidej položku</a>
+			    
+			    
+			</div>
+		    </div>
+				
+
+</div>
+
+{include ../../../templates/Table/pagination.latte}
+
+{/block}
+

@@ -1,0 +1,71 @@
+{* This is the welcome page, you can delete it *}
+{varType App\Model\entities\Concert $concert}
+{block content}
+
+    <div class="col-sm-12 text-left">
+        {include ../heading.latte}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <nav class="navbar">
+                        <ul class="nav navbar-nav">
+                            <li><a n:href=":Concerts:default">Zpět na seznam</a></li>
+                            {*<li><a href="#">Link</a></li>*}
+                        </ul>
+                    </nav>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">{$concert->getTitle()}</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-hover table-striped">
+                                <tbody>
+                                <tr>
+                                    <td>
+                                        <span class="label label-default">Datum a čas koncertu:</span>
+                                    </td>
+                                    <td>
+                                         {$concert->getScheduledAt()|date:'j. n. Y H:i'}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>
+                                        <span class="label label-default">Poznámka:</span>
+                                    </td>
+                                    <td>
+                                        {$concert->getNote()|breaklines}
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            <h5>Skladby</h5>
+                            <div class="list-group" n:inner-foreach="$concertSongs as $concertSong">
+                                <a n:href=":Songs:show $concertSong->getSong()->getId()" class="list-group-item list-group-item-action">{$concertSong->getSong()->getTitle()}</a>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+
+
+
+
+
+
+
+{/block}
+

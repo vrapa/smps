@@ -1,0 +1,63 @@
+{if $paginator->pageCount > 1}
+<div class="container">
+    <div class="row text-center">
+
+    <nav style="margin-left: 10px;">
+        <ul class="pagination pagination-sm">
+
+            <li n:class="page-item, $paginator->first ? disabled">
+                {var $userFilters['page'] = 1 }
+                <a href="{link this (expand) $userFilters}" class="page-link" aria-label="First">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            <li n:class="page-item, $paginator->first ? disabled">
+                {var $userFilters['page'] = $paginator->page-1}
+                <a href="{link this (expand) $userFilters}" class="page-link" aria-label="Previous">
+                    <span aria-hidden="true">&lsaquo;</span>
+                </a>
+            </li>
+
+            {if ($paginator->page-9 > 1) }
+                {var $firstbutton = $paginator->page-9}
+            {else}   
+                {var $firstbutton = 1}
+            {/if}
+
+            {if ($paginator->page+9 > $paginator->pageCount) }
+                {var $lastbutton = $paginator->pageCount}
+            {else}   
+                {var $lastbutton = $paginator->page+9}
+            {/if}                                              
+
+
+
+            {for $i = $firstbutton; $i <= $lastbutton; $i++}
+                <li n:class="page-item, ($paginator->page == $i) ? active" {if $paginator->page == $i}aria-current="page"{/if}>
+                    {var $userFilters['page'] = $i}
+                    <a href="{link this (expand) $userFilters}" class="page-link">{$i}</a>
+                </li>
+            {/for}
+
+            <li n:class="page-item, $paginator->last ? disabled">
+                {var $userFilters['page'] = $paginator->page+1}
+                <a href="{link this (expand) $userFilters}" class="page-link" aria-label="Next">
+                    <span aria-hidden="true">&rsaquo;</span>
+                </a>
+            </li>
+
+            <li n:class="page-item, $paginator->last ? disabled">
+                {var $userFilters['page'] = $paginator->pageCount}
+                <a href="{link this (expand) $userFilters}" class="page-link" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>                                                
+
+
+        </ul>
+    </nav>
+    </div>		
+</div>				
+		
+{/if}

@@ -1,0 +1,25 @@
+includes:
+	- parameters.neon
+	- extensions.neon
+	- doctrine.neon
+
+# Debug mode is disabled by default. Set the SMPS_DEBUG environment variable to
+# 1 only in a trusted local development environment when interactive debugging
+# is required.
+
+parameters:
+    doctrine:
+        host: 127.0.0.1
+        user: root
+        password:
+        dbname: smps
+
+application:
+	errorPresenter: Error
+	mapping:
+		*: App\Modules\*\Presenters\*Presenter
+
+
+session:
+	expiration: 14 days
+	autoStart: always

@@ -1,0 +1,42 @@
+{* This is the welcome page, you can delete it *}
+
+{block content}
+
+    <div class="col-sm-12 text-left">
+        {include ../../../templates/heading.latte}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+
+                    <nav class="navbar">
+                        <ul class="nav navbar-nav">
+                            <li><a n:href=":Admin:Users:">Zpět na seznam</a></li>
+                            {*<li><a href="#">Link</a></li>*}
+                        </ul>
+                    </nav>
+
+                    <div class="card">
+                        <h5 class="card-header">{$displayedUser->getName()} {$displayedUser->getSurname()}</h5>
+                        <div class="card-body">
+                            <h5 class="card-title">{$displayedUser->getUsername()} (login)</h5>
+                            <p class="card-text">
+
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+{/block}
+

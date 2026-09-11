@@ -1,0 +1,45 @@
+{* This is the welcome page, you can delete it *}
+
+{block content}
+
+<div class="col-sm-12 text-left"> 
+    {include ../heading.latte}
+    <div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<nav class="navbar">
+					<ul class="nav navbar-nav">
+					<li><a n:href="default">Zpět na seznam</a></li>
+					</ul>
+				</nav>
+
+				<div class="row">
+					<div class="col-md-12">
+						<div class="card">
+							<div class="card-header">
+								<B>Zadejte nový záznam</B>
+							</div>
+							<div class="card-body">
+
+								{control createForm}
+
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+			</div>
+		</div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+{/block}
+

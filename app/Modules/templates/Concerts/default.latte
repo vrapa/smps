@@ -1,0 +1,71 @@
+{* This is the welcome page, you can delete it *}
+
+{block content}
+    <div class="row">
+        {include ../heading.latte}
+
+        <table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">Název</th>
+                <th scope="col" style="width: 150px;">Datum konání</th>
+                <th scope="col">Možnosti</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            {foreach $concerts as $concert}
+                <tr>
+                    {varType App\Model\entities\Concert $concert}
+                    <td>
+                        {$concert->getTitle()}
+                    </td>
+                    <td>
+                        {$concert->getScheduledAt()|date:'j. n. Y H:i'}
+                    </td>
+                    <td>
+
+                        {if $user->isInRole('admin')}
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Volby
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" n:href="show, 'id'=> $concert->getId()">Náhled</a></li>
+                                    <li><a class="dropdown-item" n:href="edit, 'id'=> $concert->getId()">Úpravy</a></li>
+                                    <li>
+                                        {var $deleteFormName = 'deleteForm-' . $concert->getId()}
+                                        {form $deleteFormName, class: d-inline}
+                                            {input send, class: 'dropdown-item'}
+                                        {/form}
+                                    </li>
+                                </ul>
+                            </div>
+                        {else}
+                            <a n:href="show, 'id'=> $concert->getId()" class="btn btn-info" role="button">Náhled</a>
+                        {/if}
+
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3"  n:class="$concert->getNote() == null ? d-none">
+                        {$concert->getNote()|breaklines}
+                    </td>
+                </tr>
+            {/foreach}
+            </tbody>
+        </table>
+    </div>
+
+    {include ../Table/pagination.latte}
+
+    {if $user->isInRole('admin')}
+        <div class="panel panel-default">
+            <div class="panel-body text-center">
+                <a n:href="create" class="btn btn-info" role="button">Přidej položku</a>
+            </div>
+        </div>
+    {/if}
+
+{/block}
+

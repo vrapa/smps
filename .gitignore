@@ -1,0 +1,28 @@
+# ============================================
+# PhpStorm:
+/.idea/
+/.tmp/
+
+# ============================================
+# Less:
+*.css.map
+
+# ============================================
+# Nette:
+/log/*
+/temp/*
+/config/local.neon
+/config/test.neon
+
+
+
+/.htaccess
+!README
+# ============================================
+# Other:
+/www/dokumenty/
+/www/images/carousel/
+/vendor/
+
+config/phinx.yaml
+config/phinx.php

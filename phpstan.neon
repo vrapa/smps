@@ -1,0 +1,21 @@
+parameters:
+	level: 0
+	paths:
+		- app
+		- tests
+		- bin
+		- db/migrations
+		- www/index.php
+	parallel:
+		processTimeout: 300.0
+	tmpDir: .tmp/phpstan
+	disallowedFunctionCalls:
+		-
+			function: 'dump()'
+			message: 'use some logger instead'
+
+includes:
+	- vendor/phpstan/phpstan-doctrine/extension.neon
+	- vendor/phpstan/phpstan-doctrine/rules.neon
+	- vendor/spaze/phpstan-disallowed-calls/extension.neon
+	- vendor/spaze/phpstan-disallowed-calls/disallowed-dangerous-calls.neon
