@@ -1,66 +1,65 @@
 # SMPS
 
-Webová aplikace Smíšeného pěveckého sboru Bruntál pro správu skladeb,
-koncertů, uživatelů a souvisejících souborů. Aplikace je postavená na Nette 3,
-Doctrine ORM a PHP 8.1+.
+[English](#english) | [Česky](#cesky)
 
-Repozitář se připravuje na veřejné vydání. Aktuální stav a zbývající právní,
-databázové a provozní kroky jsou v
-[`docs/public-release-plan.md`](docs/public-release-plan.md). Dokud nejsou
-splněné release gates, není repozitář připravený ke zveřejnění ani k nasazení
-z čisté databáze.
+<a id="english"></a>
 
-## Požadavky
+## English
 
-- PHP 8.1 nebo novější s PDO MySQL a rozšířeními požadovanými Composerem;
+SMPS is a self-hosted web application for managing a choir's song catalogue,
+concert programmes, users, roles, and related files. It was originally built
+for the Mixed Choir of Bruntál, Czech Republic, but its core workflow is not
+tied to that organisation and can be used or adapted by choirs anywhere in the
+world.
+
+The application uses Nette 3, Doctrine ORM, Phinx, and PHP 8.1 or newer. The
+current user interface is in Czech. A choir can run the software in another
+country, but a translated interface is still needed for comfortable use by
+non-Czech-speaking members. Localisation contributions are welcome.
+
+### Requirements and installation
+
+- PHP 8.1 or newer, with PDO MySQL and Composer-required extensions;
 - Composer 2;
-- MySQL nebo MariaDB;
-- webový server s document rootem nastaveným na adresář `www`.
+- MySQL or MariaDB;
+- a web server whose document root points to `www`.
 
-Produkční vstupní bod je `www/index.php`, konzolový vstupní bod `bin/console`.
-Adresáře `temp` a `log` musí být zapisovatelné procesem PHP.
-
-## Instalace závislostí
-
-Po naklonování repozitáře spusťte v jeho kořenovém adresáři:
+The web entry point is `www/index.php`; the CLI entry point is `bin/console`.
+The PHP process must be able to write to `temp` and `log`. Install the locked,
+reproducible dependency set in a clean clone with:
 
 ```sh
 composer install
 ```
 
-Verzovaný `composer.lock` zajišťuje opakovatelnou sadu závislostí. Změny
-závislostí dělejte přes Composer a vždy commitněte odpovídající změnu locku.
+### Local configuration
 
-## Lokální konfigurace
-
-Zkopírujte bezpečný příklad a doplňte přístup k vlastní lokální databázi:
+Copy the safe example and add credentials for your own local database:
 
 ```sh
 cp config/local.example.neon config/local.neon
 ```
 
-Ve Windows PowerShellu použijte:
+On Windows PowerShell:
 
 ```powershell
 Copy-Item config/local.example.neon config/local.neon
 ```
 
-`config/local.neon` je ignorovaný a nesmí se commitovat. Totéž platí pro
-`config/phinx.php`. Neukládejte do repozitáře produkční hostitele, uživatele,
-hesla ani jiné tajné údaje.
+`config/local.neon` and `config/phinx.php` are ignored and must never be
+committed. Do not store production hosts, usernames, passwords, private keys,
+or other secrets in this repository. Debug mode is disabled by default; set
+`SMPS_DEBUG=1` only in a trusted local development environment.
 
-Debug režim je ve výchozím stavu vypnutý. Pouze v důvěryhodném lokálním
-prostředí jej lze pro daný proces zapnout proměnnou `SMPS_DEBUG=1`.
+### Database and migrations
 
-## Databáze a migrace
-
-Phinx migrace obsahují kompletní počáteční schéma pro prázdnou databázi.
-Počáteční migrace používá verzi, kterou už mají existující instalace zapsanou,
-takže se na nich znovu nespustí; navazující historické migrace současně umějí
-bezpečně převést starý sloupec `users.role`. Návrh a lokální ověření jsou v
+Phinx migrations contain the complete schema for a fresh database. The
+baseline uses a version already recorded by existing installations, so it is
+not replayed there; guarded follow-up migrations also support upgrades from
+the former `users.role` column. See
 [`docs/database-inventory.md`](docs/database-inventory.md).
 
-Pro práci s již kompatibilní lokální databází zkopírujte a upravte příklad:
+For a compatible local database, copy and edit the example configuration:
 
 ```sh
 cp config/phinx.example.php config/phinx.php
@@ -68,10 +67,8 @@ php vendor/bin/phinx status -e development -c config/phinx.php
 php vendor/bin/phinx migrate -e development -c config/phinx.php
 ```
 
-Pro jednorázovou testovací databázi zkopírujte také
-`config/test.example.neon` do ignorovaného `config/test.neon`, nastavte účet
-omezený na databázi s názvem končícím `_test` a použijte výslovně testovací
-prostředí:
+For integration tests, also copy `config/test.example.neon` to the ignored
+`config/test.neon` and use a disposable database whose name ends in `_test`:
 
 ```sh
 php vendor/bin/phinx migrate -e testing -c config/phinx.php
@@ -79,45 +76,43 @@ SMPS_ENV=test php bin/console orm:validate-schema
 SMPS_ENV=test SMPS_DATABASE_TESTS=1 php vendor/bin/phpunit tests/Integration
 ```
 
-Databázové testy se bez `SMPS_DATABASE_TESTS=1` přeskočí a jejich konfigurace
-musí ukazovat na databázi s názvem končícím `_test`. CI vytváří tuto databázi
-od nuly v samostatné službě MariaDB 10.11.
+Database tests are skipped unless `SMPS_DATABASE_TESTS=1` is set. CI builds a
+fresh isolated database with MariaDB 10.11. Always verify the selected host,
+database, and environment first. Never run migrations, rollbacks, schema
+generation, or database resets against production without a separate backup,
+review, and explicit approval. Migrations are CLI-only.
 
-Před každou migrací ověřte zvolený hostitel, databázi a prostředí. Migrace,
-rollback, generování schématu ani reset databáze nespouštějte proti produkci
-bez samostatné zálohy, revize a výslovného schválení. Migrace jsou dostupné
-jen přes CLI; aplikace nemá webový migrační endpoint.
+### Running and runtime content
 
-## Spuštění aplikace
-
-Nastavte document root Apache/Nginx na `www` a nechte server směrovat požadavky
-podle `www/.htaccess` nebo ekvivalentního pravidla pro front controller. Po
-nakonfigurování kompatibilní databáze lze dostupné konzolové příkazy zobrazit:
+Point Apache or Nginx at `www` and route requests according to
+`www/.htaccess` or an equivalent front-controller rule. List CLI commands with:
 
 ```sh
 php bin/console list
 ```
 
-Uživatelské uploady se ukládají do ignorovaného `www/dokumenty`. Tento adresář
-je runtime data, nikoli součást zdrojového kódu; nesmí se čistit při instalaci
-ani nasazení.
+User uploads are stored at runtime in the ignored `www/dokumenty` directory.
+Choir photographs for the home-page carousel are managed outside the
+repository in ignored `www/images/carousel`. These deployment-excluded runtime
+directories must not be deleted during installation or deployment.
 
-Sborové fotografie pro úvodní carousel se spravují mimo repozitář v
-`www/images/carousel`. Čistá instalace je musí získat samostatnou, oprávněnou
-cestou. Nasazení tento adresář nepřenáší ani nemaže.
+### Public repository content and privacy
 
-## Testy a kontroly kvality
+The public source tree and public Git history contain no choir photographs,
+user uploads, database dumps, sheet music, scores, PDFs, office documents,
+MIDI files, or audio recordings. They also contain no production credentials
+or member data. Tracked binary images are limited to third-party UI icon
+sprites and the application favicon; licences are documented in
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
-Aktuální PHPUnit testy jsou izolované unit/kompatibilitní testy a nevyžadují
-databázové připojení:
+Do not commit content from `www/dokumenty` or `www/images/carousel`. Before
+adding media or personal data, confirm publication permission and licence
+compatibility.
+
+### Tests and quality checks
 
 ```sh
 php vendor/bin/phpunit
-```
-
-Lokální kontrolní sada odpovídající verzovaným konfiguracím:
-
-```sh
 composer validate --strict --no-check-publish
 composer audit --locked
 php vendor/bin/phpcs
@@ -126,36 +121,182 @@ php vendor/bin/latte-lint app
 php vendor/bin/neon-lint config
 ```
 
-PHPStan je zatím nastavený na úroveň 0 nad aplikací, testy, CLI, migracemi a
-webovým vstupním bodem. Vyšší úroveň je žádoucí další krok, nemá však být
-nahrazena rozsáhlým ignorováním chyb.
+PHPStan currently runs at level 0 over application code, tests, CLI code,
+migrations, and the web entry point. Raising the level remains a future
+improvement and should not be replaced by broadly ignoring errors.
 
-## Architektura
+### Architecture
 
-- `app/Modules/Presenters` a `app/Modules/Admin/Presenters` obsahují Nette
-  presentery; Latte šablony jsou v odpovídajících adresářích `templates`.
-- `app/Model/entities` obsahuje Doctrine entity mapované PHP atributy a
-  `app/Model/repositories` jejich repozitáře.
+- `app/Modules` contains Nette presenters and Latte templates.
+- `app/Model/entities` and `app/Model/repositories` contain Doctrine entities
+  and repositories.
+- `app/Services` contains reusable application and transaction logic.
+- `config` contains public configuration and ignored local configuration.
+- `db/migrations` contains Phinx schema migrations; Phinx is not an ORM.
+- `www` is the only public directory and contains the entry point and assets.
+
+Application persistence uses Doctrine ORM. Entity writes must preserve the
+existing transaction boundaries and call `flush()`.
+
+### Deployment
+
+GitHub Actions builds a tested artifact and provides a separate, manually
+approved production workflow. Its protected environment and least-privilege
+SFTP credentials must be configured before use. Deployment is designed not to
+transfer or delete local configuration, uploads, photographs, logs, temporary
+data, or database data. See [`docs/deployment.md`](docs/deployment.md).
+
+The legacy GitLab deployment remains until the GitHub workflow is verified on
+staging and production. Do not change targets or run production migrations
+without explicit operational approval.
+
+### Licence
+
+The project source is available under the [MIT License](LICENSE), Copyright
+(c) 2026 Radovan Kraus. Third-party licences are listed in
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+<a id="cesky"></a>
+
+## Česky
+
+SMPS je samostatně hostovaná webová aplikace pro správu katalogu skladeb,
+programů koncertů, uživatelů, rolí a souvisejících souborů pěveckého sboru.
+Původně vznikla pro Smíšený pěvecký sbor Bruntál, její základní postupy ale
+nejsou vázané na tuto organizaci a mohou ji používat nebo upravit sbory kdekoli
+na světě.
+
+Aplikace používá Nette 3, Doctrine ORM, Phinx a PHP 8.1 nebo novější. Současné
+uživatelské rozhraní je české. V jiné zemi lze aplikaci provozovat, pro pohodlné
+používání nečesky mluvícími členy je však ještě potřeba doplnit lokalizaci.
+
+### Požadavky a instalace
+
+- PHP 8.1 nebo novější s PDO MySQL a rozšířeními požadovanými Composerem;
+- Composer 2;
+- MySQL nebo MariaDB;
+- webový server s document rootem nastaveným na `www`.
+
+Webový vstupní bod je `www/index.php`, CLI vstupní bod je `bin/console`.
+Adresáře `temp` a `log` musí být zapisovatelné procesem PHP. Závislosti
+nainstalujete z verzovaného locku příkazem:
+
+```sh
+composer install
+```
+
+### Lokální konfigurace
+
+```sh
+cp config/local.example.neon config/local.neon
+```
+
+Ve Windows PowerShellu:
+
+```powershell
+Copy-Item config/local.example.neon config/local.neon
+```
+
+`config/local.neon` a `config/phinx.php` jsou ignorované a nesmějí se
+commitovat. Neukládejte sem produkční hostitele, uživatele, hesla, soukromé
+klíče ani jiná tajemství. Debug režim je ve výchozím stavu vypnutý;
+`SMPS_DEBUG=1` používejte jen v důvěryhodném lokálním prostředí.
+
+### Databáze a migrace
+
+Phinx migrace obsahují kompletní schéma pro prázdnou databázi. Počáteční
+migrace používá verzi již zapsanou v existujících instalacích; chráněné
+navazující migrace podporují i přechod ze starého `users.role`. Podrobnosti
+jsou v [`docs/database-inventory.md`](docs/database-inventory.md).
+
+```sh
+cp config/phinx.example.php config/phinx.php
+php vendor/bin/phinx status -e development -c config/phinx.php
+php vendor/bin/phinx migrate -e development -c config/phinx.php
+```
+
+Pro integrační testy zkopírujte také `config/test.example.neon` do ignorovaného
+`config/test.neon` a použijte jednorázovou databázi s názvem končícím `_test`:
+
+```sh
+php vendor/bin/phinx migrate -e testing -c config/phinx.php
+SMPS_ENV=test php bin/console orm:validate-schema
+SMPS_ENV=test SMPS_DATABASE_TESTS=1 php vendor/bin/phpunit tests/Integration
+```
+
+Databázové testy se bez `SMPS_DATABASE_TESTS=1` přeskočí. Před migrací vždy
+ověřte hostitele, databázi a prostředí. Migrace, rollback, generování schématu
+ani reset databáze nespouštějte proti produkci bez samostatné zálohy, revize a
+výslovného schválení. Migrace jsou dostupné jen přes CLI.
+
+### Spuštění a runtime obsah
+
+Nastavte Apache nebo Nginx na adresář `www` a směrujte požadavky podle
+`www/.htaccess` nebo ekvivalentního pravidla. CLI příkazy zobrazíte takto:
+
+```sh
+php bin/console list
+```
+
+Uživatelské uploady se ukládají do ignorovaného `www/dokumenty`. Sborové
+fotografie pro carousel se spravují mimo repozitář v ignorovaném
+`www/images/carousel`. Jde o runtime data vyloučená z nasazení a při instalaci
+ani nasazení se nesmějí mazat.
+
+### Veřejný obsah a soukromí
+
+Veřejný zdrojový strom ani veřejná Git historie neobsahují sborové fotografie,
+uživatelské uploady, databázové exporty, noty, partitury, PDF, kancelářské
+dokumenty, MIDI ani zvukové nahrávky. Neobsahují ani produkční přístupové údaje
+nebo data členů. Verzované binární obrázky jsou jen ikonové sprity třetích
+stran a favicon; licence popisuje
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+Obsah z `www/dokumenty` ani `www/images/carousel` necommitujte. Před přidáním
+média nebo osobního údaje ověřte oprávnění ke zveřejnění a slučitelnost licence.
+
+### Testy a kontroly kvality
+
+```sh
+php vendor/bin/phpunit
+composer validate --strict --no-check-publish
+composer audit --locked
+php vendor/bin/phpcs
+php vendor/bin/phpstan analyse --configuration phpstan.neon --memory-limit=512M
+php vendor/bin/latte-lint app
+php vendor/bin/neon-lint config
+```
+
+PHPStan je zatím na úrovni 0 nad aplikací, testy, CLI, migracemi a webovým
+vstupem. Zvýšení úrovně je žádoucí budoucí krok.
+
+### Architektura
+
+- `app/Modules` obsahuje Nette presentery a Latte šablony.
+- `app/Model/entities` a `app/Model/repositories` obsahují Doctrine entity a
+  repozitáře.
 - `app/Services` obsahuje znovupoužitelnou aplikační a transakční logiku.
-- `config/common.neon`, `config/services.neon` a ignorovaný
-  `config/local.neon` skládají runtime DI konfiguraci.
-- `db/migrations` obsahuje Phinx migrace; Phinx spravuje schéma, není ORM.
-- `www` je jediný veřejný adresář a obsahuje vstupní bod a statické assety.
+- `config` obsahuje veřejnou a ignorovanou lokální konfiguraci.
+- `db/migrations` obsahuje Phinx migrace schématu; Phinx není ORM.
+- `www` je jediný veřejný adresář a obsahuje vstupní bod a assety.
 
-Persistence aplikačního kódu používá Doctrine ORM. Po zápisu entit je nutné
-zachovat stávající transakční hranice a zavolat `flush()`. Přímé databázové
-operace patří do migrací nebo do výslovně zdokumentovaných integračních míst.
+Persistence aplikace používá Doctrine ORM. Zápisy entit musí zachovat stávající
+transakční hranice a volat `flush()`.
 
-## Nasazení
+### Nasazení
 
-Stávající GitLab pipeline je dočasná a může nasazovat větev `master` do
-produkce. Veřejný release plán ji nahrazuje testovaným GitHub artefaktem a
-bezpečným no-delete přenosem popsaným v `docs/deployment.md`. Neměňte deploy
-cíle, nespouštějte produkční migrace a nezveřejňujte repozitář, dokud nejsou
-splněné příslušné body plánu.
+GitHub Actions sestavuje otestovaný artefakt a nabízí oddělený, ručně
+schvalovaný produkční workflow. Před použitím je nutné nastavit chráněné
+produkční prostředí a SFTP přístup s minimálními právy. Nasazení nepřenáší ani
+nemaže lokální konfiguraci, uploady, fotografie, logy, dočasná či databázová
+data. Viz [`docs/deployment.md`](docs/deployment.md).
 
-## Licence
+Původní GitLab deployment zůstává zachovaný, dokud se GitHub workflow neověří
+na stagingu a v produkci. Bez výslovného schválení neměňte cíle nasazení ani
+nespouštějte produkční migrace.
 
-Zdrojový kód projektu je dostupný pod [licencí MIT](LICENSE), Copyright (c)
-2026 Radovan Kraus. Licence distribuovaných knihoven jsou uvedené v
+### Licence
+
+Zdrojový kód je dostupný pod [licencí MIT](LICENSE), Copyright (c) 2026 Radovan
+Kraus. Licence třetích stran uvádí
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

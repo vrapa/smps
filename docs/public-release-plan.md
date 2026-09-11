@@ -31,6 +31,9 @@ release gate at the end passes.
   production-managed directory out of source and deployment artifacts.
 - [x] Review remaining names, email addresses, and other personal data for
   permission to publish.
+- [x] Verify that the public tree and public history contain no sheet music,
+  scores, PDFs, office documents, MIDI/audio recordings, database exports,
+  choir photographs, or user uploads.
 - [x] Ensure `config/local.neon`, `config/phinx.php`, legacy
   `config/phinx.yaml`, uploads, logs, and
   temporary files remain ignored and are never copied into documentation or
@@ -42,11 +45,13 @@ Current status: complete. The three choir photographs have been removed from
 version control; `www/images/carousel` is ignored and excluded from deploy
 artifacts while existing production files remain untouched. No first-party
 private email remains in the tracked tree. `Radovan Kraus` is intentionally
-public in the MIT notice, and the clean public root commit will use GitHub's
+public in the MIT notice, and public commits use GitHub's
 `28861508+vrapa@users.noreply.github.com` address. The private GitLab history,
 including its original commit identity and removed footer blob, will not be
-published. On 2026-08-27, checksum-verified Gitleaks 8.30.1 again reported no
-leaks in the 164-file tracked tree or all 91 commits reachable from local refs.
+published. A post-publication content audit on 2026-09-11 found no private
+content or music documents in the 165-file public tree. Checksum-verified
+Gitleaks 8.30.1 and GitHub CI also reported no leaks in the selected public
+history.
 
 ## 2. MIT License and repository metadata
 
@@ -272,10 +277,11 @@ layout, required icon fonts and jQuery UI images, and upstream license notices.
 `THIRD_PARTY_NOTICES.md` records component versions, copyright holders, and
 licenses. Unused source maps, alternate builds, demos, metadata, and standalone
 Bootstrap Icon SVG files were removed.
-The README now documents requirements, locked dependency installation, ignored
-local configuration, the fresh-database baseline, CLI-only
-migrations, runtime directories, quality commands, architecture, deployment
-safety, and the confirmed MIT License.
+The bilingual English/Czech README now documents worldwide reuse and the
+current Czech-only UI, requirements, locked dependency installation, ignored
+local configuration, the fresh-database baseline, CLI-only migrations, runtime
+directories, public-content boundaries, quality commands, architecture,
+deployment safety, and the confirmed MIT License.
 
 ## 9. GitHub Actions continuous integration
 
