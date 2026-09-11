@@ -114,3 +114,8 @@ protected default branch, and store credentials only on that environment.
 Complete staging, production, and rollback verification as the remaining
 operational release gates. Keep the GitLab repository and verified bundle
 restricted until the retention and rollback policy has been approved.
+
+This publication sequence completed on 2026-09-11. The verified root snapshot
+was made public and `main` was immediately protected with all five CI jobs
+required, strict status checks, linear history, administrator enforcement,
+conversation resolution, and force-push and deletion disabled.
