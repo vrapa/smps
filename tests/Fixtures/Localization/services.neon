@@ -1,0 +1,6 @@
+parameters:
+	locale: cs
+
+services:
+	translator: App\Localization\CatalogTranslator(%locale%, %debugMode%)
+	formFactory: App\Forms\FormFactory
