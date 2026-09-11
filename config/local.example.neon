@@ -8,6 +8,9 @@ includes:
 # is required.
 
 parameters:
+    # Installation-wide UI language: cs, en, de, or nl. Keep cs until all
+    # localization-plan UI stages are complete.
+    locale: cs
     doctrine:
         host: 127.0.0.1
         user: root

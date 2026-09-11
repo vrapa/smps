@@ -161,7 +161,7 @@ class SongsPresenter extends BasePresenter
     protected function createComponentDeleteForm(): Multiplier
     {
         return new Multiplier(function (string $id): Form {
-            $form = new Form();
+            $form = $this->createForm();
             $form->addSubmit('send', 'Smazat');
             $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
             $form->onSuccess[] = function () use ($id): void {
@@ -179,7 +179,7 @@ class SongsPresenter extends BasePresenter
 
     private function getFormBase(): Form
     {
-        $form = new Form();
+        $form = $this->createForm();
 
         $form->addText('title', 'Název:')
             ->setRequired('Název musíte zadat !')
@@ -201,7 +201,7 @@ class SongsPresenter extends BasePresenter
 
     protected function createComponentChoirSheetMusicUploadForm(): Form
     {
-        $form = new Form();
+        $form = $this->createForm();
 
         $this->addUploadControls($form, SongFileStorage::CATEGORY_CHOIR_SHEET_MUSIC);
 
@@ -215,7 +215,7 @@ class SongsPresenter extends BasePresenter
     }
     protected function createComponentOrchestraSheetMusicUploadForm(): Form
     {
-        $form = new Form();
+        $form = $this->createForm();
 
         $this->addUploadControls($form, SongFileStorage::CATEGORY_ORCHESTRA_SHEET_MUSIC);
         $form->addSubmit('send', 'Přidat soubor');
@@ -228,7 +228,7 @@ class SongsPresenter extends BasePresenter
     }
     protected function createComponentRecordingsUploadForm(): Form
     {
-        $form = new Form();
+        $form = $this->createForm();
 
         $this->addUploadControls($form, SongFileStorage::CATEGORY_RECORDINGS);
         $form->addSubmit('send', 'Přidat soubor');
@@ -278,7 +278,7 @@ class SongsPresenter extends BasePresenter
     protected function createComponentFileDeleteForm(): Multiplier
     {
         return new Multiplier(function (string $id): Form {
-            $form = new Form();
+            $form = $this->createForm();
             $form->addSubmit('send', 'Smazat');
             $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
             $form->onSuccess[] = function () use ($id): void {

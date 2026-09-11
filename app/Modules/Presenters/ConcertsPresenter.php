@@ -152,7 +152,7 @@ class ConcertsPresenter extends BasePresenter
     protected function createComponentDeleteForm(): Multiplier
     {
         return new Multiplier(function (string $id): Form {
-            $form = new Form();
+            $form = $this->createForm();
             $form->addSubmit('send', 'Smazat');
             $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
             $form->onSuccess[] = function () use ($id): void {
@@ -171,7 +171,7 @@ class ConcertsPresenter extends BasePresenter
 
     private function getFormBase(): Form
     {
-        $form = new Form();
+        $form = $this->createForm();
 
         $form->addText('title', 'Název:')
             ->setRequired('Název musíte zadat !')

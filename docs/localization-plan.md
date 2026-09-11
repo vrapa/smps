@@ -43,7 +43,8 @@ deployment remain separately approved operations.
 - Keep existing routes, including `koncerty` and `skladby`, in the first
   release. Translated URLs can be designed later with redirects and backward-
   compatibility tests.
-- Validate the configured locale against the allowlist during container setup.
+- Validate the configured locale against the allowlist when the localization
+  service is created, before any application page is rendered.
   Never build a catalogue path directly from unchecked input.
 - Translation remains escaped by Latte like other UI text; catalogue values
   must not be treated as trusted HTML.
@@ -66,9 +67,10 @@ parameters:
 ```
 
 `config/local.example.neon` documents all four values. An unsupported or empty
-value must fail container creation with a clear configuration error instead of
-silently selecting an unexpected language. The resolved locale is supplied to
-the translator, date formatter, every Latte template, and every Nette form.
+value must fail localization service creation with a clear configuration error
+instead of silently selecting an unexpected language. The resolved locale is
+supplied to the translator, date formatter, every Latte template, and every
+Nette form.
 The layout renders it in `<html lang="…">`.
 
 ## Current inventory
@@ -93,22 +95,28 @@ a per-recipient language feature is designed separately.
 
 ## 1. Translation and configuration infrastructure
 
-- [ ] Add a supported-locale value object/enum and the `parameters.locale`
+- [x] Add a supported-locale value object/enum and the `parameters.locale`
   configuration contract with Czech as the default.
-- [ ] Document `cs`, `en`, `de`, and `nl` in `config/local.example.neon` and
+- [x] Document `cs`, `en`, `de`, and `nl` in `config/local.example.neon` and
   deployment documentation without changing protected production config.
-- [ ] Add `CatalogTranslator` implementing `Nette\Localization\Translator`.
-- [ ] Add catalogue loading, English fallback, named interpolation, and clear
+- [x] Add `CatalogTranslator` implementing `Nette\Localization\Translator`.
+- [x] Add catalogue loading, English fallback, named interpolation, and clear
   diagnostics for unknown keys in development without leaking paths in
   production.
-- [ ] Add initial `cs.php`, `en.php`, `de.php`, and `nl.php` catalogues.
-- [ ] Register the translator in Nette DI and attach it to every Latte template
+- [x] Add initial `cs.php`, `en.php`, `de.php`, and `nl.php` catalogues.
+- [x] Register the translator in Nette DI and attach it to every Latte template
   and Nette form through shared presenter/form infrastructure.
-- [ ] Add unit tests for all configured locales, invalid configuration, known
+- [x] Add unit tests for all configured locales, invalid configuration, known
   keys, fallback, interpolation, and safe catalogue output.
 
 Done when four test containers can render the same template and form key in
 their configured language while the default container remains Czech.
+
+Current status: complete. The four configuration variants build independently,
+translate a shared Latte fixture and Nette form, and retain Czech as the
+default. Legacy literal UI strings pass through unchanged until their vertical
+slice moves them to semantic keys. No dependency or database migration was
+added.
 
 ## 2. Shared UI, authentication, forms, and errors
 

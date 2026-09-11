@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
+use App\Localization\CatalogTranslator;
 use App\Model\entities\Concert;
 use App\Model\entities\Song;
 use App\Model\entities\User as UserEntity;
@@ -55,6 +56,7 @@ final class PresenterFormTest extends DatabaseTestCase
 
         $songPresenter = $this->runPresenter('Songs', 'edit', $song->getId());
         $songForm = $this->getForm($songPresenter, 'editForm');
+        self::assertInstanceOf(CatalogTranslator::class, $songForm->getTranslator());
         self::assertSame('Form Song', $songForm['title']->getValue());
         self::assertSame('Form Composer', $songForm['author']->getValue());
         self::assertTrue($songForm['active']->getValue());
