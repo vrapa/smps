@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use App\Bootstrap;
 use App\Forms\FormFactory;
 use App\Localization\CatalogTranslator;
 use App\Localization\SupportedLocale;
@@ -12,6 +11,8 @@ use InvalidArgumentException;
 use Latte\Engine;
 use Nette\Application\UI\Form;
 use Nette\Bridges\ApplicationLatte\Template;
+use Nette\Bootstrap\Configurator;
+use Nette\DI\Container;
 use LogicException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -46,9 +47,7 @@ final class CatalogTranslatorTest extends TestCase
         string $ready,
         string $greeting,
     ): void {
-        $configurator = Bootstrap::boot();
-        $configurator->addStaticParameters(['locale' => $locale]);
-        $container = $configurator->createContainer();
+        $container = $this->createExampleContainer($locale);
 
         $translator = $container->getByType(CatalogTranslator::class);
         self::assertSame($locale, $translator->getLocale());
@@ -89,9 +88,7 @@ final class CatalogTranslatorTest extends TestCase
 
     public function testUnsupportedConfiguredLocaleIsRejectedByContainerService(): void
     {
-        $configurator = Bootstrap::boot();
-        $configurator->addStaticParameters(['locale' => 'fr']);
-        $container = $configurator->createContainer();
+        $container = $this->createExampleContainer('fr');
 
         $this->expectException(InvalidArgumentException::class);
         $container->getByType(CatalogTranslator::class);
@@ -153,5 +150,16 @@ final class CatalogTranslatorTest extends TestCase
 
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $output);
         self::assertStringNotContainsString('<script>', $output);
+    }
+
+    private function createExampleContainer(string $locale): Container
+    {
+        $root = dirname(__DIR__, 2);
+        $configurator = new Configurator();
+        $configurator->setTempDirectory($root . '/temp');
+        $configurator->addConfig($root . '/tests/Fixtures/Localization/services.neon');
+        $configurator->addStaticParameters(['locale' => $locale]);
+
+        return $configurator->createContainer();
     }
 }
