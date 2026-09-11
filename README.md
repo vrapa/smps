@@ -15,7 +15,9 @@ world.
 The application uses Nette 3, Doctrine ORM, Phinx, and PHP 8.1 or newer. The
 current user interface is in Czech. A choir can run the software in another
 country, but a translated interface is still needed for comfortable use by
-non-Czech-speaking members. Localisation contributions are welcome.
+non-Czech-speaking members. The implementation roadmap for Czech, English,
+German, and Dutch is in
+[`docs/localization-plan.md`](docs/localization-plan.md).
 
 ### Requirements and installation
 
@@ -169,6 +171,8 @@ na světě.
 Aplikace používá Nette 3, Doctrine ORM, Phinx a PHP 8.1 nebo novější. Současné
 uživatelské rozhraní je české. V jiné zemi lze aplikaci provozovat, pro pohodlné
 používání nečesky mluvícími členy je však ještě potřeba doplnit lokalizaci.
+Plán implementace češtiny, angličtiny, němčiny a nizozemštiny je v
+[`docs/localization-plan.md`](docs/localization-plan.md).
 
 ### Požadavky a instalace
 

@@ -433,6 +433,10 @@ migration, or deployment was created or run as part of publication.
 
 ## Working agreement
 
+Post-publication Czech, English, German, and Dutch UI localization is tracked
+in `docs/localization-plan.md`. It is a separate implementation stream and does
+not authorize a production database migration or deployment.
+
 - Each completed section is committed and pushed separately.
 - Production-impacting actions require explicit approval.
 - Keep unrelated changes out of each commit.
