@@ -115,7 +115,7 @@ class ConcertsPresenter extends BasePresenter
 
         $this->concertSongService->saveConcert($concert, $values->songIds);
 
-        $this->flashMessage("Záznam byl úspěšně aktualizován.", 'alert-success');
+        $this->flashMessage($this->translator->translate('common.record_updated'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -132,7 +132,7 @@ class ConcertsPresenter extends BasePresenter
     public function createFormSucceeded(Form $form, ArrayHash $values): void
     {
         if (!$this->user->isInRole('admin')) {
-            throw new \Exception("Nemáte potřebná oprávnění!");
+            throw new \Exception($this->translator->translate('common.permission_denied'));
         }
 
         $concert = new Concert();
@@ -144,7 +144,7 @@ class ConcertsPresenter extends BasePresenter
 
         $this->concertSongService->saveConcert($concert, $values->songIds);
 
-        $this->flashMessage('Záznam byl vložen.', 'alert-success');
+        $this->flashMessage($this->translator->translate('common.record_created'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -154,14 +154,14 @@ class ConcertsPresenter extends BasePresenter
         return new Multiplier(function (string $id): Form {
             $form = $this->createForm();
             $form->addSubmit('send', 'Smazat');
-            $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+            $form->addProtection('form.csrf_expired');
             $form->onSuccess[] = function () use ($id): void {
                 if (!$this->getUser()->isInRole('admin')) {
-                    throw new \Exception("Nemáte potřebná oprávnění!");
+                    throw new \Exception($this->translator->translate('common.permission_denied'));
                 }
 
                 $this->concertSongService->deleteConcert($this->getConcert((int) $id));
-                $this->flashMessage('Zvolený záznam byl smazán.', 'alert-success');
+                $this->flashMessage($this->translator->translate('common.record_deleted'), 'alert-success');
                 $this->redirect('this');
             };
 
@@ -190,7 +190,7 @@ class ConcertsPresenter extends BasePresenter
         $form->addTextArea('note', 'Poznámka:');
 
         $form->addSubmit('send', 'Uložit úpravy');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         return $form;
     }
 
@@ -198,7 +198,7 @@ class ConcertsPresenter extends BasePresenter
     {
         $concert = $this->entityManager->getRepository(Concert::class)->find($id);
         if ($concert === null) {
-            $this->error('Záznam nebyl nalezen');
+            $this->error($this->translator->translate('common.record_not_found'));
         }
 
         return $concert;

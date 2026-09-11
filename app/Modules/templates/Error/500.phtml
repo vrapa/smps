@@ -1,7 +1,8 @@
 <!DOCTYPE html><!-- "' --></textarea></script></style></pre></xmp></a></audio></button></canvas></datalist></details></dialog></iframe></listing></meter></noembed></noframes></noscript></optgroup></option></progress></rp></select></table></template></title></video>
+<html lang="<?= htmlspecialchars($translator->getLocale(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
 <meta charset="utf-8">
 <meta name="robots" content="noindex">
-<title>Server Error</title>
+<title><?= htmlspecialchars($translator->translate('error.500.title'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></title>
 
 <style>
 	#nette-error { all: initial; position: absolute; top: 0; left: 0; right: 0; height: 70vh; min-height: 400px; display: flex; align-items: center; justify-content: center; z-index: 1000 }
@@ -13,15 +14,15 @@
 
 <div id=nette-error>
 	<div>
-		<h1>Server Error</h1>
+		<h1><?= htmlspecialchars($translator->translate('error.500.title'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></h1>
 
-		<p>We're sorry! The server encountered an internal error and
-		was unable to complete your request. Please try again later.</p>
+		<p><?= htmlspecialchars($translator->translate('error.500.message'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
 
-		<p><small>error 500</small></p>
+		<p><small><?= htmlspecialchars($translator->translate('error.code', code: 500), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></small></p>
 	</div>
 </div>
 
 <script>
 	document.body.insertBefore(document.getElementById('nette-error'), document.body.firstChild);
 </script>
+</html>

@@ -124,7 +124,7 @@ class SongsPresenter extends BasePresenter
         $song->setActive($values->active);
         $this->entityManager->flush();
 
-        $this->flashMessage("Záznam byl úspěšně aktualizován.", 'alert-success');
+        $this->flashMessage($this->translator->translate('common.record_updated'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -141,7 +141,7 @@ class SongsPresenter extends BasePresenter
     public function createFormSucceeded(Form $form, ArrayHash $values): void
     {
         if (!$this->user->isInRole('admin')) {
-            throw new \Exception("Nemáte potřebná oprávnění!");
+            throw new \Exception($this->translator->translate('common.permission_denied'));
         }
 
         $song = new Song();
@@ -153,7 +153,7 @@ class SongsPresenter extends BasePresenter
 
         $this->entityManager->persist($song);
         $this->entityManager->flush();
-        $this->flashMessage('Záznam byl vložen.', 'alert-success');
+        $this->flashMessage($this->translator->translate('common.record_created'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -163,13 +163,13 @@ class SongsPresenter extends BasePresenter
         return new Multiplier(function (string $id): Form {
             $form = $this->createForm();
             $form->addSubmit('send', 'Smazat');
-            $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+            $form->addProtection('form.csrf_expired');
             $form->onSuccess[] = function () use ($id): void {
                 $this->assertAdmin();
                 $this->entityManager->remove($this->getSong((int) $id));
                 $this->entityManager->flush();
 
-                $this->flashMessage('Zvolený záznam byl smazán.', 'alert-success');
+                $this->flashMessage($this->translator->translate('common.record_deleted'), 'alert-success');
                 $this->redirect('this');
             };
 
@@ -194,7 +194,7 @@ class SongsPresenter extends BasePresenter
             ->setDefaultValue(true);
 
         $form->addSubmit('send', 'Uložit úpravy');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         return $form;
     }
 
@@ -206,7 +206,7 @@ class SongsPresenter extends BasePresenter
         $this->addUploadControls($form, SongFileStorage::CATEGORY_CHOIR_SHEET_MUSIC);
 
         $form->addSubmit('send', 'Přidat soubor');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'uploadFormSucceeded'];
 
         $this->formToBootstrapInline3($form);
@@ -219,7 +219,7 @@ class SongsPresenter extends BasePresenter
 
         $this->addUploadControls($form, SongFileStorage::CATEGORY_ORCHESTRA_SHEET_MUSIC);
         $form->addSubmit('send', 'Přidat soubor');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'uploadFormSucceeded'];
 
         $this->formToBootstrapInline3($form);
@@ -232,7 +232,7 @@ class SongsPresenter extends BasePresenter
 
         $this->addUploadControls($form, SongFileStorage::CATEGORY_RECORDINGS);
         $form->addSubmit('send', 'Přidat soubor');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'uploadFormSucceeded'];
 
         $this->formToBootstrapInline3($form);
@@ -243,7 +243,7 @@ class SongsPresenter extends BasePresenter
     public function uploadFormSucceeded(Form $form, ArrayHash $values): void
     {
         if (!$this->user->isInRole('admin')) {
-            throw new \Exception("Nemáte potřebná oprávnění!");
+            throw new \Exception($this->translator->translate('common.permission_denied'));
         }
 
         try {
@@ -254,7 +254,7 @@ class SongsPresenter extends BasePresenter
                 $values->category,
                 $values->description,
             );
-            $this->flashMessage('Záznam byl vložen.', 'alert-success');
+            $this->flashMessage($this->translator->translate('common.record_created'), 'alert-success');
             $this->redirect('this');
         } catch (InvalidArgumentException $exception) {
             $form->addError($exception->getMessage());
@@ -280,7 +280,7 @@ class SongsPresenter extends BasePresenter
         return new Multiplier(function (string $id): Form {
             $form = $this->createForm();
             $form->addSubmit('send', 'Smazat');
-            $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+            $form->addProtection('form.csrf_expired');
             $form->onSuccess[] = function () use ($id): void {
                 $this->assertAdmin();
                 $this->songFileStorage->delete($this->getSongFile((int) $id));
@@ -297,7 +297,7 @@ class SongsPresenter extends BasePresenter
     {
         $song = $this->entityManager->getRepository(Song::class)->find($id);
         if ($song === null) {
-            $this->error('Záznam nebyl nalezen');
+            $this->error($this->translator->translate('common.record_not_found'));
         }
 
         return $song;
@@ -337,7 +337,7 @@ class SongsPresenter extends BasePresenter
     private function assertAdmin(): void
     {
         if (!$this->getUser()->isInRole('admin')) {
-            throw new \Exception("Nemáte potřebná oprávnění!");
+            throw new \Exception($this->translator->translate('common.permission_denied'));
         }
     }
 }

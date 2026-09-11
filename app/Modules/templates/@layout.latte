@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="{$locale}">
 <head>
     <meta charset="utf-8">
-    <title>{ifset title}{include title|stripHtml} | {/ifset}Smíšený pěvecký sbor Bruntál</title>
+    <title>{ifset title}{include title|stripHtml} | {/ifset}{$applicationName}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="shortcut icon" href="{$basePath}/favicon.ico">
@@ -19,29 +19,29 @@
 <header data-bs-theme="dark">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container-fluid">
-            <a class="navbar-brand" n:href=":Dashboard:">SMPS Bruntál</a>
+            <a class="navbar-brand" n:href=":Dashboard:">{$applicationName}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeadLine"
-                    aria-controls="navbarHeadLine" aria-expanded="false" aria-label="Toggle navigation">
+                    aria-controls="navbarHeadLine" aria-expanded="false" aria-label="{_'nav.toggle'}">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarHeadLine">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a n:class="nav-link, $presenter->isLinkCurrent(':Concerts:*') ? active" aria-current="page"  n:href=":Concerts:">Koncerty</a>
+                        <a n:class="nav-link, $presenter->isLinkCurrent(':Concerts:*') ? active" aria-current="page"  n:href=":Concerts:">{_'nav.concerts'}</a>
                     </li>
                     <li class="nav-item">
-                        <a n:class="nav-link, $presenter->isLinkCurrent(':Songs:*') ? active" n:href=":Songs:">Skladby</a>
+                        <a n:class="nav-link, $presenter->isLinkCurrent(':Songs:*') ? active" n:href=":Songs:">{_'nav.songs'}</a>
                     </li>
                     {if $user->isInRole('admin')}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                                aria-expanded="false">
-                                Administrace
+                                {_'nav.administration'}
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a n:class="dropdown-item, $presenter->isLinkCurrent(':Admin:Users:*') ? active" n:href=":Admin:Users:">Uživatelé</a>
+                                    <a n:class="dropdown-item, $presenter->isLinkCurrent(':Admin:Users:*') ? active" n:href=":Admin:Users:">{_'nav.users'}</a>
                                 </li>
                             </ul>
                         </li>
@@ -51,11 +51,11 @@
 
                 <div class="d-flex navbar-nav">
                     {if $user->isLoggedIn()}
-                        <span class="navbar-text">Přihlášený jako uživatel: <B>{$user->getIdentity()->name}</B>.&nbsp;</span>
-                        <a n:class="nav-link, $presenter->isLinkCurrent(':Settings:*') ? active" n:href=":Settings:default"><i class="bi bi-gear"></i> Nastavit</a>
-                        <a n:class="nav-link, $presenter->isLinkCurrent(':Authentication:logout') ? active" n:href=":Authentication:logout"><i class="bi bi-box-arrow-right"></i>&nbsp;Odhlásit</a>
+                        <span class="navbar-text">{_'nav.signed_in_as'}: <B>{$user->getIdentity()->name}</B>.&nbsp;</span>
+                        <a n:class="nav-link, $presenter->isLinkCurrent(':Settings:*') ? active" n:href=":Settings:default"><i class="bi bi-gear"></i> {_'nav.settings'}</a>
+                        <a n:class="nav-link, $presenter->isLinkCurrent(':Authentication:logout') ? active" n:href=":Authentication:logout"><i class="bi bi-box-arrow-right"></i>&nbsp;{_'nav.logout'}</a>
                     {else}
-                        <a n:class="nav-link, $presenter->isLinkCurrent(':Authentication:login') ? active" n:href=":Authentication:login"><i class="bi bi-person-up"></i>&nbsp;Přihlášení</a>
+                        <a n:class="nav-link, $presenter->isLinkCurrent(':Authentication:login') ? active" n:href=":Authentication:login"><i class="bi bi-person-up"></i>&nbsp;{_'nav.login'}</a>
                     {/if}
                 </div>
 
@@ -88,30 +88,30 @@
         <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-indicators">
                 <button type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide-to="0" class="active"
-                        aria-current="true" aria-label="Slide 1"></button>
+                        aria-current="true" aria-label="{_'carousel.slide', number: 1}"></button>
                 <button type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide-to="1"
-                        aria-label="Slide 2"></button>
+                        aria-label="{_'carousel.slide', number: 2}"></button>
                 <button type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide-to="2"
-                        aria-label="Slide 3"></button>
+                        aria-label="{_'carousel.slide', number: 3}"></button>
             </div>
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <img src="/images/carousel/P1020497.JPG" class="d-block w-100" alt="...">
+                    <img src="/images/carousel/P1020497.JPG" class="d-block w-100" alt="{_'carousel.photo'}">
                 </div>
                 <div class="carousel-item">
-                    <img src="/images/carousel/P1020483.JPG" class="d-block w-100" alt="...">
+                    <img src="/images/carousel/P1020483.JPG" class="d-block w-100" alt="{_'carousel.photo'}">
                 </div>
                 <div class="carousel-item">
-                    <img src="/images/carousel/IMG_20230626_184937974.jpg" class="d-block w-100" alt="...">
+                    <img src="/images/carousel/IMG_20230626_184937974.jpg" class="d-block w-100" alt="{_'carousel.photo'}">
                 </div>
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
+                <span class="visually-hidden">{_'pagination.previous'}</span>
             </button>
             <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
+                <span class="visually-hidden">{_'pagination.next'}</span>
             </button>
         </div>
     {/if}

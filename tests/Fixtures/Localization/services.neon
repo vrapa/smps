@@ -1,6 +1,8 @@
 parameters:
 	locale: cs
+	applicationName: Test Choir
 
 services:
 	translator: App\Localization\CatalogTranslator(%locale%, %debugMode%)
+	publicSettings: App\Configuration\PublicSettings(%applicationName%)
 	formFactory: App\Forms\FormFactory

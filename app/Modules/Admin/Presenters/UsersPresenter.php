@@ -102,7 +102,7 @@ class UsersPresenter extends BasePresenter
         $form = $this->getFormBase();
 
         $form->addSubmit('send', 'Uložit úpravy');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'editFormSucceeded'];
 
         $this->formToBootstrap3($form);
@@ -121,7 +121,7 @@ class UsersPresenter extends BasePresenter
 
         $this->userService->saveUser($user, $values->roleIds);
 
-        $this->flashMessage("Záznam byl úspěšně aktualizován.", 'alert-success');
+        $this->flashMessage($this->translator->translate('common.record_updated'), 'alert-success');
     }
 
     protected function createComponentCreateForm(): Form
@@ -137,7 +137,7 @@ class UsersPresenter extends BasePresenter
             ->addRule(Form::EQUAL, 'Hesla se neshodují', $form['password']);
 
         $form->addSubmit('send', 'Uložit úpravy');
-        $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+        $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'createFormSucceeded'];
 
         $this->formToBootstrap3($form);
@@ -157,7 +157,7 @@ class UsersPresenter extends BasePresenter
 
         $this->userService->saveUser($user, $values->roleIds);
 
-        $this->flashMessage('Záznam byl vložen.', 'alert-success');
+        $this->flashMessage($this->translator->translate('common.record_created'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -167,11 +167,11 @@ class UsersPresenter extends BasePresenter
         return new Multiplier(function (string $id): Form {
             $form = $this->createForm();
             $form->addSubmit('send', 'Smazat');
-            $form->addProtection('Platnost formuláře vypršela. Odešlete jej prosím znovu.');
+            $form->addProtection('form.csrf_expired');
             $form->onSuccess[] = function () use ($id): void {
                 $userId = (int) $id;
                 if (!$this->getUser()->isInRole('admin')) {
-                    throw new \Exception("Nemáte potřebná oprávnění!");
+                    throw new \Exception($this->translator->translate('common.permission_denied'));
                 }
                 if ((int) $this->getUser()->getId() === $userId) {
                     $this->flashMessage('Nemůžete smazat sami sebe!', 'alert-danger');
@@ -179,7 +179,7 @@ class UsersPresenter extends BasePresenter
                 }
 
                 $this->userService->deleteUser($this->getUserEntity($userId));
-                $this->flashMessage('Zvolený záznam byl smazán.', 'alert-success');
+                $this->flashMessage($this->translator->translate('common.record_deleted'), 'alert-success');
                 $this->redirect('this');
             };
 
@@ -225,7 +225,7 @@ class UsersPresenter extends BasePresenter
     {
         $user = $this->entityManager->getRepository(User::class)->find($id);
         if ($user === null) {
-            $this->error('Záznam nebyl nalezen');
+            $this->error($this->translator->translate('common.record_not_found'));
         }
 
         return $user;

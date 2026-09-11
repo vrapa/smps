@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use App\Configuration\PublicSettings;
 use App\Forms\FormFactory;
 use App\Localization\CatalogTranslator;
 use App\Localization\SupportedLocale;
@@ -53,6 +54,7 @@ final class CatalogTranslatorTest extends TestCase
         self::assertSame($locale, $translator->getLocale());
         self::assertSame($ready, $translator->translate('localization.ready'));
         self::assertSame($greeting, $translator->translate('localization.greeting', name: 'SMPS'));
+        self::assertSame('Test Choir', $container->getByType(PublicSettings::class)->getApplicationName());
 
         $sharedForm = $container->getByType(FormFactory::class)->create();
         self::assertSame($translator, $sharedForm->getTranslator());
@@ -156,6 +158,7 @@ final class CatalogTranslatorTest extends TestCase
     {
         $root = dirname(__DIR__, 2);
         $configurator = new Configurator();
+        $configurator->setDebugMode(true);
         $configurator->setTempDirectory($root . '/temp');
         $configurator->addConfig($root . '/tests/Fixtures/Localization/services.neon');
         $configurator->addStaticParameters(['locale' => $locale]);

@@ -9,6 +9,7 @@ search:
 services:
 	- App\Router\RouterFactory::createRouter
 	- App\Localization\CatalogTranslator(%locale%, %debugMode%)
+	- App\Configuration\PublicSettings(%applicationName%)
 	- App\Model\UserAuthenticator
 	- App\Services\UserService
 	- App\Services\ConcertSongService

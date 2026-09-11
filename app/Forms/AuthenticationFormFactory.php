@@ -20,15 +20,15 @@ class AuthenticationFormFactory
     public function create(): Form
     {
         $form = $this->formFactory->create();
-        $form->addText('username', 'Uživatelské jméno:')
-            ->setRequired('Zadej živatelské jméno.');
+        $form->addText('username', 'auth.form.username')
+            ->setRequired('auth.form.username_required');
 
-        $form->addPassword('password', 'Heslo:')
-            ->setRequired('Zadej heslo.');
+        $form->addPassword('password', 'auth.form.password')
+            ->setRequired('auth.form.password_required');
 
-        $form->addCheckbox('remember', 'Zůstat přihlášený');
+        $form->addCheckbox('remember', 'auth.form.remember');
 
-        $form->addSubmit('send', 'Přihlásit');
+        $form->addSubmit('send', 'auth.form.submit');
 
         $form->onSuccess[] = [$this, 'formSucceeded'];
         return $form;
@@ -45,7 +45,7 @@ class AuthenticationFormFactory
         try {
             $this->user->login($values->username, $values->password);
         } catch (AuthenticationException) {
-            $form->addError('Jméno nebo heslo jsou chybně zadané.');
+            $form->addError('auth.form.invalid_credentials');
         }
     }
 }
