@@ -16,6 +16,9 @@ values.
   verified the repository ignore rules.
 - Inventoried current and historical choir images, Git identities, names, and
   email addresses that may require permission before publication.
+- Inventoried tracked filenames and file signatures for PDF and office
+  documents, database exports, common score and sheet-music formats, MIDI and
+  audio recordings, photographs, and archives.
 
 The initial manual patterns were supplemented with checksum-verified Gitleaks
 8.30.1 scans. The repeat recorded at `853819d` inspected 158 publishable
@@ -47,6 +50,15 @@ locally reachable private history. GitHub CI independently repeated its secret
 scan successfully before building the release artifact. The checks are
 repeated whenever the root snapshot is replaced before publication.
 
+A post-publication repeat on 2026-09-11 inspected all 165 files on public
+`main`. Filename and binary-signature checks found no PDF, Office/ZIP, database
+export, score or sheet-music format, MIDI, audio recording, JPEG photograph,
+or archive. The only tracked raster images are the application favicon and six
+jQuery UI icon sprites; the other binary assets are the two Bootstrap Icons
+font files. The public history contains only the approved GitHub noreply commit
+identity. A targeted review found only reserved `.test` email addresses in
+tests and the approved noreply address outside upstream Composer metadata.
+
 ## Findings and remediation
 
 - No high-confidence private keys, access tokens, or embedded URL credentials
@@ -68,6 +80,10 @@ repeated whenever the root snapshot is replaced before publication.
   from two choir photographs during the private-tree audit. The three choir
   photographs were subsequently removed from version control altogether;
   `www/images/carousel` is now ignored and protected from deployment artifacts.
+- Verified after publication that neither `www/dokumenty` nor
+  `www/images/carousel` has any tracked file and that the repository contains
+  no choir photographs, sheet music, scores, PDFs, office documents, MIDI or
+  audio files, or database exports.
 - Removed the obsolete commented footer block that contained the maintainer's
   personal name and was never rendered by the application.
 

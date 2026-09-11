@@ -27,9 +27,9 @@ Commitujte záměrné, samostatně kontrolovatelné kroky. Necommitujte vygenero
 
 ## Databáze a runtime data
 
-Aplikace používá Doctrine ORM a Phinx migrace. Tracked migrace zatím neumějí
-vytvořit prázdnou databázi; podrobnosti jsou v
-[`docs/database-inventory.md`](docs/database-inventory.md).
+Aplikace používá Doctrine ORM a Phinx migrace. Verzovaný řetězec migrací umí
+vytvořit schéma prázdné databáze; podrobnosti a pravidla bezpečného upgradu
+jsou v [`docs/database-inventory.md`](docs/database-inventory.md).
 
 Bez výslovného schválení nespouštějte produkční migrace, rollback, schema
 generation ani reset databáze. Nikdy nemažte či nepřesouvejte uživatelské
