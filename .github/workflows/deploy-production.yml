@@ -38,6 +38,10 @@ jobs:
           fi
 
           default_branch="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.default_branch')"
+          if [[ "$GITHUB_REF" != "refs/heads/${default_branch}" ]]; then
+            echo 'Run the production workflow only from the default branch.' >&2
+            exit 1
+          fi
           run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CI_RUN_ID}")"
 
           if ! jq --exit-status --arg branch "$default_branch" '
@@ -69,6 +73,12 @@ jobs:
 
     steps:
 
+      - name: Check out policy from the trusted workflow revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+
       - name: Download the tested artifact
         shell: bash
         run: |
@@ -83,38 +93,15 @@ jobs:
         run: |
           set -euo pipefail
           archive="$RUNNER_TEMP/artifact/smps-${DEPLOY_SHA}.tar.gz"
-          entries="$RUNNER_TEMP/artifact/entries.txt"
 
           test -f "$archive"
-          tar --list --gzip --file "$archive" > "$entries"
-
-          if grep --extended-regexp '(^/|(^|/)\.\.(/|$))' "$entries"; then
-            echo 'Unsafe path found in deploy artifact.' >&2
-            exit 1
-          fi
-
-          if grep --extended-regexp \
-            '^(config/(local\.neon|phinx\.(yaml|php))|www/(dokumenty|images/carousel)(/|$)|log(/|$)|temp(/|$))' \
-            "$entries"; then
-            echo 'Protected runtime path found in deploy artifact.' >&2
-            exit 1
-          fi
-
-          if awk -F/ '
-            $1 !~ /^(app|bin|config|db|vendor|www|composer.json|composer.lock|README.md|THIRD_PARTY_NOTICES.md)$/ {
-              print
-              unexpected = 1
-            }
-            END { exit unexpected }
-          ' "$entries"; then
-            :
-          else
-            echo 'Unexpected top-level path found in deploy artifact.' >&2
-            exit 1
-          fi
+          python3 tools/audit_public_content.py archive "$archive"
 
           mkdir -p "$RUNNER_TEMP/release"
-          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP/release"
+          tar --extract --gzip --file "$archive" \
+            --directory "$RUNNER_TEMP/release" \
+            --no-same-owner \
+            --no-same-permissions
 
       - name: Configure pinned SFTP host identity
         shell: bash

@@ -207,20 +207,30 @@ language-review status are recorded. Hosting acceptance continues in milestone 7
 - [ ] Re-audit the final tracked tree, all public reachable refs/history, release
   attachments, Actions artifacts/logs, and published screenshots. Review both
   secret patterns and personal/copyrighted content; Gitleaks alone is insufficient.
-- [ ] Automate checks rejecting protected configuration, database exports and
+- [x] Automate checks rejecting protected configuration, database exports and
   production fixtures, photographs, PDFs/scores, recordings, and uploads from
   first-party public source and release artifacts. Permit only explicitly reviewed
   public assets and necessary licensed dependency content.
 - [ ] Check tests use synthetic users and generated upload samples without
   production names, email addresses, hashes, or music documents. Preserve MIT
   attribution and legitimate dependency notices.
-- [ ] Harden artifact checks for traversal, symlinks/hardlinks, unexpected paths,
+- [x] Harden artifact checks for traversal, symlinks/hardlinks, unexpected paths,
   and secret-bearing configuration; validate before extraction and transfer.
 - [ ] Verify private hosting values never enter public workflow output, command
   traces, screenshots, commit messages, or documentation. Redact diagnostic logs.
 
 Gate: the selected release and its public history/artifact pass both automated
 scans and the content review. Old private history remains confidential.
+
+Current status (2026-09-16): `tools/audit_public_content.py` now checks the
+tracked tree and every reachable public commit in CI, with an explicit allowlist
+for the reviewed favicon and third-party jQuery UI icon sprites. The same policy
+validates the deploy archive when it is built and again before extraction,
+rejecting unsafe paths, duplicate entries, links/special files, unexpected roots,
+protected configuration/runtime paths, and unapproved first-party media or
+database/document formats. Remaining work is the final manual review of public
+attachments, logs, screenshots and test data, plus verification that hosting
+values never appear in output.
 
 ## 6. Implement a complete Webglobe deployment and recovery workflow
 

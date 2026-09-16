@@ -23,6 +23,8 @@
 /www/dokumenty/
 /www/images/carousel/
 /vendor/
+__pycache__/
+*.pyc
 
 config/phinx.yaml
 config/phinx.php
