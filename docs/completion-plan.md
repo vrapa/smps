@@ -222,7 +222,7 @@ hosting acceptance.
   production fixtures, photographs, PDFs/scores, recordings, and uploads from
   first-party public source and release artifacts. Permit only explicitly reviewed
   public assets and necessary licensed dependency content.
-- [ ] Check tests use synthetic users and generated upload samples without
+- [x] Check tests use synthetic users and generated upload samples without
   production names, email addresses, hashes, or music documents. Preserve MIT
   attribution and legitimate dependency notices.
 - [x] Harden artifact checks for traversal, symlinks/hardlinks, unexpected paths,
@@ -242,6 +242,13 @@ protected configuration/runtime paths, and unapproved first-party media or
 database/document formats. Remaining work is the final manual review of public
 attachments, logs, screenshots and test data, plus verification that hosting
 values never appear in output.
+
+Test-data review (2026-09-16): integration identities are generic synthetic
+records, literal addresses use the reserved `example.test` domain, upload tests
+generate short marker strings rather than real scores or recordings, and the
+single static bcrypt compatibility value is explicitly documented as generated
+and non-production. `PublicTestDataAuditTest` now enforces these verifiable
+invariants and rejects document/media files anywhere under `tests/`.
 
 ## 6. Implement a complete Webglobe deployment and recovery workflow
 

@@ -141,6 +141,11 @@ sentence in a presenter, form, or template. Add the same key and placeholders
 to every catalogue under `app/Lang/{cs,en,de,nl}`. PHPUnit checks catalogue
 parity and rejects new untranslated UI text in the audited application paths.
 
+Tests and examples must use visibly synthetic identities, the reserved
+`example.test` email domain, generated marker content instead of real documents
+or recordings, and no production password hashes. The test-data privacy audit
+enforces the mechanically verifiable parts of this rule.
+
 ### Architecture
 
 - `app/Modules` contains Nette presenters and Latte templates.
@@ -303,6 +308,11 @@ nikoli jako přímou větu v presenteru, formuláři nebo šabloně. Stejný kl�
 zástupné symboly doplňte do všech katalogů v `app/Lang/{cs,en,de,nl}`. PHPUnit
 kontroluje shodu katalogů a v auditovaných částech aplikace odmítne nové
 nepřeložené texty.
+
+Testy a příklady musí používat zjevně syntetické identity, vyhrazenou e-mailovou
+doménu `example.test`, generovaný značkovací obsah místo skutečných dokumentů či
+nahrávek a žádné produkční hashe hesel. Mechanicky ověřitelnou část tohoto
+pravidla hlídá audit testovacích dat.
 
 ### Architektura
 
