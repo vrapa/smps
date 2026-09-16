@@ -1,5 +1,12 @@
 # GitHub production deployment
 
+Implementation status (2026-09-16): the workflow below is a prepared SFTP
+transfer, not yet a verified Webglobe deployment. No GitHub environments or
+deployment runs were present at inspection. Hosting capability checks, release
+activation, cache handling, durable artifact retention, exact rollback, and
+staging/production acceptance are tracked in
+[completion-plan.md](completion-plan.md), milestones 1 and 6–9.
+
 The production workflow deploys only an artifact created by a successful `CI`
 push run on the repository's default branch. It is started manually with the
 numeric CI run ID, then waits for the protection rules configured on the
