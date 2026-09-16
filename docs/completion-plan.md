@@ -239,9 +239,13 @@ for the reviewed favicon and third-party jQuery UI icon sprites. The same policy
 validates the deploy archive when it is built and again before extraction,
 rejecting unsafe paths, duplicate entries, links/special files, unexpected roots,
 protected configuration/runtime paths, and unapproved first-party media or
-database/document formats. Remaining work is the final manual review of public
-attachments, logs, screenshots and test data, plus verification that hosting
-values never appear in output.
+database/document formats. A current-state review at `fd17c4e` also found no
+tags, releases, deployment runs, public issue/PR attachments, risky public-text
+patterns, or sensitive patterns in the successful `main` CI log; its downloaded
+artifact passed with the digest recorded in `public-release-audit.md`. Remaining
+work is the final repeat against the exact production SHA, individual disposition
+or expiry of older Actions artifacts, and review of the first deployment log for
+hosting-value disclosure.
 
 Test-data review (2026-09-16): integration identities are generic synthetic
 records, literal addresses use the reserved `example.test` domain, upload tests

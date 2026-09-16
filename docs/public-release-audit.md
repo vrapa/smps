@@ -59,6 +59,31 @@ font files. The public history contains only the approved GitHub noreply commit
 identity. A targeted review found only reserved `.test` email addresses in
 tests and the approved noreply address outside upstream Composer metadata.
 
+The current-state repeat on 2026-09-16 inspected public `main` at
+`fd17c4e1005a2a0e921549f51f4c9f0f9e16dc87`. The automated public-content
+policy passed against the index and every commit reachable from the local ref
+set, which is a superset of the seven branches then reported by the GitHub API.
+The successful default-branch CI run `35084140291` repeated the full-history
+Gitleaks and path-policy scans. Its downloaded deployment artifact passed the
+archive policy; its SHA-256 was
+`ae3bbf0761fafd74b0c56058e9a5f4b9f89f972d9ce471435833ee74ee8627f2`.
+
+GitHub reported no tags, releases, release assets, or production-deployment
+runs. A count-only review of 15 public issue/pull-request bodies and all public
+issue comments found no GitHub user attachments, linked image/document/media
+files, credential-bearing URLs, private-key headers, or IP literals. A
+count-only scan of the current `main` CI log found no credential URLs,
+private-key headers, FTP/SFTP URLs, production-domain references, user
+attachments, or non-loopback IPv4 literals. Git history reports only the
+approved GitHub noreply author identity.
+
+This is a clean current-state audit, not the final production release gate.
+Older unexpired Actions artifacts were inventoried by metadata but not all
+downloaded individually; they were built from the already reviewed public
+history and expire automatically. Re-run the complete audit against the exact
+production SHA and its retained artifact after the remaining hosting work, and
+inspect any deployment log created at that time.
+
 ## Findings and remediation
 
 - No high-confidence private keys, access tokens, or embedded URL credentials
