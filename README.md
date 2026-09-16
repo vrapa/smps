@@ -13,10 +13,10 @@ tied to that organisation and can be used or adapted by choirs anywhere in the
 world.
 
 The application uses Nette 3, Doctrine ORM, Phinx, and PHP 8.1 or newer. The
-current user interface is in Czech. A choir can run the software in another
-country, but a translated interface is still needed for comfortable use by
-non-Czech-speaking members. The implementation roadmap for Czech, English,
-German, and Dutch is in
+The user interface supports Czech, English, German, and Dutch. Each installation
+selects one language and an IANA timezone in configuration; user-created song,
+concert, and file content remains exactly as entered. Translation acceptance
+and review status are tracked in
 [`docs/localization-plan.md`](docs/localization-plan.md).
 
 ### Requirements and installation
@@ -131,6 +131,11 @@ PHPStan currently runs at level 0 over application code, tests, CLI code,
 migrations, and the web entry point. Raising the level remains a future
 improvement and should not be replaced by broadly ignoring errors.
 
+When adding user-facing copy, use a semantic translation key instead of a raw
+sentence in a presenter, form, or template. Add the same key and placeholders
+to every catalogue under `app/Lang/{cs,en,de,nl}`. PHPUnit checks catalogue
+parity and rejects new untranslated UI text in the audited application paths.
+
 ### Architecture
 
 - `app/Modules` contains Nette presenters and Latte templates.
@@ -174,10 +179,10 @@ Původně vznikla pro Smíšený pěvecký sbor Bruntál, její základní postu
 nejsou vázané na tuto organizaci a mohou ji používat nebo upravit sbory kdekoli
 na světě.
 
-Aplikace používá Nette 3, Doctrine ORM, Phinx a PHP 8.1 nebo novější. Současné
-uživatelské rozhraní je české. V jiné zemi lze aplikaci provozovat, pro pohodlné
-používání nečesky mluvícími členy je však ještě potřeba doplnit lokalizaci.
-Plán implementace češtiny, angličtiny, němčiny a nizozemštiny je v
+Aplikace používá Nette 3, Doctrine ORM, Phinx a PHP 8.1 nebo novější. Uživatelské
+rozhraní podporuje češtinu, angličtinu, němčinu a nizozemštinu. Každá instalace
+vybírá jeden jazyk a IANA časovou zónu v konfiguraci; uživatelské názvy skladeb,
+koncertů a souborů zůstávají beze změny. Stav akceptace a jazykové kontroly je v
 [`docs/localization-plan.md`](docs/localization-plan.md).
 
 ### Požadavky a instalace
@@ -283,6 +288,12 @@ php vendor/bin/neon-lint config
 
 PHPStan je zatím na úrovni 0 nad aplikací, testy, CLI, migracemi a webovým
 vstupem. Zvýšení úrovně je žádoucí budoucí krok.
+
+Nové texty uživatelského rozhraní zapisujte přes významový překladový klíč,
+nikoli jako přímou větu v presenteru, formuláři nebo šabloně. Stejný klíč a
+zástupné symboly doplňte do všech katalogů v `app/Lang/{cs,en,de,nl}`. PHPUnit
+kontroluje shodu katalogů a v auditovaných částech aplikace odmítne nové
+nepřeložené texty.
 
 ### Architektura
 
