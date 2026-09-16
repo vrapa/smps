@@ -7,13 +7,16 @@
         <table class="table table-striped table-bordered">
             <thead>
             <tr>
-                <th scope="col">Název</th>
-                <th scope="col" style="width: 150px;">Datum konání</th>
-                <th scope="col">Možnosti</th>
+                <th scope="col">{_'concerts.list.column.title'}</th>
+                <th scope="col" style="width: 180px;">{_'concerts.list.column.date'}</th>
+                <th scope="col">{_'common.actions'}</th>
             </tr>
             </thead>
             <tbody>
 
+            <tr n:if="count($concerts) === 0">
+                <td colspan="3" class="text-center">{_'concerts.list.empty'}</td>
+            </tr>
             {foreach $concerts as $concert}
                 <tr>
                     {varType App\Model\entities\Concert $concert}
@@ -21,14 +24,14 @@
                         {$concert->getTitle()}
                     </td>
                     <td>
-                        {$concert->getScheduledAt()|date:'j. n. Y H:i'}
+                        {$dateTimeFormatter->formatConcertDate($concert->getScheduledAt())}
                     </td>
                     <td>
 
                         {if $user->isInRole('admin')}
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Volby
+                                    {_'common.options'}
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" n:href="show, 'id'=> $concert->getId()">{_'common.preview'}</a></li>

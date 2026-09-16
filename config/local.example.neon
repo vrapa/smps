@@ -14,6 +14,8 @@ parameters:
     # Public name displayed in the navigation and browser title. This is not a
     # secret and lets another choir reuse the application without editing code.
     applicationName: SMPS Bruntál
+    # IANA timezone used for concert input and display.
+    timezone: Europe/Prague
     doctrine:
         host: 127.0.0.1
         user: root

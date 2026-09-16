@@ -176,15 +176,25 @@ configured; GitHub CI supplies the required database integration gate.
 
 ## 4. Concerts vertical slice
 
-- [ ] Translate concert list, detail, create/edit/delete flows, programme
+- [x] Translate concert list, detail, create/edit/delete flows, programme
   controls, validation, and flash/error messages.
-- [ ] Introduce one locale-aware date/time formatter backed by `ext-intl` and
+- [x] Introduce one locale-aware date/time formatter backed by `ext-intl` and
   remove fixed date patterns from Latte.
-- [ ] Keep concert titles, notes, and song ordering unchanged as user data.
-- [ ] Test date rendering and the complete concert workflow in all locales and
+- [x] Keep concert titles, notes, and song ordering unchanged as user data.
+- [x] Test date rendering and the complete concert workflow in all locales and
   under the application's configured timezone.
 
 Done when concert UI and dates are correct in Czech, English, German, and Dutch.
+
+Current status: complete in application code and CI. Concert pages, forms,
+validation, programme controls, empty states, and messages use semantic keys;
+titles, notes, song identifiers, and ordering remain user data. A single Intl
+formatter uses `parameters.locale` and the new configurable IANA
+`parameters.timezone`, while database-compatible `datetime-local` values keep
+their wall time. CI installs Intl and the four-locale tests cover localized
+output, stable fields, valid timezone parsing, and invalid calendar dates.
+Production Intl availability is still a hosting gate: the Composer platform
+requirement remains intentionally deferred until Webglobe has been verified.
 
 ## 5. Users, roles, and settings vertical slice
 
