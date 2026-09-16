@@ -222,7 +222,7 @@ labels, validation, password confirmation, and notification controls.
 
 - [x] Add a catalogue parity test: every locale has exactly the canonical key
   set and matching placeholders.
-- [ ] Add a focused static audit that rejects new raw UI sentences in
+- [x] Add a focused static audit that rejects new raw UI sentences in
   presenters/templates while allowing documented technical strings and user
   data.
 - [ ] Run PHPUnit, database integration tests, PHP syntax checks, PHPCS,
@@ -231,7 +231,7 @@ labels, validation, password confirmation, and notification controls.
   forms, validation messages, and small screens.
 - [ ] Have Czech, German, and Dutch catalogues reviewed by fluent speakers;
   record corrections without claiming machine-generated text is authoritative.
-- [ ] Update README requirements and contributor guidance for translation keys.
+- [x] Update README requirements and contributor guidance for translation keys.
   Add screenshots only if publication rights are clear.
 - [ ] Verify staging separately with `cs`, `en`, `de`, and `nl`, including
   login, roles, uploads, dates, errors, and fallback behaviour.
