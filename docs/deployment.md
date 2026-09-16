@@ -19,7 +19,19 @@ transfer-only workflow still needs maintenance and recovery handling implemented
 The production workflow deploys only an artifact created by a successful `CI`
 push run on the repository's default branch. It is started manually with the
 numeric CI run ID, then waits for the protection rules configured on the
-GitHub `production` environment.
+GitHub `production` environment. The production workflow itself must also run
+from the default branch; artifact validation uses the policy from that trusted
+workflow revision, including when an older tested artifact is selected for
+rollback.
+
+CI audits every path in the current source and reachable public Git history.
+The artifact is then checked at build time and again before deployment. The
+policy rejects protected runtime paths, unapproved first-party photographs and
+music/document/database formats, secret-bearing file names, traversal,
+duplicate paths, links, special entries, oversized content, and unexpected
+top-level paths. Media shipped inside Composer dependencies is permitted; the
+small reviewed first-party icon allowlist is explicit in
+`tools/audit_public_content.py`.
 
 Do not invoke this workflow while the GitHub staging repository is private.
 Required environment reviewers are available only to public repositories on
@@ -65,10 +77,10 @@ set the value in the protected `config/local.neon`, validate the application in
 an isolated test environment, and clear the Nette cache through the normal
 deployment procedure.
 
-Keep production on `cs` until every UI slice and the acceptance matrix in
-`docs/localization-plan.md` are complete. The other values are accepted while
-the translation infrastructure is developed, but untranslated legacy text
-deliberately remains Czech during the incremental rollout.
+Keep production on `cs` until the four-locale acceptance matrix and
+fluent-speaker review in `docs/localization-plan.md` are complete. All four
+catalogues are implemented, but production language changes still require
+hosting acceptance for the selected locale.
 
 The deployment artifact excludes `config/local.neon` and therefore cannot
 change the production language by itself. A production locale change is a

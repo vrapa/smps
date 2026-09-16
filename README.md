@@ -125,6 +125,8 @@ php vendor/bin/phpcs
 php vendor/bin/phpstan analyse --configuration phpstan.neon --memory-limit=512M
 php vendor/bin/latte-lint app
 php vendor/bin/neon-lint config
+python tools/audit_public_content.py source --history
+python -m unittest discover -s tools/tests -p 'test_*.py'
 ```
 
 PHPStan currently runs at level 0 over application code, tests, CLI code,
@@ -284,6 +286,8 @@ php vendor/bin/phpcs
 php vendor/bin/phpstan analyse --configuration phpstan.neon --memory-limit=512M
 php vendor/bin/latte-lint app
 php vendor/bin/neon-lint config
+python tools/audit_public_content.py source --history
+python -m unittest discover -s tools/tests -p 'test_*.py'
 ```
 
 PHPStan je zatím na úrovni 0 nad aplikací, testy, CLI, migracemi a webovým
