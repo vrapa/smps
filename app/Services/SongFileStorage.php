@@ -63,7 +63,7 @@ final class SongFileStorage
     ): SongFile {
         [$extension, $maxSize] = $this->getUploadRule($category, $upload);
         if ($upload->getSize() > $maxSize) {
-            throw new InvalidArgumentException('Soubor překračuje povolenou velikost.');
+            throw new InvalidArgumentException('songs.files.error.size_exceeded');
         }
 
         $filename = bin2hex(random_bytes(16)) . '.' . $extension;
@@ -148,7 +148,7 @@ final class SongFileStorage
     {
         $this->assertAllowedCategory($category);
         if (!$upload->isOk()) {
-            throw new InvalidArgumentException('Soubor se nepodařilo bezpečně nahrát.');
+            throw new InvalidArgumentException('songs.files.error.upload_failed');
         }
 
         $mimeType = $upload->getContentType();
@@ -156,7 +156,7 @@ final class SongFileStorage
             ? self::RECORDING_MIME_TYPES
             : self::SHEET_MUSIC_MIME_TYPES;
         if ($mimeType === null || !isset($mimeTypes[$mimeType])) {
-            throw new InvalidArgumentException('Tento typ souboru není povolen.');
+            throw new InvalidArgumentException('songs.files.error.type_not_allowed');
         }
 
         $maxSize = $category === self::CATEGORY_RECORDINGS
@@ -175,7 +175,7 @@ final class SongFileStorage
             self::CATEGORY_CHOIR_SHEET_MUSIC,
             ], true)
         ) {
-            throw new InvalidArgumentException('Kategorie souboru není povolena.');
+            throw new InvalidArgumentException('songs.files.error.category_not_allowed');
         }
     }
 }

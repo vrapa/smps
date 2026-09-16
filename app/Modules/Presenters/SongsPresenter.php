@@ -45,8 +45,8 @@ class SongsPresenter extends BasePresenter
     protected function startup(): void
     {
         parent::startup();
-        $this->pageName = 'Seznam skladeb';
-        $this->showPageName = 'Skladba';
+        $this->pageName = $this->translator->translate('songs.page.list');
+        $this->showPageName = $this->translator->translate('songs.page.show');
     }
 
     public function renderDefault(int $page = 1): void
@@ -74,10 +74,15 @@ class SongsPresenter extends BasePresenter
         ]);
     }
 
+    public function renderCreate(): void
+    {
+        $this->getTemplate()->pageName = $this->translator->translate('songs.page.create');
+    }
+
     public function renderEdit(int $id): void
     {
 
-        $this->getTemplate()->pageName = $this->showPageName . ' - úpravy';
+        $this->getTemplate()->pageName = $this->translator->translate('songs.page.edit');
 
         $this->getTemplate()->song = $this->getSong($id);
     }
@@ -85,7 +90,7 @@ class SongsPresenter extends BasePresenter
     public function renderShow(int $id): void
     {
 
-        $this->getTemplate()->pageName = $this->showPageName . ' - zobrazení';
+        $this->getTemplate()->pageName = $this->showPageName;
 
         $song = $this->getSong($id);
 
@@ -124,7 +129,7 @@ class SongsPresenter extends BasePresenter
         $song->setActive($values->active);
         $this->entityManager->flush();
 
-        $this->flashMessage($this->translator->translate('common.record_updated'), 'alert-success');
+        $this->flashMessage($this->translator->translate('songs.flash.updated'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -153,7 +158,7 @@ class SongsPresenter extends BasePresenter
 
         $this->entityManager->persist($song);
         $this->entityManager->flush();
-        $this->flashMessage($this->translator->translate('common.record_created'), 'alert-success');
+        $this->flashMessage($this->translator->translate('songs.flash.created'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -162,14 +167,14 @@ class SongsPresenter extends BasePresenter
     {
         return new Multiplier(function (string $id): Form {
             $form = $this->createForm();
-            $form->addSubmit('send', 'Smazat');
+            $form->addSubmit('send', 'common.delete');
             $form->addProtection('form.csrf_expired');
             $form->onSuccess[] = function () use ($id): void {
                 $this->assertAdmin();
                 $this->entityManager->remove($this->getSong((int) $id));
                 $this->entityManager->flush();
 
-                $this->flashMessage($this->translator->translate('common.record_deleted'), 'alert-success');
+                $this->flashMessage($this->translator->translate('songs.flash.deleted'), 'alert-success');
                 $this->redirect('this');
             };
 
@@ -181,19 +186,19 @@ class SongsPresenter extends BasePresenter
     {
         $form = $this->createForm();
 
-        $form->addText('title', 'Název:')
-            ->setRequired('Název musíte zadat !')
-            ->addRule(Form::MIN_LENGTH, 'Délka musí být alespoň 3 znaky !', 3)
-            ->addRule(Form::MAX_LENGTH, 'Délka může být maximálně 20 znaků !', 40);
+        $form->addText('title', 'songs.form.title')
+            ->setRequired('songs.form.title_required')
+            ->addRule(Form::MIN_LENGTH, 'songs.form.title_min_length', 3)
+            ->addRule(Form::MAX_LENGTH, 'songs.form.title_max_length', 40);
 
-        $form->addText('author', 'Autor:')
-            ->setRequired('Autora musíte zadat !')
-            ->addRule(Form::MAX_LENGTH, 'Délka nesmí překročit 30 znaků !', 40);
+        $form->addText('author', 'songs.form.author')
+            ->setRequired('songs.form.author_required')
+            ->addRule(Form::MAX_LENGTH, 'songs.form.author_max_length', 40);
 
-        $form->addCheckbox('active', 'Aktivní:')
+        $form->addCheckbox('active', 'songs.form.active')
             ->setDefaultValue(true);
 
-        $form->addSubmit('send', 'Uložit úpravy');
+        $form->addSubmit('send', 'songs.form.save');
         $form->addProtection('form.csrf_expired');
         return $form;
     }
@@ -205,7 +210,7 @@ class SongsPresenter extends BasePresenter
 
         $this->addUploadControls($form, SongFileStorage::CATEGORY_CHOIR_SHEET_MUSIC);
 
-        $form->addSubmit('send', 'Přidat soubor');
+        $form->addSubmit('send', 'songs.files.upload');
         $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'uploadFormSucceeded'];
 
@@ -218,7 +223,7 @@ class SongsPresenter extends BasePresenter
         $form = $this->createForm();
 
         $this->addUploadControls($form, SongFileStorage::CATEGORY_ORCHESTRA_SHEET_MUSIC);
-        $form->addSubmit('send', 'Přidat soubor');
+        $form->addSubmit('send', 'songs.files.upload');
         $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'uploadFormSucceeded'];
 
@@ -231,7 +236,7 @@ class SongsPresenter extends BasePresenter
         $form = $this->createForm();
 
         $this->addUploadControls($form, SongFileStorage::CATEGORY_RECORDINGS);
-        $form->addSubmit('send', 'Přidat soubor');
+        $form->addSubmit('send', 'songs.files.upload');
         $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'uploadFormSucceeded'];
 
@@ -254,10 +259,10 @@ class SongsPresenter extends BasePresenter
                 $values->category,
                 $values->description,
             );
-            $this->flashMessage($this->translator->translate('common.record_created'), 'alert-success');
+            $this->flashMessage($this->translator->translate('songs.files.flash.uploaded'), 'alert-success');
             $this->redirect('this');
         } catch (InvalidArgumentException $exception) {
-            $form->addError($exception->getMessage());
+            $form->addError($this->translator->translate($exception->getMessage()));
         }
     }
 
@@ -270,7 +275,7 @@ class SongsPresenter extends BasePresenter
         $songFile = $this->getSongFile($songFileId);
         $filePath = $this->songFileStorage->getFilePath($songFile);
         if (!is_file($filePath)) {
-            $this->error('Soubor nebyl nalezen');
+            $this->error($this->translator->translate('songs.files.not_found'));
         }
         $this->sendResponse(new FileResponse($filePath));
     }
@@ -279,12 +284,15 @@ class SongsPresenter extends BasePresenter
     {
         return new Multiplier(function (string $id): Form {
             $form = $this->createForm();
-            $form->addSubmit('send', 'Smazat');
+            $form->addSubmit('send', 'common.delete');
             $form->addProtection('form.csrf_expired');
             $form->onSuccess[] = function () use ($id): void {
                 $this->assertAdmin();
                 $this->songFileStorage->delete($this->getSongFile((int) $id));
-                $this->flashMessage('Soubor byl smazán!', 'alert-warning');
+                $this->flashMessage(
+                    $this->translator->translate('songs.files.flash.deleted'),
+                    'alert-warning',
+                );
 
                 $this->redirect('this');
             };
@@ -305,12 +313,16 @@ class SongsPresenter extends BasePresenter
 
     private function addUploadControls(Form $form, string $category): void
     {
-        $form->addUpload('fileUpload', 'Soubor:')
-            ->setRequired('Soubor musíte vybrat.')
-            ->addRule(Form::MAX_FILE_SIZE, 'Soubor je příliš velký.', SongFileStorage::MAX_UPLOAD_SIZE);
-        $form->addText('description', 'Popis souboru:')
-            ->setRequired()
-            ->addRule(Form::MAX_LENGTH, 'Popis je příliš dlouhý.', 150);
+        $form->addUpload('fileUpload', 'songs.files.form.file')
+            ->setRequired('songs.files.form.file_required')
+            ->addRule(
+                Form::MAX_FILE_SIZE,
+                'songs.files.error.size_exceeded',
+                SongFileStorage::MAX_UPLOAD_SIZE,
+            );
+        $form->addText('description', 'songs.files.form.description')
+            ->setRequired('songs.files.form.description_required')
+            ->addRule(Form::MAX_LENGTH, 'songs.files.form.description_max_length', 150);
         $form->addHidden('category', $category);
     }
 
@@ -318,7 +330,7 @@ class SongsPresenter extends BasePresenter
     {
         $songFile = $this->entityManager->getRepository(SongFile::class)->find($id);
         if ($songFile === null) {
-            $this->error('Soubor nebyl nalezen');
+            $this->error($this->translator->translate('songs.files.not_found'));
         }
 
         return $songFile;
