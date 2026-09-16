@@ -148,9 +148,11 @@ SFTP credentials must be configured before use. Deployment is designed not to
 transfer or delete local configuration, uploads, photographs, logs, temporary
 data, or database data. See [`docs/deployment.md`](docs/deployment.md).
 
-The legacy GitLab deployment remains until the GitHub workflow is verified on
-staging and production. Do not change targets or run production migrations
-without explicit operational approval.
+GitHub is the only active source for development, issues, and pull requests.
+The historical GitLab deployment is a restricted transition fallback: freeze
+it before the first GitHub production run and retire it after the new workflow
+and recovery procedure are verified. Do not change targets or run production
+migrations without explicit operational approval.
 
 ### Licence
 
@@ -295,9 +297,11 @@ produkční prostředí a SFTP přístup s minimálními právy. Nasazení nepř
 nemaže lokální konfiguraci, uploady, fotografie, logy, dočasná či databázová
 data. Viz [`docs/deployment.md`](docs/deployment.md).
 
-Původní GitLab deployment zůstává zachovaný, dokud se GitHub workflow neověří
-na stagingu a v produkci. Bez výslovného schválení neměňte cíle nasazení ani
-nespouštějte produkční migrace.
+GitHub je jediným aktivním zdrojem pro vývoj, issues a pull requesty. Historický
+GitLab deployment je jen omezená přechodová záloha: před prvním produkčním
+nasazením z GitHubu jej zmrazte a po ověření nového workflow a obnovy jej
+vyřaďte. Bez výslovného schválení neměňte cíle nasazení ani nespouštějte
+produkční migrace.
 
 ### Licence
 

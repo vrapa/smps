@@ -131,17 +131,17 @@ and [hosting feature list](https://www.webglobe.cz/webhosting), checked 2026-09-
 
 ## 2. Make GitHub the sole development source
 
-- [ ] Identify the last synchronized source trees and reconcile only reviewed
+- [x] Identify the last synchronized source trees and reconcile only reviewed
   pending changes; verify the public tree and commit author identity.
-- [ ] Verify a complete confidential GitLab backup, including refs, and identify
+- [x] Verify a complete confidential GitLab backup, including refs, and identify
   any issues, CI settings, or other service metadata requiring separate retention.
-- [ ] Choose a clean GitHub checkout as the development workspace. Preserve all
+- [x] Choose a clean GitHub checkout as the development workspace. Preserve all
   ignored local configuration and runtime data in the existing workspace;
   prepare local setup separately without publishing or bulk copying it.
-- [ ] Recheck `main` protection, required checks, PR workflow, Actions permissions,
+- [x] Recheck `main` protection, required checks, PR workflow, Actions permissions,
   and the public `noreply` commit identity. Remove operational dependence on the
   old development branch and two-repository copying instructions.
-- [ ] Reconcile `AGENTS.md`, README, contribution instructions, and linked plans
+- [x] Reconcile `AGENTS.md`, README, contribution instructions, and linked plans
   with the actual Doctrine, lock-file, CI, and deployment state.
 - [ ] Record a GitLab development freeze. Inventory its triggers, schedules, and
   credentials; establish a controlled deployment handover so both providers
@@ -151,6 +151,20 @@ and [hosting feature list](https://www.webglobe.cz/webhosting), checked 2026-09-
 Gate: the next implementation commit is developed, reviewed, and merged only
 on GitHub. Completing translations is not a prerequisite for this cutover.
 Archiving the old service and revoking its credentials happen in milestone 9.
+
+Current status (2026-09-16): the reviewed private and public tips resolve to
+the same tree `58494f0bbfc00458168d12fe6b3f3556505a00d7`. A confidential backup
+retains all four local branches and their remote-tracking refs; the unrelated
+invalid zero-valued Codex checkpoint ref is not a source ref. The existing
+workspace now uses the public GitHub metadata on `main`, while ignored local
+configuration, Phinx configuration, and `www/dokumenty` remain in place.
+GitHub is public, `main` has strict required CI checks, administrator enforcement,
+linear history, conversation resolution, and force-push/deletion protection;
+Actions has read-only default token permissions. The approved GitHub `noreply`
+identity is configured. This cutover update is developed only on a GitHub branch.
+The remaining milestone-2 action is to freeze and inventory GitLab deployment
+triggers and credentials before the production handover; GitLab is no longer a
+development source.
 
 ## 3. Complete translations in three reviewable increments
 

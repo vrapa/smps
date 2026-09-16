@@ -1,12 +1,12 @@
 # Contributing to SMPS
 
 Děkujeme za pomoc s projektem. Než začnete, přečtěte si instalační a testovací
-pokyny v [`README.md`](README.md) a aktuální omezení v
-[`docs/public-release-plan.md`](docs/public-release-plan.md).
+pokyny v [`README.md`](README.md) a aktuální stav v
+[`docs/completion-plan.md`](docs/completion-plan.md).
 
 ## Vývojový postup
 
-1. Vytvořte krátkou větev z aktuální vývojové větve.
+1. Vytvořte krátkou větev z aktuálního `main` ve veřejném GitHub repozitáři.
 2. Udržujte změnu úzce zaměřenou a neměňte nesouvisející legacy kód.
 3. Doplňte nebo upravte testy pro měněné chování.
 4. Spusťte kontrolní sadu uvedenou v README.
@@ -19,8 +19,9 @@ Commitujte záměrné, samostatně kontrolovatelné kroky. Necommitujte vygenero
 ## Jazyk a styl
 
 - Identifikátory zdrojového kódu, komentáře a vývojářské zprávy pište anglicky.
-- České texty uživatelského rozhraní a zavedené doménové názvy zachovejte,
-  pokud změna výslovně neřeší copywriting.
+- Uživatelské rozhraní používá sémantické překladové klíče. Každou změnu klíčů
+  proveďte současně v katalozích `cs`, `en`, `de` a `nl`; uživatelský obsah
+  nepřekládejte.
 - Dodržujte strukturu a styl sousedních souborů. Nové PHP soubory mají používat
   `declare(strict_types=1);`, pokud je to slučitelné s okolním kódem.
 - Hromadné formátování nebo refaktoring nespojujte s funkční změnou.
