@@ -75,9 +75,9 @@ final class PresenterFormTest extends DatabaseTestCase
         self::assertSame('Form Admin', $userForm['displayName']->getValue());
         self::assertSame([1], $userForm['roleIds']->getValue());
         self::assertSame([
-            1 => 'admin',
-            3 => 'guest',
-            2 => 'user',
+            1 => 'Administrátor',
+            3 => 'Čtenář',
+            2 => 'Uživatel',
         ], $userForm['roleIds']->getItems());
 
         $loginPresenter = $this->runPresenter('Authentication', 'login');
