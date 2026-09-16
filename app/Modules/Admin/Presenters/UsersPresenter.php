@@ -44,11 +44,11 @@ class UsersPresenter extends BasePresenter
     protected function startup(): void
     {
         parent::startup();
-        $this->pageName = 'Seznam uživatelů';
-        $this->showPageName = 'Uživatel';
+        $this->pageName = $this->translator->translate('users.page.list');
+        $this->showPageName = $this->translator->translate('users.page.show');
 
         if (!$this->getUser()->isInRole('admin')) {
-            $this->flashMessage('Vstup do této sekce je umožněn pouze pro admina !', 'alert-success');
+            $this->flashMessage($this->translator->translate('users.admin_only'), 'alert-danger');
             $this->redirect('Authentication:login', ['backlink' => $this->storeRequest()]);
         }
     }
@@ -81,10 +81,15 @@ class UsersPresenter extends BasePresenter
         ]);
     }
 
+    public function renderCreate(): void
+    {
+        $this->getTemplate()->pageName = $this->translator->translate('users.page.create');
+    }
+
     public function renderEdit(int $id): void
     {
 
-        $this->getTemplate()->pageName = $this->showPageName . ' - úpravy';
+        $this->getTemplate()->pageName = $this->translator->translate('users.page.edit');
 
         $this->getTemplate()->editedUser = $this->getUserEntity($id);
     }
@@ -92,7 +97,7 @@ class UsersPresenter extends BasePresenter
     public function renderShow(int $id): void
     {
 
-        $this->getTemplate()->pageName = $this->showPageName . ' - náhled';
+        $this->getTemplate()->pageName = $this->showPageName;
 
         $this->getTemplate()->displayedUser = $this->getUserEntity($id);
     }
@@ -101,7 +106,7 @@ class UsersPresenter extends BasePresenter
     {
         $form = $this->getFormBase();
 
-        $form->addSubmit('send', 'Uložit úpravy');
+        $form->addSubmit('send', 'users.form.save');
         $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'editFormSucceeded'];
 
@@ -121,22 +126,22 @@ class UsersPresenter extends BasePresenter
 
         $this->userService->saveUser($user, $values->roleIds);
 
-        $this->flashMessage($this->translator->translate('common.record_updated'), 'alert-success');
+        $this->flashMessage($this->translator->translate('users.flash.updated'), 'alert-success');
     }
 
     protected function createComponentCreateForm(): Form
     {
         $form = $this->getFormBase();
 
-        $form->addPassword('password', 'Heslo:')
-            ->setRequired('Zvolte si heslo')
-            ->addRule(Form::MIN_LENGTH, 'Heslo musí mít alespoň %d znaky', 6);
+        $form->addPassword('password', 'users.form.password')
+            ->setRequired('users.form.password_required')
+            ->addRule(Form::MIN_LENGTH, 'users.form.password_min_length', 6);
 
-        $form->addPassword('passwordVerify', 'Heslo pro kontrolu:')
-            ->setRequired('Zadejte prosím heslo ještě jednou pro kontrolu')
-            ->addRule(Form::EQUAL, 'Hesla se neshodují', $form['password']);
+        $form->addPassword('passwordVerify', 'users.form.password_verify')
+            ->setRequired('users.form.password_verify_required')
+            ->addRule(Form::EQUAL, 'users.form.password_mismatch', $form['password']);
 
-        $form->addSubmit('send', 'Uložit úpravy');
+        $form->addSubmit('send', 'users.form.save');
         $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'createFormSucceeded'];
 
@@ -157,7 +162,7 @@ class UsersPresenter extends BasePresenter
 
         $this->userService->saveUser($user, $values->roleIds);
 
-        $this->flashMessage($this->translator->translate('common.record_created'), 'alert-success');
+        $this->flashMessage($this->translator->translate('users.flash.created'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -166,7 +171,7 @@ class UsersPresenter extends BasePresenter
     {
         return new Multiplier(function (string $id): Form {
             $form = $this->createForm();
-            $form->addSubmit('send', 'Smazat');
+            $form->addSubmit('send', 'common.delete');
             $form->addProtection('form.csrf_expired');
             $form->onSuccess[] = function () use ($id): void {
                 $userId = (int) $id;
@@ -174,12 +179,12 @@ class UsersPresenter extends BasePresenter
                     throw new \Exception($this->translator->translate('common.permission_denied'));
                 }
                 if ((int) $this->getUser()->getId() === $userId) {
-                    $this->flashMessage('Nemůžete smazat sami sebe!', 'alert-danger');
+                    $this->flashMessage($this->translator->translate('users.delete_self'), 'alert-danger');
                     $this->redirect('this');
                 }
 
                 $this->userService->deleteUser($this->getUserEntity($userId));
-                $this->flashMessage($this->translator->translate('common.record_deleted'), 'alert-success');
+                $this->flashMessage($this->translator->translate('users.flash.deleted'), 'alert-success');
                 $this->redirect('this');
             };
 
@@ -191,32 +196,35 @@ class UsersPresenter extends BasePresenter
     {
         $form = $this->createForm();
 
-        $form->addText('username', 'Uživatel:')
-            ->setRequired('Uživatele musíte zadat !')
-            ->addRule(Form::MIN_LENGTH, 'Délka musí být alespoň 3 znaky !', 3)
-            ->addRule(Form::MAX_LENGTH, 'Délka může být maximálně 20 znaků !', 20);
+        $form->addText('username', 'users.form.username')
+            ->setRequired('users.form.username_required')
+            ->addRule(Form::MIN_LENGTH, 'users.form.username_min_length', 3)
+            ->addRule(Form::MAX_LENGTH, 'users.form.username_max_length', 20);
 
-        $form->addText('name', 'Jméno:')
-            ->setRequired('Jméno musíte zadat !')
-            ->addRule(Form::MAX_LENGTH, 'Délka nesmí překročit 30 znaků !', 30);
+        $form->addText('name', 'users.form.name')
+            ->setRequired('users.form.name_required')
+            ->addRule(Form::MAX_LENGTH, 'users.form.name_max_length', 30);
 
-        $form->addText('surname', 'Příjmení:')
-            ->setRequired('Příjmení musíte zadat !')
-            ->addRule(Form::MAX_LENGTH, 'Délka nesmí překročit 30 znaků !', 30);
+        $form->addText('surname', 'users.form.surname')
+            ->setRequired('users.form.surname_required')
+            ->addRule(Form::MAX_LENGTH, 'users.form.surname_max_length', 30);
 
-        $form->addText('displayName', 'Název:')
-            ->setRequired('Název musíte zadat !')
-            ->addRule(Form::MAX_LENGTH, 'Délka nesmí překročit 30 znaků !', 30);
+        $form->addText('displayName', 'users.form.display_name')
+            ->setRequired('users.form.display_name_required')
+            ->addRule(Form::MAX_LENGTH, 'users.form.display_name_max_length', 30);
 
-        $form->addText('email', 'Email:')
-            ->addRule(Form::FILLED, 'Zadejte email')
-            ->addRule(Form::EMAIL, 'Email nemá správný formát');
+        $form->addText('email', 'users.form.email')
+            ->addRule(Form::FILLED, 'users.form.email_required')
+            ->addRule(Form::EMAIL, 'users.form.email_invalid');
 
         /** @var RoleRepository $roleRepository */
         $roleRepository = $this->entityManager->getRepository(Role::class);
 
-        $form->addCheckboxList('roleIds', 'Výběr rolí:', $roleRepository->findChoices())
-            ->setRequired('Musíte vybrat nějakou roli !');
+        $form->addCheckboxList(
+            'roleIds',
+            'users.form.roles',
+            $this->translateRoleChoices($roleRepository->findChoices()),
+        )->setRequired('users.form.roles_required');
 
         return $form;
     }
@@ -229,5 +237,23 @@ class UsersPresenter extends BasePresenter
         }
 
         return $user;
+    }
+
+    /**
+     * @param array<int, string> $choices
+     * @return array<int, string>
+     */
+    private function translateRoleChoices(array $choices): array
+    {
+        foreach ($choices as $id => $code) {
+            $choices[$id] = match ($code) {
+                'admin' => $this->translator->translate('roles.admin'),
+                'user' => $this->translator->translate('roles.user'),
+                'guest' => $this->translator->translate('roles.guest'),
+                default => $code,
+            };
+        }
+
+        return $choices;
     }
 }

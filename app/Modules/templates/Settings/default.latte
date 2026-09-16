@@ -8,7 +8,7 @@
 
             <nav class="navbar">
                 <ul class="nav navbar-nav">
-                    <li><a n:href="edit">Změna nastavení uživatele</a></li>
+                    <li><a n:href="edit">{_'settings.edit_link'}</a></li>
                     {*<li><a href="#">Link</a></li>*}
                 </ul>
             </nav>
@@ -22,7 +22,7 @@
                         <tbody>
                         <tr>
                             <td>
-                                <span class="label label-default">Login:</span>
+                                <span class="label label-default">{_'users.list.username'}:</span>
                             </td>
                             <td>
                                 {$profileUser->getUsername()}
@@ -31,7 +31,7 @@
 
                         <tr>
                             <td>
-                                <span class="label label-default">Jmeno a příjmení:</span>
+                                <span class="label label-default">{_'settings.full_name'}:</span>
                             </td>
                             <td>
                                 {$profileUser->getName()} {$profileUser->getSurname()}
@@ -39,7 +39,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <span class="label label-default">Mail:</span>
+                                <span class="label label-default">{_'users.form.email'}</span>
                             </td>
                             <td>
                                 {$profileUser->getEmail()}
@@ -47,10 +47,10 @@
                         </tr>
                         <tr>
                             <td>
-                                <span class="label label-default">Posílání notifikací:</span>
+                                <span class="label label-default">{_'settings.notifications'}:</span>
                             </td>
                             <td>
-                                {if $profileUser->areNotificationsEnabled()} <b>aktivní</b> {else} vypnuto {/if}
+                                {if $profileUser->areNotificationsEnabled()}<b>{_'settings.status.enabled'}</b>{else}{_'settings.status.disabled'}{/if}
                             </td>
                         </tr>
 

@@ -174,7 +174,7 @@ development source.
 - [x] Concerts and dates: complete stage 4 with locale-aware formatting and the
   configured timezone. Add an `intl` requirement only after verifying the
   development, CI, production, and any optional hosting staging environment.
-- [ ] Users, roles, and settings: complete stage 5, including password forms,
+- [x] Users, roles, and settings: complete stage 5, including password forms,
   validation, notifications, and translated labels for unchanged role codes.
 
 Gate for each increment: meaningful all-locale tests and required CI pass;

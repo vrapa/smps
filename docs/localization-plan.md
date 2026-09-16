@@ -198,16 +198,25 @@ requirement remains intentionally deferred until Webglobe has been verified.
 
 ## 5. Users, roles, and settings vertical slice
 
-- [ ] Translate user list/detail/create/edit/delete flows and password forms.
-- [ ] Translate display labels for stable role codes without changing the codes
+- [x] Translate user list/detail/create/edit/delete flows and password forms.
+- [x] Translate display labels for stable role codes without changing the codes
   stored in the database or used by authorization.
-- [ ] Translate notification settings and status values.
-- [ ] Verify that authorization decisions never depend on translated text.
-- [ ] Add all-locale tests for administration, self-delete protection,
+- [x] Translate notification settings and status values.
+- [x] Verify that authorization decisions never depend on translated text.
+- [x] Add all-locale tests for administration, self-delete protection,
   validation, password changes, and settings.
 
 Done when administrators and members can complete their workflows in the
 configured language with unchanged authorization semantics.
+
+Current status: complete. User administration, profile settings, password
+forms, validation, notification states, empty lists, and flash/permission
+messages use semantic keys in all four catalogues. Database role IDs and codes
+remain unchanged; only the known `admin`, `user`, and `guest` display labels
+are translated, while an unknown extension role is shown by its stable code.
+Authorization and self-delete protection still compare stable IDs/codes rather
+than translated labels. Four-locale tests cover field names, role IDs and
+labels, validation, password confirmation, and notification controls.
 
 ## 6. Completeness, translation review, and release
 

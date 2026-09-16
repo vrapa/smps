@@ -27,7 +27,7 @@ class SettingsPresenter extends BasePresenter
     protected function startup(): void
     {
         parent::startup();
-        $this->pageName = 'Nastavení';
+        $this->pageName = $this->translator->translate('settings.page.title');
     }
 
     public function actionDefault(): void
@@ -56,25 +56,25 @@ class SettingsPresenter extends BasePresenter
     {
         $form = $this->createForm();
 
-        $form->addText('name', 'Jméno:')
-            ->setRequired('Jméno musíte zadat !')
-            ->addRule(Form::MAX_LENGTH, 'Délka nesmí překročit 30 znaků !', 30);
+        $form->addText('name', 'users.form.name')
+            ->setRequired('users.form.name_required')
+            ->addRule(Form::MAX_LENGTH, 'users.form.name_max_length', 30);
 
-        $form->addText('surname', 'Příjmení:')
-            ->setRequired('Příjmení musíte zadat !')
-            ->addRule(Form::MAX_LENGTH, 'Délka nesmí překročit 30 znaků !', 30);
+        $form->addText('surname', 'users.form.surname')
+            ->setRequired('users.form.surname_required')
+            ->addRule(Form::MAX_LENGTH, 'users.form.surname_max_length', 30);
 
-        $form->addText('displayName', 'Název:')
-            ->setRequired('Název musíte zadat !')
-            ->addRule(Form::MAX_LENGTH, 'Délka nesmí překročit 30 znaků !', 30);
+        $form->addText('displayName', 'users.form.display_name')
+            ->setRequired('users.form.display_name_required')
+            ->addRule(Form::MAX_LENGTH, 'users.form.display_name_max_length', 30);
 
-        $form->addText('email', 'Email:')
-            ->addRule(Form::FILLED, 'Zadejte email')
-            ->addRule(Form::EMAIL, 'Email nemá správný formát');
+        $form->addText('email', 'users.form.email')
+            ->addRule(Form::FILLED, 'users.form.email_required')
+            ->addRule(Form::EMAIL, 'users.form.email_invalid');
 
-        $form->addCheckbox('notificationsEnabled', 'Notifikace mailem aktivní');
+        $form->addCheckbox('notificationsEnabled', 'settings.form.notifications_enabled');
 
-        $form->addSubmit('send', 'Uložit údaje');
+        $form->addSubmit('send', 'settings.form.save_profile');
         $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'profileFormSucceeded'];
         $this->formToBootstrap3($form);
@@ -93,7 +93,7 @@ class SettingsPresenter extends BasePresenter
         $this->entityManager->persist($profileUser);
         $this->entityManager->flush();
 
-        $this->flashMessage('Změna byla uložena.', 'alert-success');
+        $this->flashMessage($this->translator->translate('settings.flash.profile_saved'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -102,15 +102,15 @@ class SettingsPresenter extends BasePresenter
     {
         $form = $this->createForm();
 
-        $form->addPassword('password', 'Nové heslo:')
-            ->setRequired('Zvolte si heslo')
-            ->addRule(Form::MIN_LENGTH, 'Heslo musí mít alespoň %d znaky', 6);
+        $form->addPassword('password', 'settings.form.new_password')
+            ->setRequired('users.form.password_required')
+            ->addRule(Form::MIN_LENGTH, 'users.form.password_min_length', 6);
 
-        $form->addPassword('passwordVerify', 'Heslo pro kontrolu:')
-            ->setRequired('Zadejte prosím heslo ještě jednou pro kontrolu')
-            ->addRule(Form::EQUAL, 'Hesla se neshodují', $form['password']);
+        $form->addPassword('passwordVerify', 'users.form.password_verify')
+            ->setRequired('users.form.password_verify_required')
+            ->addRule(Form::EQUAL, 'users.form.password_mismatch', $form['password']);
 
-        $form->addSubmit('send', 'Uložit změnu hesla');
+        $form->addSubmit('send', 'settings.form.save_password');
         $form->addProtection('form.csrf_expired');
         $form->onSuccess[] = [$this, 'passwordFormSucceeded'];
 
@@ -127,7 +127,7 @@ class SettingsPresenter extends BasePresenter
         $this->entityManager->persist($profileUser);
         $this->entityManager->flush();
 
-        $this->flashMessage('Změna hesla byla uložena.', 'alert-success');
+        $this->flashMessage($this->translator->translate('settings.flash.password_saved'), 'alert-success');
         $this->redirect('default');
     }
 }
