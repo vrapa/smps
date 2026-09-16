@@ -100,7 +100,10 @@ php bin/console list
 User uploads are stored at runtime in the ignored `www/dokumenty` directory.
 Choir photographs for the home-page carousel are managed outside the
 repository in ignored `www/images/carousel`. These deployment-excluded runtime
-directories must not be deleted during installation or deployment.
+directories must not be deleted during installation or deployment. The
+carousel discovers top-level JPEG, PNG, and WebP files at runtime; when the
+directory is absent or empty, the dashboard shows a localized welcome instead
+of broken image links.
 
 ### Public repository content and privacy
 
@@ -262,7 +265,9 @@ php bin/console list
 Uživatelské uploady se ukládají do ignorovaného `www/dokumenty`. Sborové
 fotografie pro carousel se spravují mimo repozitář v ignorovaném
 `www/images/carousel`. Jde o runtime data vyloučená z nasazení a při instalaci
-ani nasazení se nesmějí mazat.
+ani nasazení se nesmějí mazat. Carousel za běhu načte soubory JPEG, PNG a WebP
+přímo z tohoto adresáře; pokud adresář chybí nebo je prázdný, dashboard zobrazí
+lokalizované uvítání namísto nefunkčních obrázků.
 
 ### Veřejný obsah a soukromí
 

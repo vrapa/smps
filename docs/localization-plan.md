@@ -238,6 +238,15 @@ labels, validation, password confirmation, and notification controls.
 - [ ] Change production locale only through protected configuration after an
   explicitly approved deployment; verify the chosen language and rollback.
 
+Current status (2026-09-16): automated presenter acceptance now renders the
+real login page, navigation shell, protected-dashboard redirect, authenticated
+dashboard, forwarded 403/404/405/410/generic 4xx responses, and the 500 callback
+in all four locales. It also verifies the localized empty-dashboard fallback
+used when installation-specific carousel
+photographs are absent. Remaining acceptance covers maintenance 503 delivery,
+submitted validation/CSRF paths, authenticated database-backed flows, responsive
+layout review, fluent-speaker review, and four-locale hosting staging.
+
 Done when CI enforces catalogue completeness, fluent-speaker review is
 recorded, and staging passes the full multilingual acceptance matrix.
 

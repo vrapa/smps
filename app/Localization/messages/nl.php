@@ -15,6 +15,7 @@ return [
     'auth.logout.title' => 'U bent afgemeld',
     'carousel.photo' => 'Foto van het koor',
     'carousel.slide' => 'Dia {number}',
+    'dashboard.welcome' => 'Welkom bij {applicationName}.',
     'common.actions' => 'Acties',
     'common.add_item' => 'Item toevoegen',
     'common.back_to_list' => 'Terug naar de lijst',

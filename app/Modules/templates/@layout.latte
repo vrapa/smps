@@ -71,7 +71,7 @@
 
 <main>
 
-    {if $presenter->isLinkCurrent(':Dashboard:*')}
+    {if $presenter->isLinkCurrent(':Dashboard:*') && isset($carouselImages) && $carouselImages}
         <style>
             .carousel .carousel-item {
                 height: 600px;
@@ -87,32 +87,30 @@
         </style>
         <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-indicators">
-                <button type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide-to="0" class="active"
-                        aria-current="true" aria-label="{_'carousel.slide', number: 1}"></button>
-                <button type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide-to="1"
-                        aria-label="{_'carousel.slide', number: 2}"></button>
-                <button type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide-to="2"
-                        aria-label="{_'carousel.slide', number: 3}"></button>
+                <button n:foreach="$carouselImages as $image" type="button"
+                        data-bs-target="#carouselExampleAutoplaying"
+                        data-bs-slide-to="{$iterator->counter - 1}"
+                        n:class="$iterator->first ? active"
+                        aria-current="{$iterator->first ? 'true' : null}"
+                        aria-label="{_'carousel.slide', number: $iterator->counter}"></button>
             </div>
             <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <img src="/images/carousel/P1020497.JPG" class="d-block w-100" alt="{_'carousel.photo'}">
-                </div>
-                <div class="carousel-item">
-                    <img src="/images/carousel/P1020483.JPG" class="d-block w-100" alt="{_'carousel.photo'}">
-                </div>
-                <div class="carousel-item">
-                    <img src="/images/carousel/IMG_20230626_184937974.jpg" class="d-block w-100" alt="{_'carousel.photo'}">
+                <div n:foreach="$carouselImages as $image" n:class="carousel-item, $iterator->first ? active">
+                    <img src="{$basePath}/images/carousel/{$image}" class="d-block w-100" alt="{_'carousel.photo'}">
                 </div>
             </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">{_'pagination.previous'}</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">{_'pagination.next'}</span>
-            </button>
+            {if count($carouselImages) > 1}
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying"
+                        data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">{_'pagination.previous'}</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying"
+                        data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">{_'pagination.next'}</span>
+                </button>
+            {/if}
         </div>
     {/if}
 

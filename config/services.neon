@@ -15,4 +15,5 @@ services:
 	- App\Services\UserService
 	- App\Services\ConcertSongService
 	- App\Services\SongFileStorage
+	- App\Services\CarouselImageProvider(%carouselDirectory%)
 	- App\Services\MailService

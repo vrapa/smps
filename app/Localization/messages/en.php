@@ -15,6 +15,7 @@ return [
     'auth.logout.title' => 'You have been signed out',
     'carousel.photo' => 'Choir photograph',
     'carousel.slide' => 'Slide {number}',
+    'dashboard.welcome' => 'Welcome to {applicationName}.',
     'common.actions' => 'Actions',
     'common.add_item' => 'Add item',
     'common.back_to_list' => 'Back to list',
