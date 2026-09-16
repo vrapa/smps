@@ -9,6 +9,30 @@ the earlier plans. Detailed localization checklists remain in
 This planning change does not activate hosting services, change credentials,
 run migrations, deploy production, or archive either repository.
 
+## Confirmed production target and acceptable downtime
+
+The owner confirmed on 2026-09-16 that the existing production application runs
+on Webglobe at [https://smps.rkcomputer.cz](https://smps.rkcomputer.cz).
+GitHub deployment will update that installation in place, preserving its users,
+database, local configuration, photographs, and uploaded documents.
+The public website address does not determine the SFTP host or remote path;
+verify those separately before uploading.
+
+A planned outage during deployment is acceptable. Use a straightforward
+maintenance window: stop application traffic/writes, take a consistent backup,
+upload the tested application and dependencies, apply any separately authorized
+configuration/schema changes, refresh cache, verify the application, then reopen
+the site. If the update fails, keep maintenance enabled while restoring the
+previous compatible version. There is no zero-downtime requirement or fixed
+maximum outage agreed here.
+
+Atomic release switching, permanent staging infrastructure, automated failover,
+and production-grade availability engineering are not prerequisites. Prefer
+existing local/CI test environments; use temporary hosting staging if convenient.
+Keep practical safeguards: recoverable backups, verified encrypted transfer,
+protection of private/runtime data, and a usable rollback procedure. Accepting
+downtime does not authorize data loss or deployment as part of this planning edit.
+
 ## Final state and completion criteria
 
 - [ ] `vrapa/smps` on GitHub is the sole active source repository. All development,
@@ -23,10 +47,10 @@ run migrations, deploy production, or archive either repository.
 - [ ] The complete UI works in Czech, English, German, and Dutch, selected through
   `parameters.locale`, with Czech as the installation default. User content and
   stored role/category identifiers remain unchanged.
-- [ ] A tested GitHub artifact can be deployed to Webglobe staging and production
+- [ ] A tested GitHub artifact can update the existing Webglobe production site
   through a documented, repeatable workflow with protected credentials.
 - [ ] Deployment preserves configuration, uploads, photographs, logs, and database
-  contents; application rollback has been demonstrated on staging and the
+  contents; application rollback has been rehearsed in an isolated test environment and the
   production recovery procedure is ready and verified.
 - [ ] The final multilingual release is running on production and its critical
   workflows have passed the post-deployment checks.
@@ -73,7 +97,8 @@ storage; public progress notes contain only sanitized results.
 
 ## 1. Verify the Webglobe hosting contract
 
-- [ ] Establish the actual hosting product/platform and available staging target.
+- [ ] Establish the actual hosting product/platform serving `smps.rkcomputer.cz`.
+  Check whether temporary hosting staging is easy to provide; it is optional.
   Record privately the application root, document root, protocol, port, account
   restrictions, and host identity. Do not infer them from the old FTP pipeline.
 - [ ] Verify noninteractive SFTP and key authentication from the runner network,
@@ -86,7 +111,8 @@ storage; public progress notes contain only sanitized results.
 - [ ] Check the actual web and CLI PHP versions and extensions, especially
   `pdo_mysql`, `intl`, `mbstring`, and `fileinfo`, against the locked application
   requirements. Check memory, execution/upload limits, timezone, OPcache, disk
-  quota, filesystem permissions, rename/symlink support, and database version.
+  quota, filesystem permissions, and database version. Symlink support is only
+  relevant if it simplifies this installation; it is not required.
 - [ ] Verify how the host serves `www/index.php`, honours rewrite/access rules,
   and prevents HTTP access to configuration, vendor code, logs, and backups.
 - [ ] Select the release activation strategy from milestone 6 using these facts.
@@ -133,7 +159,7 @@ Archiving the old service and revoking its credentials happen in milestone 9.
   empty states. Keep existing storage paths and category codes stable.
 - [ ] Concerts and dates: complete stage 4 with locale-aware formatting and the
   configured timezone. Add an `intl` requirement only after verifying the
-  development, CI, staging, and production environments.
+  development, CI, production, and any optional hosting staging environment.
 - [ ] Users, roles, and settings: complete stage 5, including password forms,
   validation, notifications, and translated labels for unchanged role codes.
 
@@ -184,8 +210,8 @@ scans and the content review. Old private history remains confidential.
 
 ## 6. Implement a complete Webglobe deployment and recovery workflow
 
-- [ ] Configure separate `staging` and `production` environments with restricted
-  deployment branches and environment-scoped credentials. Agree the reviewer
+- [ ] Configure a `production` environment with restricted deployment branches
+  and environment-scoped credentials; add `staging` only if used. Agree the reviewer
   arrangement with the owner: preventing self-review requires another eligible
   approver and must not leave a single-maintainer project unable to deploy.
 - [ ] Use a deployment account scoped as narrowly as the hosting supports. Treat
@@ -197,37 +223,42 @@ scans and the content review. Old private history remains confidential.
   commit and artifact digest; select revisions from protected `main`, including
   an explicitly chosen earlier revision for rollback. Do not rebuild dependencies
   or run Composer update on production. Fork PRs receive no deployment secrets.
-- [ ] Use one tested artifact for staging and production. Make artifact lookup
+- [ ] Deploy the same artifact that passed CI and the isolated rehearsal; reuse
+  it on hosting staging if available. Make artifact lookup
   explicit about repository and run ID; the existing download command runs
   without a checkout and must be checked in that context.
-- [ ] Prefer isolated release directories and an atomic activation if supported.
-  Persist configuration/uploads/logs outside disposable releases and explicitly
-  test how application-relative upload paths attach to persistent storage.
-  Any existing-data relocation needs its own reviewed backup and migration step.
-- [ ] If atomic activation is unavailable, implement tested maintenance-mode
-  deployment with upload verification, controlled activation, and failure recovery.
-  Do not serve a mix of old application code and new vendor files during transfer.
+- [ ] Implement in-place deployment during a planned maintenance window. Keep
+  existing configuration and upload locations, block application requests/writes
+  independently of the code being replaced, and verify uploaded files before
+  reopening the site. Do not require data relocation or a release-directory redesign.
+- [ ] Provide a simple recovery path: keep maintenance enabled on failure, restore
+  the backed-up compatible code/dependencies and refresh cache, then verify before
+  reopening. A manual recovery during the outage is acceptable.
 - [ ] Add deployment serialization, disk/permission preflight, a release manifest,
-  cache invalidation or per-release cache, and hosting-appropriate OPcache handling.
+  targeted application-cache invalidation, and hosting-appropriate OPcache handling.
   No public cache-clearing or migration endpoint is introduced.
-- [ ] Reconcile obsolete code using the previous release manifest, or by switching
-  complete releases. A no-delete overlay leaves obsolete files behind and does
+- [ ] Reconcile obsolete code using the previous release manifest. A no-delete
+  overlay leaves obsolete files behind and does
   not by itself provide an exact rollback. Never use broad mirror deletion.
 - [ ] Add health checks and a deployed-revision record without sensitive output;
   failed activation leaves or restores the last working compatible version.
-- [ ] Retain the current and at least two previous tested artifacts/manifests for
-  at least 90 days in suitable storage, subject to host/account limits. Preserve
-  private configuration/database/upload backups separately and verify restoration.
+- [ ] Keep the new artifact and at least the last working production version,
+  including its manifest, outside short-lived CI retention. Back up the actual
+  current hosting version before the first update; it may predate the GitHub
+  releases. Preserve private configuration/database/upload backups separately and
+  verify restoration. A simple private backup location is sufficient.
 
-Gate: a staging dry run demonstrates protected-path preservation, exact revision
+Gate: an isolated rehearsal demonstrates protected-path preservation, exact revision
 identity, interrupted-upload recovery, stale-file handling, and application
 rollback. This milestone updates both workflows and [deployment.md](deployment.md).
 
-## 7. Rehearse on isolated Webglobe staging
+## 7. Rehearse in an isolated test environment
 
-- [ ] Provision staging with separate config, database, storage and credentials;
-  prevent indexing and production notifications. Use synthetic data and generated
-  documents rather than production dumps, photographs, or copyrighted scores.
+- [ ] Use an isolated local/CI environment with separate config, database and
+  storage. If a temporary Webglobe staging target is easy to provide, use it for
+  additional hosting checks; a permanent staging site is not a release requirement.
+  Disable real notifications and prevent indexing of any hosted test site. Use
+  synthetic data and generated documents rather than production data or scores.
 - [ ] Verify fresh schema installation and rehearse the upgrade path against a
   synthetic database matching the existing schema and migration history.
 - [ ] Test the known pending schema/configuration transition: obsolete `database:`
@@ -238,32 +269,38 @@ rollback. This milestone updates both workflows and [deployment.md](deployment.m
   and concert flows, upload/download/delete, pagination, dates, and error responses.
 - [ ] Check unauthenticated access to upload URLs as well as presenter download
   authorization. If direct file access bypasses authentication, fix it before
-  production acceptance. Test actual hosting rewrite/access rules.
+  production acceptance. Test actual hosting rewrite/access rules on temporary
+  hosting staging or during the production maintenance window before reopening.
 - [ ] Demonstrate rollback to the previous artifact, then redeploy the candidate;
   include a newly added code file to prove obsolete files do not survive rollback.
 - [ ] Simulate failure before activation and verify existing runtime data survives.
 
-Gate: record tested SHA/digest, test outcomes, transport/activation method and
-recovery result. Keep hosting identifiers and operational evidence private where
-necessary. Green GitHub CI alone does not close this gate.
+Gate: record tested SHA/digest, test outcomes, update method and recovery result.
+If rehearsal was local, explicitly carry hosting-specific checks into milestone 8.
+Keep private connection details and operational evidence outside public records.
 
 ## 8. Perform the production handover
 
 - [ ] Prepare an owner-reviewed runbook naming the exact tested release, target,
   maintenance window, verified backups, smoke tests, and rollback decision point.
+  The target is the existing `https://smps.rkcomputer.cz` installation. Plan for
+  downtime covering backup, transfer, any approved migrations, and verification.
 - [ ] Confirm the last GitLab job has finished and freeze its deployment triggers
   before starting GitHub production deployment. Avoid two independent deployers.
-- [ ] Back up production config, application release, database, and uploads; verify
+- [ ] Enable maintenance and stop application/background writes, then back up
+  production config, application release, database, and uploads; verify
   restore access. Confirm the required database migration versions and compatibility
   with both the new release and the rollback release.
 - [ ] Apply separately authorized configuration cleanup and CLI migrations, if
   needed. Deployment does not silently run schema changes; database restore is a
   distinct operation and must account for writes since the backup.
-- [ ] Deploy the staging-tested artifact through the protected production workflow.
+- [ ] Deploy the tested artifact in place through the protected production workflow.
   Preserve `locale: cs` unless an installation-language change is requested.
-- [ ] Verify login, roles, representative data, songs/concerts, upload/download,
-  settings, cache, and permissions; observe error logs for at least one normal
-  operating day. Use only an agreed disposable record for production write checks.
+- [ ] Verify startup, login, roles, representative data, songs/concerts,
+  upload/download, settings, cache, and permissions. Complete hosting-specific
+  checks carried over from rehearsal, then disable maintenance and confirm the
+  public URL works. Briefly review error logs; a mandatory full-day observation
+  period is not a prerequisite. Use an agreed disposable record for write checks.
 - [ ] Record deployment outcome and rollback readiness. If acceptance fails, execute
   the prepared compatible rollback and keep this milestone open.
 
@@ -291,8 +328,10 @@ Start milestones 1 and 2, then complete the three translation increments.
 Deployment implementation can proceed once hosting capabilities are verified.
 Milestones 4–7 must pass before production handover; retire GitLab last.
 
-Inputs needed at the relevant operational step: the exact Webglobe service and
-available access method, a staging target, the production approver arrangement,
-and the release/maintenance window. Collect connection credentials via protected
+The production URL and acceptance of planned downtime are confirmed. Inputs
+needed at the relevant operational step: the exact Webglobe service and access
+method, the production approver arrangement, and the release/maintenance window.
+An optional temporary staging target may be used if readily available.
+Collect connection credentials via protected
 configuration, never by adding them to this plan. No such input is required to
 finish planning or continue application translation work.
