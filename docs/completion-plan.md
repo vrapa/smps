@@ -171,7 +171,7 @@ development source.
 - [x] Songs and files: complete localization-plan stage 3, including upload
   validation, permission failures, categories, deletion/download controls, and
   empty states. Keep existing storage paths and category codes stable.
-- [ ] Concerts and dates: complete stage 4 with locale-aware formatting and the
+- [x] Concerts and dates: complete stage 4 with locale-aware formatting and the
   configured timezone. Add an `intl` requirement only after verifying the
   development, CI, production, and any optional hosting staging environment.
 - [ ] Users, roles, and settings: complete stage 5, including password forms,

@@ -24,16 +24,16 @@
                                 <tbody>
                                 <tr>
                                     <td>
-                                        <span class="label label-default">Datum a čas koncertu:</span>
+                                        <span class="label label-default">{_'concerts.detail.date'}</span>
                                     </td>
                                     <td>
-                                         {$concert->getScheduledAt()|date:'j. n. Y H:i'}
+                                         {$dateTimeFormatter->formatConcertDate($concert->getScheduledAt())}
                                     </td>
                                 </tr>
 
                                 <tr>
                                     <td>
-                                        <span class="label label-default">Poznámka:</span>
+                                        <span class="label label-default">{_'concerts.form.note'}</span>
                                     </td>
                                     <td>
                                         {$concert->getNote()|breaklines}
@@ -42,8 +42,9 @@
                                 </tbody>
                             </table>
 
-                            <h5>Skladby</h5>
-                            <div class="list-group" n:inner-foreach="$concertSongs as $concertSong">
+                            <h5>{_'concerts.form.songs'}</h5>
+                            <p n:if="count($concertSongs) === 0" class="text-body-secondary">{_'concerts.program.empty'}</p>
+                            <div n:if="count($concertSongs) > 0" class="list-group" n:inner-foreach="$concertSongs as $concertSong">
                                 <a n:href=":Songs:show $concertSong->getSong()->getId()" class="list-group-item list-group-item-action">{$concertSong->getSong()->getTitle()}</a>
                             </div>
 

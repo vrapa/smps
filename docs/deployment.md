@@ -79,6 +79,12 @@ The public name shown in the navigation and browser title is configured by
 override it in `config/local.neon` without changing a template. The value is
 public display text, not a place for credentials or other private data.
 
+Concert input and localized display use the IANA timezone in
+`parameters.timezone`, defaulting to `Europe/Prague`. Set it deliberately for
+another installation and verify PHP Intl before deploying this release. CI
+installs and tests Intl, but the Composer platform requirement must not be added
+until the development, CI, and Webglobe runtimes have all been checked.
+
 ## GitHub environment setup
 
 Create a `production` environment after the GitHub repository is public and:

@@ -21,7 +21,7 @@ German, and Dutch is in
 
 ### Requirements and installation
 
-- PHP 8.1 or newer, with PDO MySQL and Composer-required extensions;
+- PHP 8.1 or newer, with PDO MySQL, Intl, and Composer-required extensions;
 - Composer 2;
 - MySQL or MariaDB;
 - a web server whose document root points to `www`.
@@ -52,6 +52,10 @@ Copy-Item config/local.example.neon config/local.neon
 committed. Do not store production hosts, usernames, passwords, private keys,
 or other secrets in this repository. Debug mode is disabled by default; set
 `SMPS_DEBUG=1` only in a trusted local development environment.
+
+The installation-wide UI language is selected by `parameters.locale` (`cs`,
+`en`, `de`, or `nl`). Set `parameters.timezone` to an IANA timezone such as
+`Europe/Prague` or `Europe/Amsterdam`; it controls concert input and display.
 
 ### Database and migrations
 
@@ -178,7 +182,7 @@ Plán implementace češtiny, angličtiny, němčiny a nizozemštiny je v
 
 ### Požadavky a instalace
 
-- PHP 8.1 nebo novější s PDO MySQL a rozšířeními požadovanými Composerem;
+- PHP 8.1 nebo novější s PDO MySQL, Intl a rozšířeními požadovanými Composerem;
 - Composer 2;
 - MySQL nebo MariaDB;
 - webový server s document rootem nastaveným na `www`.
@@ -207,6 +211,10 @@ Copy-Item config/local.example.neon config/local.neon
 commitovat. Neukládejte sem produkční hostitele, uživatele, hesla, soukromé
 klíče ani jiná tajemství. Debug režim je ve výchozím stavu vypnutý;
 `SMPS_DEBUG=1` používejte jen v důvěryhodném lokálním prostředí.
+
+Jazyk celé instalace vybírá `parameters.locale` (`cs`, `en`, `de` nebo `nl`).
+V `parameters.timezone` nastavte IANA časovou zónu, například `Europe/Prague`
+nebo `Europe/Amsterdam`; používá se při zadávání a zobrazení koncertů.
 
 ### Databáze a migrace
 

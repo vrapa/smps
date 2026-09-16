@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Presenters;
 
+use App\Localization\LocalizedDateTimeFormatter;
 use App\Model\entities\Concert;
 use App\Model\entities\Song;
 use App\Model\entities\User;
@@ -30,6 +31,7 @@ class ConcertsPresenter extends BasePresenter
     public function __construct(
         ConcertSongService $concertSongService,
         private EntityManagerInterface $entityManager,
+        private LocalizedDateTimeFormatter $dateTimeFormatter,
     ) {
         $this->concertSongService = $concertSongService;
     }
@@ -40,13 +42,14 @@ class ConcertsPresenter extends BasePresenter
         parent::beforeRender();
 
         $this->getTemplate()->pageName = $this->pageName;
+        $this->getTemplate()->dateTimeFormatter = $this->dateTimeFormatter;
     }
 
     protected function startup(): void
     {
         parent::startup();
-        $this->pageName = 'Seznam koncertů';
-        $this->showPageName = 'Koncert';
+        $this->pageName = $this->translator->translate('concerts.page.list');
+        $this->showPageName = $this->translator->translate('concerts.page.show');
     }
 
     public function renderDefault(int $page = 1): void
@@ -77,10 +80,15 @@ class ConcertsPresenter extends BasePresenter
         ]);
     }
 
+    public function renderCreate(): void
+    {
+        $this->getTemplate()->pageName = $this->translator->translate('concerts.page.create');
+    }
+
     public function renderEdit(int $id): void
     {
 
-        $this->getTemplate()->pageName = $this->showPageName . ' - úpravy';
+        $this->getTemplate()->pageName = $this->translator->translate('concerts.page.edit');
 
         $this->getTemplate()->concert = $this->getConcert($id);
     }
@@ -88,7 +96,7 @@ class ConcertsPresenter extends BasePresenter
     public function renderShow(int $id): void
     {
 
-        $this->getTemplate()->pageName = $this->showPageName . ' - zobrazení';
+        $this->getTemplate()->pageName = $this->showPageName;
 
         $concert = $this->getConcert($id);
 
@@ -115,7 +123,7 @@ class ConcertsPresenter extends BasePresenter
 
         $this->concertSongService->saveConcert($concert, $values->songIds);
 
-        $this->flashMessage($this->translator->translate('common.record_updated'), 'alert-success');
+        $this->flashMessage($this->translator->translate('concerts.flash.updated'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -131,9 +139,7 @@ class ConcertsPresenter extends BasePresenter
 
     public function createFormSucceeded(Form $form, ArrayHash $values): void
     {
-        if (!$this->user->isInRole('admin')) {
-            throw new \Exception($this->translator->translate('common.permission_denied'));
-        }
+        $this->assertAdmin();
 
         $concert = new Concert();
         $concert->setTitle($values->title);
@@ -144,7 +150,7 @@ class ConcertsPresenter extends BasePresenter
 
         $this->concertSongService->saveConcert($concert, $values->songIds);
 
-        $this->flashMessage($this->translator->translate('common.record_created'), 'alert-success');
+        $this->flashMessage($this->translator->translate('concerts.flash.created'), 'alert-success');
         $this->redirect('default');
     }
 
@@ -153,15 +159,13 @@ class ConcertsPresenter extends BasePresenter
     {
         return new Multiplier(function (string $id): Form {
             $form = $this->createForm();
-            $form->addSubmit('send', 'Smazat');
+            $form->addSubmit('send', 'common.delete');
             $form->addProtection('form.csrf_expired');
             $form->onSuccess[] = function () use ($id): void {
-                if (!$this->getUser()->isInRole('admin')) {
-                    throw new \Exception($this->translator->translate('common.permission_denied'));
-                }
+                $this->assertAdmin();
 
                 $this->concertSongService->deleteConcert($this->getConcert((int) $id));
-                $this->flashMessage($this->translator->translate('common.record_deleted'), 'alert-success');
+                $this->flashMessage($this->translator->translate('concerts.flash.deleted'), 'alert-success');
                 $this->redirect('this');
             };
 
@@ -173,23 +177,27 @@ class ConcertsPresenter extends BasePresenter
     {
         $form = $this->createForm();
 
-        $form->addText('title', 'Název:')
-            ->setRequired('Název musíte zadat !')
-            ->addRule(Form::MIN_LENGTH, 'Délka musí být alespoň 3 znaky !', 3)
-            ->addRule(Form::MAX_LENGTH, 'Délka může být maximálně 20 znaků !', 40);
+        $form->addText('title', 'concerts.form.title')
+            ->setRequired('concerts.form.title_required')
+            ->addRule(Form::MIN_LENGTH, 'concerts.form.title_min_length', 3)
+            ->addRule(Form::MAX_LENGTH, 'concerts.form.title_max_length', 40);
 
-        $form->addText('scheduledAt', 'Kdy:')
-            ->setRequired('Datum a čas musíte zadat !')
+        $form->addText('scheduledAt', 'concerts.form.scheduled_at')
+            ->setRequired('concerts.form.scheduled_at_required')
             ->setHtmlType('datetime-local')
-            ->addRule(Form::MAX_LENGTH, 'Délka nesmí překročit 30 znaků !', 40);
+            ->addRule(
+                Form::PATTERN,
+                'concerts.form.scheduled_at_invalid',
+                '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}',
+            );
 
         /** @var SongRepository $songRepository */
         $songRepository = $this->entityManager->getRepository(Song::class);
-        $form->addCheckboxList('songIds', 'Skladby:', $songRepository->findChoices());
+        $form->addCheckboxList('songIds', 'concerts.form.songs', $songRepository->findChoices());
 
-        $form->addTextArea('note', 'Poznámka:');
+        $form->addTextArea('note', 'concerts.form.note');
 
-        $form->addSubmit('send', 'Uložit úpravy');
+        $form->addSubmit('send', 'concerts.form.save');
         $form->addProtection('form.csrf_expired');
         return $form;
     }
@@ -216,11 +224,17 @@ class ConcertsPresenter extends BasePresenter
 
     private function parseScheduledAt(string $value): DateTimeImmutable
     {
-        $scheduledAt = DateTimeImmutable::createFromFormat('!Y-m-d\TH:i', $value);
-        if ($scheduledAt === false) {
+        try {
+            return $this->dateTimeFormatter->parseLocalInput($value);
+        } catch (\RuntimeException $exception) {
             throw new UnexpectedValueException('Concert date has an invalid format.');
         }
+    }
 
-        return $scheduledAt;
+    private function assertAdmin(): void
+    {
+        if (!$this->getUser()->isInRole('admin')) {
+            throw new \Exception($this->translator->translate('common.permission_denied'));
+        }
     }
 }
