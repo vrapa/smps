@@ -1,5 +1,10 @@
 # Public release plan
 
+Publication is complete. Remaining deployment, localization, and repository
+consolidation work is coordinated by [completion-plan.md](completion-plan.md).
+The historical checkpoints below remain the publication record; the completion
+plan supersedes transitional instructions about maintaining two repositories.
+
 This document is the execution plan for preparing SMPS for a public GitHub
 repository under the MIT License. Complete each section in a separate,
 reviewable commit or pull request. Do not publish the repository until the

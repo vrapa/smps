@@ -1,5 +1,9 @@
 # Localization implementation plan
 
+The coordinating [completion plan](completion-plan.md) defines the final
+GitHub-only workflow, Webglobe deployment, and release gates. This document
+retains the detailed translation checklist.
+
 This plan introduces a multilingual user interface for Czech (`cs`), English
 (`en`), German (`de`), and Dutch (`nl`, Nederlands). Each installation selects
 one language in its configuration; all users of that installation see the same
@@ -10,9 +14,10 @@ file descriptions, names, and uploaded documents remain in the language entered
 by their authors.
 
 Each numbered stage is a separate reviewable commit. After a stage is verified,
-update its checklist and push it to the private source repository and through
-the protected public GitHub pull-request flow. Production configuration and
-deployment remain separately approved operations.
+update its checklist and use the protected public GitHub pull-request flow.
+The current private/public transfer process ends at milestone 2 of the
+completion plan; subsequent development is GitHub-only. Production
+configuration and deployment remain separately approved operations.
 
 ## Decisions
 
@@ -74,10 +79,10 @@ supplied to the translator, date formatter, every Latte template, and every
 Nette form.
 The layout renders it in `<html lang="…">`.
 
-## Current inventory
+## Initial inventory (before implementation)
 
-The application has no localization service today. Czech UI copy is embedded
-in 26 PHP, Latte, and PHTML files. The inventory includes:
+At the start of this plan the application had no localization service. Czech
+UI copy was embedded in 26 PHP, Latte, and PHTML files. The inventory included:
 
 - navigation, page titles, buttons, tables, accessibility labels, and flash
   messages;
