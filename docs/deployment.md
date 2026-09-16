@@ -4,8 +4,17 @@ Implementation status (2026-09-16): the workflow below is a prepared SFTP
 transfer, not yet a verified Webglobe deployment. No GitHub environments or
 deployment runs were present at inspection. Hosting capability checks, release
 activation, cache handling, durable artifact retention, exact rollback, and
-staging/production acceptance are tracked in
+isolated rehearsal and production acceptance are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
+
+The owner confirmed that production already runs on Webglobe at
+[https://smps.rkcomputer.cz](https://smps.rkcomputer.cz). Future deployment updates
+this existing installation. A planned outage is acceptable: the target procedure
+is maintenance mode, a consistent backup, in-place update of application and
+dependencies, any separately approved configuration/schema changes, cache refresh,
+functional checks, and reopening the site. Preserve all existing runtime data.
+Atomic switching and a permanent staging site are not required. The current
+transfer-only workflow still needs maintenance and recovery handling implemented.
 
 The production workflow deploys only an artifact created by a successful `CI`
 push run on the repository's default branch. It is started manually with the
@@ -38,8 +47,8 @@ first deployment containing this change:
    application paths.
 2. Remove only its obsolete top-level `database:` block. Keep the Doctrine
    connection parameters and all unrelated production settings unchanged.
-3. Validate the adjusted configuration on staging, then verify that the current
-   application still starts and its main read-only pages work.
+3. Validate the adjusted configuration in an isolated test environment, then
+   check it on the hosting during maintenance before reopening the application.
 4. Deploy the tested artifact and verify login, roles, users, songs, concerts,
    and uploads.
 
@@ -52,8 +61,9 @@ file.
 The user-interface language is selected once for the whole installation by
 the `parameters.locale` value. Supported values are `cs`, `en`, `de`, and
 `nl`; versioned configuration defaults to `cs`. To select another language,
-set the value in the protected `config/local.neon`, validate the application on
-staging, and clear the Nette cache through the normal deployment procedure.
+set the value in the protected `config/local.neon`, validate the application in
+an isolated test environment, and clear the Nette cache through the normal
+deployment procedure.
 
 Keep production on `cs` until every UI slice and the acceptance matrix in
 `docs/localization-plan.md` are complete. The other values are accepted while
@@ -95,8 +105,8 @@ Environment variables:
 
 The account must be restricted to this application and must not provide access
 to database data, user uploads outside the application root, or unrelated
-hosting content. Test the same workflow and account restrictions against a
-staging target before approving a production run.
+hosting content. Test transfer and account restrictions using an isolated target
+where practical; verify the exact production paths before the maintenance update.
 
 ## Deploying and rolling back
 
@@ -105,12 +115,15 @@ numeric run ID from the URL. Start `Deploy production`, enter that ID, review
 the pending environment deployment, and approve it only after checking the
 commit SHA and artifact.
 
-To roll back application files, run the workflow again with the run ID of an
-earlier successful CI artifact that is still within its retention period. This
-is a file rollback only. Database migrations remain a separate, explicitly
-approved CLI operation and must be assessed for compatibility before either a
-deployment or rollback.
+The target rollback procedure keeps maintenance enabled and restores the last
+working application/dependencies from a retained artifact or the pre-update
+hosting backup, handles files added by the failed release, refreshes cache, and
+checks the site before reopening. The existing upload-only workflow does not yet
+implement this full procedure. Database migrations remain a separate, explicitly
+approved CLI operation; check schema compatibility before deployment or rollback.
 
-The first real deployment must target staging. Retire the GitLab deployment
-only after staging and production verification, including login, roles,
-uploads, protected runtime paths, and rollback.
+Rehearse the update and recovery in an isolated local/CI environment. Temporary
+Webglobe staging is useful if readily available, but is optional. The first
+hosting deployment may update production during the agreed outage, after backup
+and rehearsal, with hosting-specific checks completed before reopening. Retire
+GitLab deployment after successful production verification and recovery readiness.
