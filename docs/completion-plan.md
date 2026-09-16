@@ -196,7 +196,7 @@ the matching detailed checklist is updated and the PR merged.
   If a reviewer is unavailable, record that gate as pending.
 - [x] Update English and Czech README/setup instructions, supported runtime
   requirements, locale configuration, and translation contribution guidance.
-- [ ] Run the full suite, isolated database integration, PHP syntax, PHPCS,
+- [x] Run the full suite, isolated database integration, PHP syntax, PHPCS,
   PHPStan, Latte/NEON checks, Composer validation, and dependency audit.
 
 Gate: no unexplained mixed-language paths remain; automated acceptance and

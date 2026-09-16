@@ -225,7 +225,7 @@ labels, validation, password confirmation, and notification controls.
 - [x] Add a focused static audit that rejects new raw UI sentences in
   presenters/templates while allowing documented technical strings and user
   data.
-- [ ] Run PHPUnit, database integration tests, PHP syntax checks, PHPCS,
+- [x] Run PHPUnit, database integration tests, PHP syntax checks, PHPCS,
   PHPStan, Latte lint, NEON lint, Composer validation, and dependency audit.
 - [ ] Review responsive layout for longer German and Dutch labels, navigation,
   forms, validation messages, and small screens.
