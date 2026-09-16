@@ -15,6 +15,7 @@ return [
     'auth.logout.title' => 'Sie wurden abgemeldet',
     'carousel.photo' => 'Foto des Chors',
     'carousel.slide' => 'Folie {number}',
+    'dashboard.welcome' => 'Willkommen bei {applicationName}.',
     'common.actions' => 'Aktionen',
     'common.add_item' => 'Eintrag hinzufügen',
     'common.back_to_list' => 'Zurück zur Liste',

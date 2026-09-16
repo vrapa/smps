@@ -1,4 +1,6 @@
-{* This is the welcome page, you can delete it *}
-
 {block content}
-
+	{if !isset($carouselImages) || !$carouselImages}
+		<div class="py-5 text-center">
+			<h1>{_'dashboard.welcome', applicationName: $applicationName}</h1>
+		</div>
+	{/if}

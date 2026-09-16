@@ -194,13 +194,24 @@ the matching detailed checklist is updated and the PR merged.
   absent; do not ship personal photos to make a demo work.
 - [ ] Obtain and record fluent-speaker review, including English terminology.
   If a reviewer is unavailable, record that gate as pending.
-- [ ] Update English and Czech README/setup instructions, supported runtime
+- [x] Update English and Czech README/setup instructions, supported runtime
   requirements, locale configuration, and translation contribution guidance.
 - [ ] Run the full suite, isolated database integration, PHP syntax, PHPCS,
   PHPStan, Latte/NEON checks, Composer validation, and dependency audit.
 
 Gate: no unexplained mixed-language paths remain; automated acceptance and
 language-review status are recorded. Hosting acceptance continues in milestone 7.
+
+Current status (2026-09-16): automated acceptance renders real presenter
+responses for the login page and navigation shell, unauthenticated dashboard
+redirect, authenticated empty dashboard, forwarded 403/404/405/410/generic 4xx,
+and the 500 callback in `cs`, `en`, `de`, and `nl`. The dashboard now discovers
+installation-managed carousel images at
+runtime and shows a localized welcome without broken image links when none are
+present; private filenames are no longer embedded in public templates. Remaining
+work includes submitted validation/CSRF and database-backed paths, maintenance
+503 delivery, responsive German/Dutch review, fluent-speaker review, and
+hosting acceptance.
 
 ## 5. Enforce the public/private boundary
 

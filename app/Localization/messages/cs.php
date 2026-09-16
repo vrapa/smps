@@ -15,6 +15,7 @@ return [
     'auth.logout.title' => 'Byli jste odhlášeni',
     'carousel.photo' => 'Fotografie pěveckého sboru',
     'carousel.slide' => 'Snímek {number}',
+    'dashboard.welcome' => 'Vítejte v aplikaci {applicationName}.',
     'common.actions' => 'Možnosti',
     'common.add_item' => 'Přidat položku',
     'common.back_to_list' => 'Zpět na seznam',
