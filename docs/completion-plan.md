@@ -168,7 +168,7 @@ development source.
 
 ## 3. Complete translations in three reviewable increments
 
-- [ ] Songs and files: complete localization-plan stage 3, including upload
+- [x] Songs and files: complete localization-plan stage 3, including upload
   validation, permission failures, categories, deletion/download controls, and
   empty states. Keep existing storage paths and category codes stable.
 - [ ] Concerts and dates: complete stage 4 with locale-aware formatting and the

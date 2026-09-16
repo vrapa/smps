@@ -25,21 +25,21 @@
 
                 </div>
                 <div class="col-md-12">
-                    <h4>Noty - sbor</h4>
+                    <h4>{_'songs.files.category.choir_sheet_music'}</h4>
                     {include partials/list-files.latte, files: $choirSheetMusic}
                     {if $user->isInRole('admin')}
                         {control choirSheetMusicUploadForm}
                     {/if}
                 </div>
                 <div class="col-md-12">
-                    <h4>Noty - orchestr</h4>
+                    <h4>{_'songs.files.category.orchestra_sheet_music'}</h4>
                     {include partials/list-files.latte, files: $orchestraSheetMusic}
                     {if $user->isInRole('admin')}
                         {control orchestraSheetMusicUploadForm}
                     {/if}
                 </div>
                 <div class="col-md-12">
-                    <h4>Nahrávky</h4>
+                    <h4>{_'songs.files.category.recordings'}</h4>
                     {include partials/list-files.latte, files: $recordings}
                     {if $user->isInRole('admin')}
                         {control recordingsUploadForm}

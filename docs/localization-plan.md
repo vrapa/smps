@@ -154,16 +154,25 @@ remain assigned to stages 3–5.
 
 ## 3. Songs and files vertical slice
 
-- [ ] Translate song list, detail, create/edit/delete flows and all flash/error
+- [x] Translate song list, detail, create/edit/delete flows and all flash/error
   messages.
-- [ ] Translate upload forms, file categories, size/type/category errors,
+- [x] Translate upload forms, file categories, size/type/category errors,
   download/delete controls, and empty states.
-- [ ] Keep song titles, authors, filenames, and descriptions unchanged as user
+- [x] Keep song titles, authors, filenames, and descriptions unchanged as user
   content.
-- [ ] Add four-locale form, presenter, upload-error, and authorization tests.
+- [x] Add four-locale form, presenter, upload-error, and authorization tests.
 
 Done when the complete song and file workflow is usable under every supported
 configuration without translating or renaming stored content.
+
+Current status: complete. Song pages, headings, actions, forms, validation,
+flash messages, file categories, upload errors, download/delete controls, and
+empty states use semantic keys in all four catalogues. Stored category codes
+(`noty-sbor`, `noty-orchestr`, and `nahravky`) and all user-entered metadata
+remain unchanged. Tests cover all locales, stable field/category identifiers,
+upload validation, and the unchanged `admin` authorization role. The full local
+suite passes with database-only tests skipped when no isolated test DSN is
+configured; GitHub CI supplies the required database integration gate.
 
 ## 4. Concerts vertical slice
 

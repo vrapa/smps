@@ -1,9 +1,11 @@
-{if $user->isInRole('admin')}
+{if count($files) === 0}
+    <p class="text-body-secondary">{_'songs.files.empty'}</p>
+{elseif $user->isInRole('admin')}
     <table class="table table-striped table-hover" n:inner-foreach="$files as $file">
         <tr>
             <td class="col-sm-9">{$file->getDescription()}</td>
             <td class="col-sm-3">
-                <a class="btn btn-primary btn-sm" n:href="fileDownload! $file->getId()" role="button">Stáhnout</a>
+                <a class="btn btn-primary btn-sm" n:href="fileDownload! $file->getId()" role="button">{_'songs.files.download'}</a>
                 {var $deleteFormName = 'fileDeleteForm-' . $file->getId()}
                 {form $deleteFormName, class: d-inline}
                     {input send, class: 'btn btn-danger btn-sm'}

@@ -72,7 +72,7 @@ final class SongFileStorageTest extends TestCase
         $song->setId(12);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Kategorie souboru není povolena.');
+        $this->expectExceptionMessage('songs.files.error.category_not_allowed');
 
         (new SongFileStorage($entityManager, $this->storageRoot))->store(
             $this->createUpload('%PDF-1.4 test document', 'score.pdf'),
@@ -90,7 +90,7 @@ final class SongFileStorageTest extends TestCase
         $song->setId(12);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Tento typ souboru není povolen.');
+        $this->expectExceptionMessage('songs.files.error.type_not_allowed');
 
         (new SongFileStorage($entityManager, $this->storageRoot))->store(
             $this->createUpload('<?php echo "unsafe";', 'score.pdf'),
@@ -108,7 +108,7 @@ final class SongFileStorageTest extends TestCase
         $song->setId(12);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Soubor překračuje povolenou velikost.');
+        $this->expectExceptionMessage('songs.files.error.size_exceeded');
 
         (new SongFileStorage($entityManager, $this->storageRoot))->store(
             $this->createUpload('%PDF-1.4 test document', 'score.pdf', SongFileStorage::MAX_UPLOAD_SIZE),
