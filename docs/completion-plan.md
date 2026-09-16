@@ -143,10 +143,12 @@ and [hosting feature list](https://www.webglobe.cz/webhosting), checked 2026-09-
   old development branch and two-repository copying instructions.
 - [x] Reconcile `AGENTS.md`, README, contribution instructions, and linked plans
   with the actual Doctrine, lock-file, CI, and deployment state.
-- [ ] Record a GitLab development freeze. Inventory its triggers, schedules, and
-  credentials; establish a controlled deployment handover so both providers
-  cannot deploy concurrently. Keep the old deployment only as a restricted
-  transitional recovery option until milestone 8.
+- [x] Inventory the legacy GitLab deployment triggers, schedules, hooks, runners,
+  environments, deploy keys, and credential metadata without exposing private
+  values. Record only the sanitized result in `gitlab-handover.md`.
+- [ ] Record a GitLab development freeze and establish a controlled deployment
+  handover so both providers cannot deploy concurrently. Keep the old deployment
+  only as a restricted transitional recovery option until milestone 8.
 
 Gate: the next implementation commit is developed, reviewed, and merged only
 on GitHub. Completing translations is not a prerequisite for this cutover.
@@ -162,9 +164,14 @@ GitHub is public, `main` has strict required CI checks, administrator enforcemen
 linear history, conversation resolution, and force-push/deletion protection;
 Actions has read-only default token permissions. The approved GitHub `noreply`
 identity is configured. This cutover update is developed only on a GitHub branch.
-The remaining milestone-2 action is to freeze and inventory GitLab deployment
-triggers and credentials before the production handover; GitLab is no longer a
-development source.
+The legacy GitLab inventory found no active pipeline, schedule, hook, deploy key,
+or deployment environment, but CI remains enabled and a future successful push
+to its protected default branch could still reach two automatic FTP deployment
+jobs. Three legacy FTP variables and two active runners remain. The exact values,
+private host details, and private commit identifiers were not copied into public
+documentation. The remaining milestone-2 action is the separately authorized
+GitLab freeze before production handover; GitLab is no longer a development
+source. See [gitlab-handover.md](gitlab-handover.md).
 
 ## 3. Complete translations in three reviewable increments
 
