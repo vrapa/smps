@@ -115,6 +115,8 @@ storage; public progress notes contain only sanitized results.
   relevant if it simplifies this installation; it is not required.
 - [ ] Verify how the host serves `www/index.php`, honours rewrite/access rules,
   and prevents HTTP access to configuration, vendor code, logs, and backups.
+  The tested artifact must contain the project-root fail-closed guard, but the
+  hosting document root still has to be set to `www` and verified independently.
 - [ ] Select the release activation strategy from milestone 6 using these facts.
   Define how maintenance, cache refresh, and rollback can actually be performed.
 
@@ -128,6 +130,14 @@ are provider capabilities to verify for the account, not assumptions about the
 existing subscription. See the official
 [WebSSH instructions](https://www.webglobe.cz/poradna/jak-se-dostanu-do-webove-ssh-konzole)
 and [hosting feature list](https://www.webglobe.cz/webhosting), checked 2026-09-16.
+
+Current web-root status (2026-09-17): an unauthenticated production check found
+that existing project-root files were being served directly. A reviewed
+project-root `.htaccess` guard was uploaded as an emergency mitigation after the
+previous file was backed up. The login page remained available, while direct
+requests for configuration, dependency, metadata, log, and Git paths returned
+HTTP 403. The permanent hosting acceptance item remains open until the document
+root points to `www` and the complete access boundary is rechecked.
 
 ## 2. Make GitHub the sole development source
 

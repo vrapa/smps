@@ -24,6 +24,14 @@ from the default branch; artifact validation uses the policy from that trusted
 workflow revision, including when an older tested artifact is selected for
 rollback.
 
+The hosting document root must point to the deployed application's `www`
+directory. The artifact also contains a project-root `.htaccess` guard for the
+legacy layout: it rejects direct access to existing project-root files and
+directories and internally routes public requests into `www`. This is
+defence-in-depth, not a substitute for the correct document root. The archive
+policy requires the guard and the deployment uploads it before application
+directories.
+
 CI audits every path in the current source and reachable public Git history.
 The artifact is then checked at build time and again before deployment. The
 policy rejects protected runtime paths, unapproved first-party photographs and
