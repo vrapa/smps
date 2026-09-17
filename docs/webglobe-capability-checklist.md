@@ -13,23 +13,28 @@ Checked on 2026-09-17:
 - The emergency project-root guard blocks direct access to configuration,
   dependencies, metadata, logs, and Git paths with HTTP 403.
 - The current legacy deployment endpoint accepts plain FTP on port 21.
-- Port 22 is not available on that endpoint, so it cannot currently provide
-  SSH or SFTP.
+- The standard SSH port 22 is not available on that endpoint.
+- Webglobe's documented SFTP/SCP/SSHFS port 222 is reachable on the same host.
+  Account authentication, key installation, host-key provenance, and SSH command
+  execution have not yet been verified.
 - Port 990 is not available on that endpoint.
 - Authenticated, certificate-verified explicit and implicit FTPS probes did not
   succeed.
 - The probes listed or checked capabilities only. They did not upload, delete,
   rename, or modify remote data.
 
-The legacy endpoint therefore cannot be reused by the prepared GitHub SFTP
-workflow. Plain FTP is not an acceptable fallback because it does not protect
-credentials or transferred application code in transit.
+The prepared GitHub SFTP workflow may be compatible through port 222, but the
+open port alone is not acceptance evidence. Plain FTP is not an acceptable
+fallback because it does not protect credentials or transferred application
+code in transit. Webglobe documents SFTP/SCP/SSHFS on port 222 in its official
+[encrypted transfer instructions](https://www.webglobe.cz/poradna/sifrovane-ftp-tls).
 
 ## Hosting action required
 
 Preferred outcome:
 
-1. Activate permanent, noninteractive SSH/SFTP for this hosting account.
+1. Activate permanent, noninteractive SSH/SFTP for this hosting account and
+   explicitly configure `SFTP_PORT=222`.
 2. Provide a dedicated deployment account restricted to this application.
 3. Obtain the SSH host key through a trusted provider channel and pin it in the
    GitHub `production` environment.

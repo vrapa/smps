@@ -142,12 +142,13 @@ HTTP 403. The permanent hosting acceptance item remains open until the document
 root points to `www` and the complete access boundary is rechecked.
 
 Current transport status (2026-09-17): an authenticated read-only probe of the
-legacy deployment endpoint found only plain FTP on port 21. SSH/SFTP and implicit
-FTPS ports were unavailable, and certificate-verified explicit and implicit FTPS
-connections did not succeed. No remote data changed. This endpoint is not an
-acceptable GitHub deployment transport. Before the workflow can be configured,
-the hosting account must provide permanent noninteractive SSH/SFTP with a pinned
-host key, or a separate certificate-verified FTPS endpoint. See
+legacy deployment endpoint confirmed plain FTP on port 21; standard SSH port 22
+and implicit FTPS port 990 were unavailable, and certificate-verified explicit
+and implicit FTPS did not succeed. The provider-documented SSH/SFTP port 222 is
+reachable. No remote data changed. Before the workflow can be configured, verify
+permanent noninteractive account access, key authentication, host-key provenance,
+and SSH command execution on port 222; otherwise obtain a separate
+certificate-verified FTPS endpoint. See
 [webglobe-capability-checklist.md](webglobe-capability-checklist.md).
 
 ## 2. Make GitHub the sole development source
