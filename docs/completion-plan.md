@@ -104,6 +104,8 @@ storage; public progress notes contain only sanitized results.
 - [ ] Verify noninteractive SFTP and key authentication from the runner network,
   and separately verify SSH command execution. Browser WebSSH alone is not
   evidence that unattended deployment is available.
+- [x] Probe the current legacy deployment endpoint without changing remote data.
+  Record only sanitized transport results; keep its host and credentials private.
 - [ ] Prefer SFTP/SSH with verified host keys. If this account only supports FTPS,
   specify a TLS-verified FTPS implementation and the necessary CLI/activation
   procedure. If neither can meet the acceptance criteria, document the exact
@@ -138,6 +140,15 @@ previous file was backed up. The login page remained available, while direct
 requests for configuration, dependency, metadata, log, and Git paths returned
 HTTP 403. The permanent hosting acceptance item remains open until the document
 root points to `www` and the complete access boundary is rechecked.
+
+Current transport status (2026-09-17): an authenticated read-only probe of the
+legacy deployment endpoint found only plain FTP on port 21. SSH/SFTP and implicit
+FTPS ports were unavailable, and certificate-verified explicit and implicit FTPS
+connections did not succeed. No remote data changed. This endpoint is not an
+acceptable GitHub deployment transport. Before the workflow can be configured,
+the hosting account must provide permanent noninteractive SSH/SFTP with a pinned
+host key, or a separate certificate-verified FTPS endpoint. See
+[webglobe-capability-checklist.md](webglobe-capability-checklist.md).
 
 ## 2. Make GitHub the sole development source
 
