@@ -147,6 +147,7 @@ jobs:
           set -euo pipefail
           batch_file="$RUNNER_TEMP/smps-ssh/deploy.sftp"
           printf '%s\n' \
+            'put .htaccess' \
             'put -R app' \
             'put -R bin' \
             'put -R config' \

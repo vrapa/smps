@@ -103,6 +103,7 @@ APPROVED_FIRST_PARTY_MEDIA = {
 APPROVED_SOURCE_PLACEHOLDERS = {"log/.gitignore", "temp/.gitignore"}
 ARTIFACT_ROOT_DIRECTORIES = {"app", "bin", "config", "db", "vendor", "www"}
 ARTIFACT_ROOT_FILES = {
+    ".htaccess",
     "composer.json",
     "composer.lock",
     "README.md",
@@ -250,7 +251,7 @@ def audit_archive(archive: Path) -> None:
     except (tarfile.TarError, OSError) as exception:
         raise PolicyViolation(f"cannot inspect archive: {exception}") from exception
 
-    required = {"composer.lock", "www/index.php"}
+    required = {".htaccess", "composer.lock", "www/index.php"}
     missing = sorted(required - seen)
     if missing:
         raise PolicyViolation(f"required artifact paths missing: {', '.join(missing)}")

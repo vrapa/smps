@@ -44,10 +44,19 @@ class PublicContentPolicyTest(unittest.TestCase):
     def test_safe_archive_is_accepted(self) -> None:
         archive = self._archive_path()
         with tarfile.open(archive, "w:gz") as tar:
+            self._add_file(tar, ".htaccess")
             self._add_file(tar, "composer.lock")
             self._add_file(tar, "www/index.php")
             self._add_file(tar, "vendor/package/docs/logo.png")
         audit.audit_archive(archive)
+
+    def test_archive_requires_project_root_guard(self) -> None:
+        archive = self._archive_path()
+        with tarfile.open(archive, "w:gz") as tar:
+            self._add_file(tar, "composer.lock")
+            self._add_file(tar, "www/index.php")
+        with self.assertRaisesRegex(audit.PolicyViolation, r"required.*\.htaccess"):
+            audit.audit_archive(archive)
 
     def test_archive_rejects_traversal_and_links(self) -> None:
         cases = (

@@ -177,7 +177,7 @@ jobs:
             --exclude='www/images/carousel' \
             --exclude='log' \
             --exclude='temp' \
-            app bin config db vendor www \
+            app bin config db vendor www .htaccess \
             composer.json composer.lock README.md THIRD_PARTY_NOTICES.md
 
       - name: Validate artifact content and structure

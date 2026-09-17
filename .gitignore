@@ -14,9 +14,6 @@
 /config/local.neon
 /config/test.neon
 
-
-
-/.htaccess
 !README
 # ============================================
 # Other:
