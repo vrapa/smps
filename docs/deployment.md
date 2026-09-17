@@ -126,7 +126,8 @@ Environment secrets:
 
 Environment variables:
 
-- `SFTP_PORT`: SFTP port; defaults to `22` when omitted.
+- `SFTP_PORT`: SFTP port; defaults to `22` when omitted. Webglobe documents port
+  `222`; set it explicitly after verifying this account.
 - `SFTP_REMOTE_PATH`: application root as seen by the restricted SFTP account.
 
 The account must be restricted to this application and must not provide access
