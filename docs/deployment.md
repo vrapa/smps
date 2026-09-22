@@ -1,10 +1,13 @@
 # GitHub production deployment
 
-Implementation status (2026-09-16): the workflow below is a prepared SFTP
-transfer, not yet a verified Webglobe deployment. No GitHub environments or
-deployment runs were present at inspection. Hosting capability checks, release
-activation, cache handling, durable artifact retention, exact rollback, and
-isolated rehearsal and production acceptance are tracked in
+Implementation status (2026-09-22): the workflow below is a prepared SFTP
+transfer, not yet a verified Webglobe deployment. The protected GitHub
+`production` environment exists, port 222 and the authenticated target path are
+configured as environment variables, and an external read-only probe verified
+password-authenticated SFTP access. Environment secrets, trusted host identity,
+key authentication, release activation, cache handling, durable artifact
+retention, exact rollback, isolated rehearsal, and production acceptance remain
+open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
 
 The owner confirmed that production already runs on Webglobe at
@@ -133,12 +136,23 @@ Environment secrets:
 Environment variables:
 
 - `SFTP_PORT`: set to Webglobe's documented port `222` (configured 2026-09-22).
-- `SFTP_REMOTE_PATH`: application root as seen by the restricted SFTP account.
+- `SFTP_REMOTE_PATH`: application root as seen by the restricted SFTP account
+  (verified and configured 2026-09-22; its value remains in protected operational
+  configuration rather than public documentation).
 
 The account must be restricted to this application and must not provide access
 to database data, user uploads outside the application root, or unrelated
 hosting content. Test transfer and account restrictions using an isolated target
 where practical; verify the exact production paths before the maintenance update.
+
+The existing hosting account accepts password-authenticated SFTP on port 222 and
+can enter the configured application target. It authenticates to SSH but the
+server disables command execution for that account. The transfer workflow can
+therefore use this endpoint only after key authentication and trusted host-key
+provenance are established. Maintenance mode, cache refresh, release cleanup,
+and rollback commands need either a separately enabled command-capable account
+or an explicit manual WebSSH/control-panel procedure. The verification probes did
+not modify remote files.
 
 ## Deploying and rolling back
 
