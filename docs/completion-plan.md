@@ -283,6 +283,12 @@ single static bcrypt compatibility value is explicitly documented as generated
 and non-production. `PublicTestDataAuditTest` now enforces these verifiable
 invariants and rejects document/media files anywhere under `tests/`.
 
+Dependency review (2026-09-22): CI detected critical advisory CVE-2026-79752 in
+the Phinx-transitive CakePHP Database 4.5.7 dependency. The four related CakePHP
+packages were updated together to 4.6.5; the locked online audit then reported no
+known vulnerability advisory, and the complete local test and quality suite
+passed.
+
 ## 6. Implement a complete Webglobe deployment and recovery workflow
 
 - [x] Configure a `production` environment restricted to protected branches and
