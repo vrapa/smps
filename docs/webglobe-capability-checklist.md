@@ -30,6 +30,10 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   panel confirms its application-root mapping and all required read, write,
   delete, listing, directory-change, directory-create, and rename permissions.
   Its password remains with the owner and is not stored in GitHub or this repository.
+- An external password-authenticated read-only SFTP probe of that account opened
+  at `/`. After `cd ..`, it remained at `/`, confirming that the account is
+  chrooted to the application directory. Its deployment target is therefore `.`.
+  No remote file was changed.
 - The production subdomain currently maps to the application root. Its editable
   directory mapping can be changed to the application's `www` directory; no
   setting was changed during inspection.
@@ -38,13 +42,15 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   upload, and post limits are compatible with the current application. The
   application explicitly sets its own timezone.
 - Temporary browser WebSSH is available for one hour after two-factor
-  authentication. Permanent console access is a separate paid option. Neither
-  option was activated.
+  authentication. One temporary session was activated for the host-key check.
+  Permanent console access is a separate paid option and was not activated.
 - Daily provider-managed FTP snapshots and database backups are available, with
   archive preparation and restore controls. No backup or restore was started.
-- The server offered an ED25519 host key consistently during the probes, but its
-  fingerprint was learned from the connection itself and is not trusted provider
-  evidence. The value is intentionally omitted from this public record.
+- The server offered the same ED25519 host key to the development workstation and
+  to a scan originating inside the authenticated Webglobe WebSSH environment.
+  This independent provider-side path corroborates the fingerprint. Its value is
+  intentionally omitted from this public record; the exact key still has to be
+  stored in the protected GitHub environment.
 - Port 990 is not available on that endpoint.
 - Authenticated, certificate-verified explicit and implicit FTPS probes did not
   succeed.
@@ -62,10 +68,9 @@ documents SFTP/SCP/SSHFS on port 222 in its official
 
 Preferred outcome:
 
-1. Verify the dedicated account is effectively restricted to this application
-   over SFTP, then install a dedicated key for noninteractive access on port 222.
-2. Obtain the SSH host key through a trusted provider channel and pin it in the
-   GitHub `production` environment.
+1. Install a dedicated key for noninteractive access on port 222.
+2. Pin the independently corroborated SSH host key in the GitHub `production`
+   environment.
 3. Verify key-authenticated SFTP upload against an isolated directory before
    production handover.
 4. Either enable a separate command-capable SSH account or document and rehearse
@@ -82,10 +87,10 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Authenticate the dedicated directory-rooted account over SFTP and verify its
-  effective boundary and required permissions, then install and test its key.
-- Obtain the trusted host key independently and verify key authentication from
-  the GitHub runner network.
+- Install and test a dedicated key, then verify write/create/rename/delete
+  behavior in an isolated directory.
+- Store the independently corroborated host key and verify key authentication
+  from the GitHub runner network.
 - CLI PHP version and extensions, filesystem permissions, disk headroom, and
   database version.
 - Cache/maintenance commands and the exact backup download, restore, and rollback
@@ -94,5 +99,6 @@ silently point the SFTP workflow at the legacy FTP service.
 
 GitHub has a `production` environment restricted to protected branches. The
 owner-approved single-maintainer model uses manual workflow dispatch as the
-approval action. `SFTP_PORT` and the verified target are configured as
-environment variables; no credentials or host identity are stored there yet.
+approval action. `SFTP_PORT=222` and the verified `SFTP_REMOTE_PATH=.` are
+configured as environment variables and were read back successfully; no
+credentials or host identity are stored there yet.

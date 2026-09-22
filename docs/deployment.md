@@ -2,13 +2,15 @@
 
 Implementation status (2026-09-22): the workflow below is a prepared SFTP
 transfer, not yet a verified Webglobe deployment. The protected GitHub
-`production` environment exists, port 222 and the authenticated target path are
-configured as environment variables, and an external read-only probe verified
-password-authenticated SFTP access. A read-only control-panel inspection also
+`production` environment exists, port 222 is configured as an environment
+variable, and an external read-only probe verified the dedicated account's
+password-authenticated SFTP boundary and target `.`. The protected environment
+value was updated to that target and read back successfully. A read-only
+control-panel inspection also
 verified a compatible web runtime, daily provider backups, an editable `www`
 document-root mapping, and the ability to create a directory-scoped transfer
-account. Environment secrets, trusted host identity, key authentication, account
-boundary verification, release activation, cache handling, durable artifact
+account. Environment secrets, host-key storage, key authentication, release
+activation, cache handling, durable artifact
 retention, exact rollback, isolated rehearsal, and production acceptance remain
 open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
@@ -170,10 +172,9 @@ Environment secrets:
 Environment variables:
 
 - `SFTP_PORT`: set to Webglobe's documented port `222` (configured 2026-09-22).
-- `SFTP_REMOTE_PATH`: application root as seen by the restricted SFTP account
-  (verified and configured 2026-09-22; its value remains in protected operational
-  configuration rather than public documentation). Recalculate it after the
-  dedicated account is rooted; its application-relative value will likely be `.`.
+- `SFTP_REMOTE_PATH`: set to `.` after the 2026-09-22 authenticated read-only
+  probe confirmed that the restricted account opens at its application-root `/`
+  and cannot move above it with `cd ..`.
 
 The account must be restricted to this application and must not provide access
 to database data, user uploads outside the application root, or unrelated
@@ -189,14 +190,19 @@ a separate account rooted as narrowly as Webglobe supports. An owner-approved
 dedicated account was created on 2026-09-22, and the control panel confirms its
 application-root mapping plus read, write, delete, listing, directory-change,
 directory-create, and rename permissions. Its password remains with the owner and
-is not stored in the repository or GitHub. Verify the effective root and permissions
-over SFTP before adding secrets to GitHub. The transfer workflow still needs key
-authentication and trusted host-key provenance. Maintenance mode, cache refresh,
+is not stored in the repository or GitHub. An external password-authenticated
+read-only SFTP probe opened at `/`; attempting to move to its parent remained at
+`/`, so the effective account boundary and deployment target `.` are confirmed.
+Write/create/rename/delete behavior still needs an isolated test after key
+authentication. The transfer workflow also still needs key authentication and
+the independently corroborated host key stored in the protected environment.
+Maintenance mode, cache refresh,
 release cleanup, and
 rollback commands need either a separately enabled command-capable account or an
 explicit manual WebSSH/control-panel procedure. The earlier probes and capability
 inspection did not modify remote data. The approved account creation changed
-access configuration only; no application files or production settings changed.
+access configuration only; the later WebSSH and SFTP checks were read-only and
+changed no application files or production settings.
 
 ## Deploying and rolling back
 
