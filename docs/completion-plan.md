@@ -283,17 +283,27 @@ single static bcrypt compatibility value is explicitly documented as generated
 and non-production. `PublicTestDataAuditTest` now enforces these verifiable
 invariants and rejects document/media files anywhere under `tests/`.
 
+Dependency review (2026-09-22): CI detected critical advisory CVE-2026-79752 in
+the Phinx-transitive CakePHP Database 4.5.7 dependency. The four related CakePHP
+packages were updated together to 4.6.5; the locked online audit then reported no
+known vulnerability advisory, and the complete local test and quality suite
+passed.
+
 ## 6. Implement a complete Webglobe deployment and recovery workflow
 
-- [ ] Configure a `production` environment with restricted deployment branches
-  and environment-scoped credentials; add `staging` only if used. Agree the reviewer
-  arrangement with the owner: preventing self-review requires another eligible
-  approver and must not leave a single-maintainer project unable to deploy.
+- [x] Configure a `production` environment restricted to protected branches and
+  record the owner-approved single-maintainer model. There is no required reviewer
+  while the repository has only one eligible administrator; manual dispatch is
+  the deliberate approval action. Add `staging` only if it is actually used.
+- [ ] Add environment-scoped credentials only after the SFTP account, trusted
+  host key, and target path have been verified. Never use repository-wide secrets.
 - [ ] Use a deployment account scoped as narrowly as the hosting supports. Treat
   wider access as an explicit unresolved constraint; never claim isolation from
   uploads/configuration merely because the upload script excludes those paths.
-- [ ] Parameterize the verified port and target path; pin the trusted host key
-  or verify the FTPS certificate. Check connectivity without echoing credentials.
+- [x] Store the provider-documented SFTP port `222` as a non-secret environment
+  variable.
+- [ ] Parameterize and verify the target path; pin the trusted host key or verify
+  the FTPS certificate. Check connectivity without echoing credentials.
 - [ ] Bind deployment to the trusted CI workflow, repository, successful tested
   commit and artifact digest; select revisions from protected `main`, including
   an explicitly chosen earlier revision for rollback. Do not rebuild dependencies
