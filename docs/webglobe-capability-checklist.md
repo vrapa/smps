@@ -25,7 +25,11 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   scoped for unattended GitHub deployment.
 - The production service is managed Webglobe Webhosting Plus. Its control panel
   can create a separate FTP/SFTP account rooted at a selected application
-  directory with granular file and directory permissions. No account was created.
+  directory with granular file and directory permissions.
+- An owner-approved dedicated account was created on 2026-09-22. The control
+  panel confirms its application-root mapping and all required read, write,
+  delete, listing, directory-change, directory-create, and rename permissions.
+  Its password remains with the owner and is not stored in GitHub or this repository.
 - The production subdomain currently maps to the application root. Its editable
   directory mapping can be changed to the application's `www` directory; no
   setting was changed during inspection.
@@ -58,8 +62,8 @@ documents SFTP/SCP/SSHFS on port 222 in its official
 
 Preferred outcome:
 
-1. Provide a dedicated deployment account restricted to this application and
-   install a dedicated key for noninteractive SFTP on port 222.
+1. Verify the dedicated account is effectively restricted to this application
+   over SFTP, then install a dedicated key for noninteractive access on port 222.
 2. Obtain the SSH host key through a trusted provider channel and pin it in the
    GitHub `production` environment.
 3. Verify key-authenticated SFTP upload against an isolated directory before
@@ -78,8 +82,8 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Create the dedicated directory-rooted account, install its key, and verify its
-  effective boundary and required permissions over SFTP.
+- Authenticate the dedicated directory-rooted account over SFTP and verify its
+  effective boundary and required permissions, then install and test its key.
 - Obtain the trusted host key independently and verify key authentication from
   the GitHub runner network.
 - CLI PHP version and extensions, filesystem permissions, disk headroom, and

@@ -67,7 +67,7 @@ Read-only inspection through 2026-09-22 established:
 | GitHub | Public repository, default branch `main`, protected required CI, and a branch-restricted `production` environment. Manual dispatch is the approved single-maintainer production gate. |
 | Publication | Clean public snapshot and MIT licensing are recorded as complete. Repeat the content audit for the final release. |
 | Localization | All three implementation increments and four catalogues are complete. Final real-path, responsive, failure-path, and fluent-speaker acceptance remains. |
-| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. Password SFTP connectivity and the current target were verified read-only; dedicated key credentials and trusted host identity are not configured. |
+| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. A directory-rooted deployment account now exists, but its effective SFTP boundary, key authentication, runner connectivity, and trusted host identity are not yet verified or configured in GitHub. |
 | Current transfer design | SFTP key authentication on provider port 222, in-place recursive upload without deletion. No implemented release activation, cache lifecycle, health check, or stale-file reconciliation. |
 | Artifact recovery | CI artifacts expire after 14 days; an older artifact alone is not a durable recovery strategy. |
 | GitLab | A sanitized inventory found no active pipeline, schedule, hook, deploy key, or environment, but CI and two runners remain enabled and a future successful default-branch push could still trigger the legacy FTP jobs. Freeze remains pending. |
@@ -171,9 +171,12 @@ maintenance/cache procedure alongside SFTP. See
 
 The 2026-09-22 control-panel inspection also confirmed that a separate FTP/SFTP
 account can be rooted at the application directory with granular file and
-directory permissions. Browser WebSSH can be activated temporarily for one hour
+directory permissions. The owner subsequently approved creation of that account;
+the control panel now confirms its application-root mapping and all seven required
+file/directory permissions. External SFTP boundary and key-authentication tests
+remain pending. Browser WebSSH can be activated temporarily for one hour
 after two-factor authentication; a permanent console is a separate paid option.
-Neither an account nor either console option was activated. Provider-managed
+Neither console option was activated. Provider-managed
 daily FTP and database backups are available, but a fresh independently verified
 pre-deployment backup and a recovery rehearsal remain required.
 
@@ -323,14 +326,16 @@ passed.
   the deliberate approval action. Add `staging` only if it is actually used.
 - [ ] Add environment-scoped credentials only after the SFTP account, trusted
   host key, and target path have been verified. Never use repository-wide secrets.
-- [ ] Use a deployment account scoped as narrowly as the hosting supports. Treat
+- [x] Create a dedicated deployment account mapped by the control panel to the
+  application directory with the required granular read, write, delete, list,
+  directory-change, directory-create, and rename permissions. Its password was
+  entered and retained by the owner; it is not stored in the repository or GitHub.
+- [ ] Verify the dedicated account's effective SFTP root and permissions from an
+  external client, then use it only after key authentication succeeds. Treat any
   wider access as an explicit unresolved constraint; never claim isolation from
   uploads/configuration merely because the upload script excludes those paths.
-  The current legacy account can navigate above the application target into the
-  wider hosting tree and is therefore not accepted as the final deployment
-  account. The control panel can create a separate account rooted at the
-  application directory with granular permissions; creating it and installing
-  its key remain controlled operational actions.
+  The legacy account remains rejected because it can navigate into the wider
+  hosting tree.
 - [x] Store the provider-documented SFTP port `222` as a non-secret environment
   variable.
 - [x] Verify the SFTP target path with an authenticated read-only probe and store

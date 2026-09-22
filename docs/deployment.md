@@ -8,8 +8,9 @@ password-authenticated SFTP access. A read-only control-panel inspection also
 verified a compatible web runtime, daily provider backups, an editable `www`
 document-root mapping, and the ability to create a directory-scoped transfer
 account. Environment secrets, trusted host identity, key authentication, account
-creation, release activation, cache handling, durable artifact retention, exact
-rollback, isolated rehearsal, and production acceptance remain open and are tracked in
+boundary verification, release activation, cache handling, durable artifact
+retention, exact rollback, isolated rehearsal, and production acceptance remain
+open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
 
 The owner confirmed that production already runs on Webglobe at
@@ -184,15 +185,18 @@ can enter the configured application target. It authenticates to SSH but the
 server disables command execution for that account. Read-only navigation also
 confirmed that this legacy account can leave the application target and reach the
 wider hosting tree, so it is not accepted as the final deployment identity. Use
-a separate account rooted as narrowly as Webglobe supports. The control panel
-offers a new account rooted at a selected directory with granular read, write,
-delete, listing, directory-change, directory-create, and rename permissions; no
-account was created during inspection. Create and test it before adding secrets
-to GitHub. The transfer workflow still needs key authentication and trusted
-host-key provenance. Maintenance mode, cache refresh, release cleanup, and
+a separate account rooted as narrowly as Webglobe supports. An owner-approved
+dedicated account was created on 2026-09-22, and the control panel confirms its
+application-root mapping plus read, write, delete, listing, directory-change,
+directory-create, and rename permissions. Its password remains with the owner and
+is not stored in the repository or GitHub. Verify the effective root and permissions
+over SFTP before adding secrets to GitHub. The transfer workflow still needs key
+authentication and trusted host-key provenance. Maintenance mode, cache refresh,
+release cleanup, and
 rollback commands need either a separately enabled command-capable account or an
-explicit manual WebSSH/control-panel procedure. The verification probes and
-control-panel inspection did not modify remote data or settings.
+explicit manual WebSSH/control-panel procedure. The earlier probes and capability
+inspection did not modify remote data. The approved account creation changed
+access configuration only; no application files or production settings changed.
 
 ## Deploying and rolling back
 
