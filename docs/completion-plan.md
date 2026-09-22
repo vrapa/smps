@@ -67,7 +67,7 @@ Read-only inspection through 2026-09-22 established:
 | GitHub | Public repository, default branch `main`, protected required CI, and a branch-restricted `production` environment. Manual dispatch is the approved single-maintainer production gate. |
 | Publication | Clean public snapshot and MIT licensing are recorded as complete. Repeat the content audit for the final release. |
 | Localization | All three implementation increments and four catalogues are complete. Final real-path, responsive, failure-path, and fluent-speaker acceptance remains. |
-| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. The dedicated account's effective SFTP boundary and account-relative target `.` are verified. Public-key authentication was rejected by the provider endpoint, so protected password authentication, runner connectivity, and GitHub host-key configuration remain to be completed. |
+| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. The dedicated account's boundary, account-relative target `.`, protected password credentials, and independently corroborated host key are configured. Runner-originated authentication and the isolated write rehearsal remain. |
 | Current transfer design | SFTP password authentication on provider port 222 with a pinned host key, in-place recursive upload without deletion. No implemented release activation, cache lifecycle, health check, or stale-file reconciliation. |
 | Artifact recovery | CI artifacts expire after 14 days; an older artifact alone is not a durable recovery strategy. |
 | GitLab | A sanitized inventory found no active pipeline, schedule, hook, deploy key, or environment, but CI and two runners remain enabled and a future successful default-branch push could still trigger the legacy FTP jobs. Freeze remains pending. |
@@ -338,12 +338,15 @@ passed.
   record the owner-approved single-maintainer model. There is no required reviewer
   while the repository has only one eligible administrator; manual dispatch is
   the deliberate approval action. Add `staging` only if it is actually used.
-- [ ] Add environment-scoped credentials only after the SFTP account, trusted
-  host key, and target path have been verified. Never use repository-wide secrets.
+- [x] Add the host, dedicated username, password, and independently corroborated
+  host key as environment-scoped secrets after verifying the account and target.
+  Their names and update times were read back without exposing values. Never use
+  repository-wide secrets.
 - [x] Create a dedicated deployment account mapped by the control panel to the
   application directory with the required granular read, write, delete, list,
   directory-change, directory-create, and rename permissions. Its password was
-  entered and retained by the owner; it is not stored in the repository or GitHub.
+  entered and retained by the owner; it is stored only as the protected GitHub
+  environment secret `SFTP_PASSWORD`, not in the repository.
 - [x] Verify the dedicated account's effective SFTP root from an external client.
   A password-authenticated read-only probe opened at `/`, and `cd ..` remained at
   `/`; the account is chrooted to the application directory. The legacy account
@@ -357,10 +360,11 @@ passed.
   dedicated chrooted account, the account-relative application root is `.`.
 - [x] Store the verified `SFTP_REMOTE_PATH=.` value as an environment-scoped
   variable without exposing credentials.
-- [ ] Pin the independently corroborated host key in the protected environment
-  and verify password authentication from the runner network. The fingerprint
-  matched from both the development workstation and authenticated Webglobe
-  WebSSH.
+- [x] Pin the independently corroborated host key in the protected environment.
+  The fingerprint matched from both the development workstation and authenticated
+  Webglobe WebSSH, and the secret name was read back successfully.
+- [ ] Verify password authentication from the GitHub runner network without
+  modifying production application data.
 - [ ] Bind deployment to the trusted CI workflow, repository, successful tested
   commit and artifact digest; select revisions from protected `main`, including
   an explicitly chosen earlier revision for rollback. Do not rebuild dependencies

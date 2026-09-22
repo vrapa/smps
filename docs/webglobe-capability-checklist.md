@@ -28,7 +28,8 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
 - An owner-approved dedicated account was created on 2026-09-22. The control
   panel confirms its application-root mapping and all required read, write,
   delete, listing, directory-change, directory-create, and rename permissions.
-  Its password remains with the owner and is not stored in GitHub or this repository.
+  Its password remains with the owner and is stored only as a protected GitHub
+  environment secret, not in this repository.
 - An external password-authenticated read-only SFTP probe of that account opened
   at `/`. After `cd ..`, it remained at `/`, confirming that the account is
   chrooted to the application directory. Its deployment target is therefore `.`.
@@ -74,17 +75,20 @@ documents SFTP/SCP/SSHFS on port 222 in its official
 
 ## Hosting action required
 
-Preferred outcome:
+Completed setup:
 
-1. Store the dedicated account password only in the GitHub `production`
-   environment.
-2. Pin the independently corroborated SSH host key in that environment.
-3. Verify password-authenticated SFTP upload against an isolated directory before
+- The dedicated account password is stored only in the GitHub `production`
+  environment.
+- The independently corroborated SSH host key is pinned in that environment.
+
+Remaining outcome:
+
+1. Verify password-authenticated SFTP upload against an isolated directory before
    production handover.
-4. Either enable a separate command-capable SSH account or document and rehearse
+2. Either enable a separate command-capable SSH account or document and rehearse
    the manual WebSSH/control-panel procedure for maintenance, cache handling, and
    rollback. Do not assume the current SFTP account can execute commands.
-5. During the approved maintenance window, switch the production subdomain to
+3. During the approved maintenance window, switch the production subdomain to
    the application `www` directory and immediately verify rewrites and the full
    non-public access boundary.
 
@@ -95,9 +99,7 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Store the dedicated password and independently corroborated host key in the
-  protected environment, then verify authentication from the GitHub runner
-  network.
+- Verify authentication from the GitHub runner network.
 - Verify write/create/rename/delete behavior in an isolated directory.
 - CLI PHP version and extensions, filesystem permissions, disk headroom, and
   database version.
@@ -108,5 +110,5 @@ silently point the SFTP workflow at the legacy FTP service.
 GitHub has a `production` environment restricted to protected branches. The
 owner-approved single-maintainer model uses manual workflow dispatch as the
 approval action. `SFTP_PORT=222` and the verified `SFTP_REMOTE_PATH=.` are
-configured as environment variables and were read back successfully; no
-credentials or host identity are stored there yet.
+configured as environment variables. The four environment-scoped connection
+secrets are also configured; only their names and update times were read back.
