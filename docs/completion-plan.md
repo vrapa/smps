@@ -364,7 +364,9 @@ passed.
   The fingerprint matched from both the development workstation and authenticated
   Webglobe WebSSH, and the secret name was read back successfully.
 - [ ] Verify password authentication from the GitHub runner network without
-  modifying production application data.
+  modifying production application data. The manual
+  `.github/workflows/verify-production-sftp.yml` check performs only `pwd`,
+  `cd ..`, and `pwd`, and publishes no production directory listing.
 - [ ] Bind deployment to the trusted CI workflow, repository, successful tested
   commit and artifact digest; select revisions from protected `main`, including
   an explicitly chosen earlier revision for rollback. Do not rebuild dependencies
