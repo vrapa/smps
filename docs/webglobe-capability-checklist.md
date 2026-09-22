@@ -58,6 +58,10 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   This independent provider-side path corroborates the fingerprint. Its value is
   intentionally omitted from this public record; the exact key still has to be
   stored in the protected GitHub environment.
+- The dedicated account's control-panel settings permit all countries and all IP
+  addresses. Nevertheless, the first GitHub-hosted runner read-only probe timed
+  out while opening TCP port 222, before authentication or any remote command.
+  This is a hosting/network-path constraint, not an account-level GeoIP rule.
 - Port 990 is not available on that endpoint.
 - Authenticated, certificate-verified explicit and implicit FTPS probes did not
   succeed.
@@ -101,7 +105,9 @@ silently point the SFTP workflow at the legacy FTP service.
 
 - Verify authentication from the GitHub runner network with the prepared manual
   read-only workflow, which checks only the target and chroot working directory
-  without listing or modifying production files.
+  without listing or modifying production files. The first attempt timed out
+  before authentication; resolve hosted-runner reachability or select a reviewed
+  alternative deployment origin.
 - Verify write/create/rename/delete behavior in an isolated directory.
 - CLI PHP version and extensions, filesystem permissions, disk headroom, and
   database version.

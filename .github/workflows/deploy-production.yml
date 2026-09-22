@@ -175,6 +175,8 @@ jobs:
             -o PreferredAuthentications=password \
             -o PubkeyAuthentication=no \
             -o NumberOfPasswordPrompts=1 \
+            -o ConnectTimeout=20 \
+            -o ConnectionAttempts=1 \
             -o StrictHostKeyChecking=yes \
             -o "UserKnownHostsFile=$RUNNER_TEMP/smps-ssh/known_hosts" \
             -P "$SFTP_PORT" \

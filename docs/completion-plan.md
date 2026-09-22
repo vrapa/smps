@@ -67,7 +67,7 @@ Read-only inspection through 2026-09-22 established:
 | GitHub | Public repository, default branch `main`, protected required CI, and a branch-restricted `production` environment. Manual dispatch is the approved single-maintainer production gate. |
 | Publication | Clean public snapshot and MIT licensing are recorded as complete. Repeat the content audit for the final release. |
 | Localization | All three implementation increments and four catalogues are complete. Final real-path, responsive, failure-path, and fluent-speaker acceptance remains. |
-| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. The dedicated account's boundary, account-relative target `.`, protected password credentials, and independently corroborated host key are configured. Runner-originated authentication and the isolated write rehearsal remain. |
+| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. The dedicated account's boundary, account-relative target `.`, protected password credentials, and independently corroborated host key are configured. The first GitHub-hosted runner probe timed out before SSH authentication even though the account permits all countries and IPs; hosted-runner connectivity and the isolated write rehearsal remain. |
 | Current transfer design | SFTP password authentication on provider port 222 with a pinned host key, in-place recursive upload without deletion. No implemented release activation, cache lifecycle, health check, or stale-file reconciliation. |
 | Artifact recovery | CI artifacts expire after 14 days; an older artifact alone is not a durable recovery strategy. |
 | GitLab | A sanitized inventory found no active pipeline, schedule, hook, deploy key, or environment, but CI and two runners remain enabled and a future successful default-branch push could still trigger the legacy FTP jobs. Freeze remains pending. |
@@ -366,7 +366,10 @@ passed.
 - [ ] Verify password authentication from the GitHub runner network without
   modifying production application data. The manual
   `.github/workflows/verify-production-sftp.yml` check performs only `pwd`,
-  `cd ..`, and `pwd`, and publishes no production directory listing.
+  `cd ..`, and `pwd`, and publishes no production directory listing. Run
+  `35747056690` timed out at TCP connection setup before authentication; Webglobe
+  Admin showed that all countries and IPs are allowed for the account. The
+  workflows now fail this condition after a bounded connection timeout.
 - [ ] Bind deployment to the trusted CI workflow, repository, successful tested
   commit and artifact digest; select revisions from protected `main`, including
   an explicitly chosen earlier revision for rollback. Do not rebuild dependencies

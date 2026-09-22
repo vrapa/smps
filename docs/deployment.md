@@ -191,6 +191,11 @@ from protected `main`. It authenticates with the production environment, verifie
 the pinned host key and target, then runs only `pwd`, `cd ..`, and `pwd`. It does
 not list production filenames or issue any write command. A successful result
 must show that both working-directory checks remained at the account root `/`.
+The first GitHub-hosted runner attempt, run `35747056690` on 2026-09-22, timed
+out while opening TCP port 222 before authentication or any remote command.
+Webglobe Admin showed no country or IP restriction on the dedicated account.
+Both workflows use a bounded connection timeout while provider-side access or an
+alternative deployment origin is resolved.
 
 The existing hosting account accepts password-authenticated SFTP on port 222 and
 can enter the configured application target. It authenticates to SSH but the
@@ -207,7 +212,8 @@ read-only SFTP probe opened at `/`; attempting to move to its parent remained at
 `/`, so the effective account boundary and deployment target `.` are confirmed.
 Write/create/rename/delete behavior still needs an isolated test using the
 protected password. The password and independently corroborated host key are
-stored in the protected environment; a runner-originated connection test remains.
+stored in the protected environment. The first runner-originated test timed out
+before authentication, so that network-path blocker remains.
 Maintenance mode, cache refresh,
 release cleanup, and
 rollback commands need either a separately enabled command-capable account or an
