@@ -186,6 +186,12 @@ to database data, user uploads outside the application root, or unrelated
 hosting content. Test transfer and account restrictions using an isolated target
 where practical; verify the exact production paths before the maintenance update.
 
+Before the first upload, run the manual `Verify production SFTP access` workflow
+from protected `main`. It authenticates with the production environment, verifies
+the pinned host key and target, then runs only `pwd`, `cd ..`, and `pwd`. It does
+not list production filenames or issue any write command. A successful result
+must show that both working-directory checks remained at the account root `/`.
+
 The existing hosting account accepts password-authenticated SFTP on port 222 and
 can enter the configured application target. It authenticates to SSH but the
 server disables command execution for that account. Read-only navigation also

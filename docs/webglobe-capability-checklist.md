@@ -99,7 +99,9 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Verify authentication from the GitHub runner network.
+- Verify authentication from the GitHub runner network with the prepared manual
+  read-only workflow, which checks only the target and chroot working directory
+  without listing or modifying production files.
 - Verify write/create/rename/delete behavior in an isolated directory.
 - CLI PHP version and extensions, filesystem permissions, disk headroom, and
   database version.
