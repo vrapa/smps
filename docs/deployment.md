@@ -9,8 +9,10 @@ value was updated to that target and read back successfully. A read-only
 control-panel inspection also
 verified a compatible web runtime, daily provider backups, an editable `www`
 document-root mapping, and the ability to create a directory-scoped transfer
-account. Environment secrets, host-key storage, key authentication, release
-activation, cache handling, durable artifact
+account. Public-key authentication was tested and rejected by the provider's
+SFTP endpoint, so the prepared workflow now uses a protected password without
+placing it on the command line. Environment secrets, host-key storage, runner
+authentication, release activation, cache handling, durable artifact
 retention, exact rollback, isolated rehearsal, and production acceptance remain
 open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
@@ -164,7 +166,9 @@ Environment secrets:
 
 - `SFTP_HOST`: production SFTP hostname.
 - `SFTP_USERNAME`: dedicated deployment account.
-- `SFTP_PRIVATE_KEY`: private key for that account.
+- `SFTP_PASSWORD`: password for that account. The workflow exposes it only to a
+  short-lived `SSH_ASKPASS` helper on the GitHub runner, never as a command-line
+  argument or repository value.
 - `SFTP_KNOWN_HOSTS`: pinned `known_hosts` line obtained from the hosting
   provider through a trusted channel. The workflow deliberately does not use
   `ssh-keyscan` at deployment time.
@@ -193,16 +197,19 @@ directory-create, and rename permissions. Its password remains with the owner an
 is not stored in the repository or GitHub. An external password-authenticated
 read-only SFTP probe opened at `/`; attempting to move to its parent remained at
 `/`, so the effective account boundary and deployment target `.` are confirmed.
-Write/create/rename/delete behavior still needs an isolated test after key
-authentication. The transfer workflow also still needs key authentication and
-the independently corroborated host key stored in the protected environment.
+Write/create/rename/delete behavior still needs an isolated test using the
+protected password. The transfer workflow also still needs that password and the
+independently corroborated host key stored in the protected environment, followed
+by a runner-originated connection test.
 Maintenance mode, cache refresh,
 release cleanup, and
 rollback commands need either a separately enabled command-capable account or an
 explicit manual WebSSH/control-panel procedure. The earlier probes and capability
 inspection did not modify remote data. The approved account creation changed
-access configuration only; the later WebSSH and SFTP checks were read-only and
-changed no application files or production settings.
+access configuration only. Public-key testing temporarily created
+`.ssh/authorized_keys` inside the restricted account; it and the `.ssh` directory
+were removed after the test, and the private keys were destroyed locally. No
+application file or production setting was changed.
 
 ## Deploying and rolling back
 
