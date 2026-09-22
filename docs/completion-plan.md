@@ -101,9 +101,12 @@ storage; public progress notes contain only sanitized results.
   Check whether temporary hosting staging is easy to provide; it is optional.
   Record privately the application root, document root, protocol, port, account
   restrictions, and host identity. Do not infer them from the old FTP pipeline.
-- [ ] Verify noninteractive SFTP and key authentication from the runner network,
-  and separately verify SSH command execution. Browser WebSSH alone is not
-  evidence that unattended deployment is available.
+- [x] Verify noninteractive SFTP password authentication from an external client
+  on the provider-documented port and confirm the application target without
+  changing remote data.
+- [ ] Verify key authentication from the runner network. The current account
+  accepts SFTP but rejects SSH command execution after successful authentication;
+  browser WebSSH alone is not evidence that unattended commands are available.
 - [x] Probe the current legacy deployment endpoint without changing remote data.
   Record only sanitized transport results; keep its host and credentials private.
 - [ ] Prefer SFTP/SSH with verified host keys. If this account only supports FTPS,
@@ -141,14 +144,18 @@ requests for configuration, dependency, metadata, log, and Git paths returned
 HTTP 403. The permanent hosting acceptance item remains open until the document
 root points to `www` and the complete access boundary is rechecked.
 
-Current transport status (2026-09-17): an authenticated read-only probe of the
+Current transport status (2026-09-22): an authenticated read-only probe of the
 legacy deployment endpoint confirmed plain FTP on port 21; standard SSH port 22
 and implicit FTPS port 990 were unavailable, and certificate-verified explicit
 and implicit FTPS did not succeed. The provider-documented SSH/SFTP port 222 is
-reachable. No remote data changed. Before the workflow can be configured, verify
-permanent noninteractive account access, key authentication, host-key provenance,
-and SSH command execution on port 222; otherwise obtain a separate
-certificate-verified FTPS endpoint. See
+reachable. The existing account successfully authenticated over SFTP and changed
+into the expected application target. SSH authentication also succeeded, but the
+server explicitly disabled command execution for this account. A network-observed
+ED25519 fingerprint is retained only as an untrusted diagnostic candidate; obtain
+the host key through a trusted provider channel before deployment. No remote data
+changed. Before credentials can be configured, verify key authentication and
+choose either a separately enabled command-capable account or a documented manual
+maintenance/cache procedure alongside SFTP. See
 [webglobe-capability-checklist.md](webglobe-capability-checklist.md).
 
 ## 2. Make GitHub the sole development source
@@ -302,8 +309,11 @@ passed.
   uploads/configuration merely because the upload script excludes those paths.
 - [x] Store the provider-documented SFTP port `222` as a non-secret environment
   variable.
-- [ ] Parameterize and verify the target path; pin the trusted host key or verify
-  the FTPS certificate. Check connectivity without echoing credentials.
+- [x] Verify the SFTP target path with an authenticated read-only probe and store
+  it as an environment-scoped variable without exposing credentials.
+- [ ] Pin the host key obtained through a trusted provider channel and verify key
+  authentication from the runner network. A key learned from the same untrusted
+  connection is not sufficient identity evidence.
 - [ ] Bind deployment to the trusted CI workflow, repository, successful tested
   commit and artifact digest; select revisions from protected `main`, including
   an explicitly chosen earlier revision for rollback. Do not rebuild dependencies
