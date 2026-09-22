@@ -23,6 +23,21 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
 - Read-only directory navigation showed that the legacy account can leave the
   application target and reach the wider hosting tree. It is not sufficiently
   scoped for unattended GitHub deployment.
+- The production service is managed Webglobe Webhosting Plus. Its control panel
+  can create a separate FTP/SFTP account rooted at a selected application
+  directory with granular file and directory permissions. No account was created.
+- The production subdomain currently maps to the application root. Its editable
+  directory mapping can be changed to the application's `www` directory; no
+  setting was changed during inspection.
+- The web runtime is PHP 8.1.34 through FPM/FastCGI with `pdo_mysql`, `intl`,
+  `mbstring`, `fileinfo`, and OPcache enabled. The observed memory, execution,
+  upload, and post limits are compatible with the current application. The
+  application explicitly sets its own timezone.
+- Temporary browser WebSSH is available for one hour after two-factor
+  authentication. Permanent console access is a separate paid option. Neither
+  option was activated.
+- Daily provider-managed FTP snapshots and database backups are available, with
+  archive preparation and restore controls. No backup or restore was started.
 - The server offered an ED25519 host key consistently during the probes, but its
   fingerprint was learned from the connection itself and is not trusted provider
   evidence. The value is intentionally omitted from this public record.
@@ -52,6 +67,9 @@ Preferred outcome:
 4. Either enable a separate command-capable SSH account or document and rehearse
    the manual WebSSH/control-panel procedure for maintenance, cache handling, and
    rollback. Do not assume the current SFTP account can execute commands.
+5. During the approved maintenance window, switch the production subdomain to
+   the application `www` directory and immediately verify rewrites and the full
+   non-public access boundary.
 
 If permanent SSH/SFTP is unavailable, obtain a separate FTPS endpoint that
 supports verified TLS and a documented noninteractive activation procedure.
@@ -60,15 +78,14 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Exact Webglobe product and whether command-capable permanent SSH requires
-  activation or a hosting-plan change. SFTP itself is already available.
-- Whether Webglobe can root a separate FTP/SFTP account at this application's
-  directory; the public provider documentation confirms IP/GeoIP controls but
-  does not document per-directory account scoping.
-- Application root and `www` document-root configuration in the control panel.
-- Web and CLI PHP versions, required extensions, limits, timezone, OPcache, disk
-  quota, permissions, and database version.
-- Cache/maintenance commands and the exact backup and rollback mechanism.
+- Create the dedicated directory-rooted account, install its key, and verify its
+  effective boundary and required permissions over SFTP.
+- Obtain the trusted host key independently and verify key authentication from
+  the GitHub runner network.
+- CLI PHP version and extensions, filesystem permissions, disk headroom, and
+  database version.
+- Cache/maintenance commands and the exact backup download, restore, and rollback
+  procedure. Rehearse rather than relying on backup availability alone.
 - Whether a small isolated staging directory can be provisioned temporarily.
 
 GitHub has a `production` environment restricted to protected branches. The

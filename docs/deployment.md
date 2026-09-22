@@ -4,10 +4,12 @@ Implementation status (2026-09-22): the workflow below is a prepared SFTP
 transfer, not yet a verified Webglobe deployment. The protected GitHub
 `production` environment exists, port 222 and the authenticated target path are
 configured as environment variables, and an external read-only probe verified
-password-authenticated SFTP access. Environment secrets, trusted host identity,
-key authentication, release activation, cache handling, durable artifact
-retention, exact rollback, isolated rehearsal, and production acceptance remain
-open and are tracked in
+password-authenticated SFTP access. A read-only control-panel inspection also
+verified a compatible web runtime, daily provider backups, an editable `www`
+document-root mapping, and the ability to create a directory-scoped transfer
+account. Environment secrets, trusted host identity, key authentication, account
+creation, release activation, cache handling, durable artifact retention, exact
+rollback, isolated rehearsal, and production acceptance remain open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
 
 The owner confirmed that production already runs on Webglobe at
@@ -34,6 +36,12 @@ directories and internally routes public requests into `www`. This is
 defence-in-depth, not a substitute for the correct document root. The archive
 policy requires the guard and the deployment uploads it before application
 directories.
+
+The Webglobe control panel currently maps the production subdomain to the
+application root and offers an editable directory target. Change it to the
+application's `www` directory only during the approved maintenance window, after
+fresh backups. Immediately verify the public site, rewrites, and denial of direct
+access to configuration, dependencies, logs, backups, and other non-public paths.
 
 CI audits every path in the current source and reachable public Git history.
 The artifact is then checked at build time and again before deployment. The
@@ -106,7 +114,32 @@ Concert input and localized display use the IANA timezone in
 `parameters.timezone`, defaulting to `Europe/Prague`. Set it deliberately for
 another installation and verify PHP Intl before deploying this release. CI
 installs and tests Intl, but the Composer platform requirement must not be added
-until the development, CI, and Webglobe runtimes have all been checked.
+until the development, CI, and Webglobe CLI runtimes have all been checked. The
+Webglobe web runtime already has Intl enabled.
+
+## Verified hosting runtime and recovery capabilities
+
+The Webglobe web runtime was inspected read-only on 2026-09-22. It uses PHP
+8.1.34 through FPM/FastCGI with `pdo_mysql`, `intl`, `mbstring`, `fileinfo`, and
+Zend OPcache enabled. The observed 256 MB memory limit, 90-second execution
+limit, and 256 MB upload/post limits are compatible with the current application.
+The server default timezone differs from the application's explicit
+`Europe/Prague` setting, so keep the application setting and verify date handling
+during acceptance. CLI PHP, CLI extensions, filesystem permissions, disk
+headroom, and database version still require private verification.
+
+The account exposes a temporary browser WebSSH console for one hour after
+two-factor authentication. Permanent console access is a separate paid option.
+Neither was activated during inspection. A temporary console may support the
+maintenance-window checks and cache/configuration operations if rehearsed; it is
+not proof that the SFTP deployment account can execute unattended commands.
+
+Webglobe provides daily FTP snapshots and daily database backups, with controls
+for preparing a downloadable archive and restoring a selected backup. No backup
+or restore action was started during inspection. Before deployment, create or
+request fresh backups, preserve an independent copy where practical, verify
+download/restore access, and retain the last compatible application artifact and
+manifest. Provider retention alone is not the rollback plan.
 
 ## GitHub environment setup
 
@@ -138,7 +171,8 @@ Environment variables:
 - `SFTP_PORT`: set to Webglobe's documented port `222` (configured 2026-09-22).
 - `SFTP_REMOTE_PATH`: application root as seen by the restricted SFTP account
   (verified and configured 2026-09-22; its value remains in protected operational
-  configuration rather than public documentation).
+  configuration rather than public documentation). Recalculate it after the
+  dedicated account is rooted; its application-relative value will likely be `.`.
 
 The account must be restricted to this application and must not provide access
 to database data, user uploads outside the application root, or unrelated
@@ -150,13 +184,15 @@ can enter the configured application target. It authenticates to SSH but the
 server disables command execution for that account. Read-only navigation also
 confirmed that this legacy account can leave the application target and reach the
 wider hosting tree, so it is not accepted as the final deployment identity. Use
-a separate account rooted as narrowly as Webglobe supports, or explicitly record
-the provider limitation and compensating controls before adding credentials to
-GitHub. The transfer workflow still needs key authentication and trusted host-key
-provenance. Maintenance mode, cache refresh, release cleanup, and rollback
-commands need either a separately enabled command-capable account or an explicit
-manual WebSSH/control-panel procedure. The verification probes did not modify
-remote files.
+a separate account rooted as narrowly as Webglobe supports. The control panel
+offers a new account rooted at a selected directory with granular read, write,
+delete, listing, directory-change, directory-create, and rename permissions; no
+account was created during inspection. Create and test it before adding secrets
+to GitHub. The transfer workflow still needs key authentication and trusted
+host-key provenance. Maintenance mode, cache refresh, release cleanup, and
+rollback commands need either a separately enabled command-capable account or an
+explicit manual WebSSH/control-panel procedure. The verification probes and
+control-panel inspection did not modify remote data or settings.
 
 ## Deploying and rolling back
 
