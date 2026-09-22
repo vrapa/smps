@@ -11,8 +11,9 @@ verified a compatible web runtime, daily provider backups, an editable `www`
 document-root mapping, and the ability to create a directory-scoped transfer
 account. Public-key authentication was tested and rejected by the provider's
 SFTP endpoint, so the prepared workflow now uses a protected password without
-placing it on the command line. Environment secrets, host-key storage, runner
-authentication, release activation, cache handling, durable artifact
+placing it on the command line. The environment-scoped connection secrets and
+independently corroborated host key are configured. Runner authentication,
+release activation, cache handling, durable artifact
 retention, exact rollback, isolated rehearsal, and production acceptance remain
 open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
@@ -194,13 +195,13 @@ a separate account rooted as narrowly as Webglobe supports. An owner-approved
 dedicated account was created on 2026-09-22, and the control panel confirms its
 application-root mapping plus read, write, delete, listing, directory-change,
 directory-create, and rename permissions. Its password remains with the owner and
-is not stored in the repository or GitHub. An external password-authenticated
+is stored only as the protected GitHub environment secret `SFTP_PASSWORD`, not in
+the repository. An external password-authenticated
 read-only SFTP probe opened at `/`; attempting to move to its parent remained at
 `/`, so the effective account boundary and deployment target `.` are confirmed.
 Write/create/rename/delete behavior still needs an isolated test using the
-protected password. The transfer workflow also still needs that password and the
-independently corroborated host key stored in the protected environment, followed
-by a runner-originated connection test.
+protected password. The password and independently corroborated host key are
+stored in the protected environment; a runner-originated connection test remains.
 Maintenance mode, cache refresh,
 release cleanup, and
 rollback commands need either a separately enabled command-capable account or an
