@@ -20,6 +20,9 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
 - The same account completes SSH authentication, but the server explicitly
   disables command execution. Key authentication has not yet been configured or
   verified.
+- Read-only directory navigation showed that the legacy account can leave the
+  application target and reach the wider hosting tree. It is not sufficiently
+  scoped for unattended GitHub deployment.
 - The server offered an ED25519 host key consistently during the probes, but its
   fingerprint was learned from the connection itself and is not trusted provider
   evidence. The value is intentionally omitted from this public record.
@@ -59,6 +62,9 @@ silently point the SFTP workflow at the legacy FTP service.
 
 - Exact Webglobe product and whether command-capable permanent SSH requires
   activation or a hosting-plan change. SFTP itself is already available.
+- Whether Webglobe can root a separate FTP/SFTP account at this application's
+  directory; the public provider documentation confirms IP/GeoIP controls but
+  does not document per-directory account scoping.
 - Application root and `www` document-root configuration in the control panel.
 - Web and CLI PHP versions, required extensions, limits, timezone, OPcache, disk
   quota, permissions, and database version.
