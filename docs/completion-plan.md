@@ -307,6 +307,9 @@ passed.
 - [ ] Use a deployment account scoped as narrowly as the hosting supports. Treat
   wider access as an explicit unresolved constraint; never claim isolation from
   uploads/configuration merely because the upload script excludes those paths.
+  The current legacy account can navigate above the application target into the
+  wider hosting tree and is therefore not accepted as the final deployment
+  account.
 - [x] Store the provider-documented SFTP port `222` as a non-secret environment
   variable.
 - [x] Verify the SFTP target path with an authenticated read-only probe and store

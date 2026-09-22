@@ -147,12 +147,16 @@ where practical; verify the exact production paths before the maintenance update
 
 The existing hosting account accepts password-authenticated SFTP on port 222 and
 can enter the configured application target. It authenticates to SSH but the
-server disables command execution for that account. The transfer workflow can
-therefore use this endpoint only after key authentication and trusted host-key
-provenance are established. Maintenance mode, cache refresh, release cleanup,
-and rollback commands need either a separately enabled command-capable account
-or an explicit manual WebSSH/control-panel procedure. The verification probes did
-not modify remote files.
+server disables command execution for that account. Read-only navigation also
+confirmed that this legacy account can leave the application target and reach the
+wider hosting tree, so it is not accepted as the final deployment identity. Use
+a separate account rooted as narrowly as Webglobe supports, or explicitly record
+the provider limitation and compensating controls before adding credentials to
+GitHub. The transfer workflow still needs key authentication and trusted host-key
+provenance. Maintenance mode, cache refresh, release cleanup, and rollback
+commands need either a separately enabled command-capable account or an explicit
+manual WebSSH/control-panel procedure. The verification probes did not modify
+remote files.
 
 ## Deploying and rolling back
 
