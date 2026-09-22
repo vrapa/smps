@@ -67,15 +67,17 @@ Read-only inspection through 2026-09-22 established:
 | GitHub | Public repository, default branch `main`, protected required CI, and a branch-restricted `production` environment. Manual dispatch is the approved single-maintainer production gate. |
 | Publication | Clean public snapshot and MIT licensing are recorded as complete. Repeat the content audit for the final release. |
 | Localization | All three implementation increments and four catalogues are complete. Final real-path, responsive, failure-path, and fluent-speaker acceptance remains. |
-| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. The dedicated account's effective SFTP boundary and account-relative target `.` are verified. Key authentication, runner connectivity, and GitHub host-key configuration remain. |
-| Current transfer design | SFTP key authentication on provider port 222, in-place recursive upload without deletion. No implemented release activation, cache lifecycle, health check, or stale-file reconciliation. |
+| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. The dedicated account's effective SFTP boundary and account-relative target `.` are verified. Public-key authentication was rejected by the provider endpoint, so protected password authentication, runner connectivity, and GitHub host-key configuration remain to be completed. |
+| Current transfer design | SFTP password authentication on provider port 222 with a pinned host key, in-place recursive upload without deletion. No implemented release activation, cache lifecycle, health check, or stale-file reconciliation. |
 | Artifact recovery | CI artifacts expire after 14 days; an older artifact alone is not a durable recovery strategy. |
 | GitLab | A sanitized inventory found no active pipeline, schedule, hook, deploy key, or environment, but CI and two runners remain enabled and a future successful default-branch push could still trigger the legacy FTP jobs. Freeze remains pending. |
 | Documentation | `AGENTS.md`, README, contribution guidance, and deployment plans are reconciled with Doctrine, the tracked lock file, four locales, and the GitHub-only development flow. |
 
 Successful artifact construction is not evidence of a successful Webglobe
-deployment. The hosting inspection and connection probes were read-only; no
-account, service, configuration, remote file, backup, or production data changed.
+deployment. Hosting inspection and connection probes were read-only except for
+the explicitly approved dedicated-account creation and public-key test. The test
+`.ssh/authorized_keys` and directory were removed after authentication failed;
+no application file, backup, or production data was changed.
 
 ## Execution rules
 
@@ -108,9 +110,10 @@ storage; public progress notes contain only sanitized results.
 - [x] Verify noninteractive SFTP password authentication from an external client
   on the provider-documented port and confirm the application target without
   changing remote data.
-- [ ] Verify key authentication from the runner network. The current account
-  accepts SFTP but rejects SSH command execution after successful authentication;
-  browser WebSSH alone is not evidence that unattended commands are available.
+- [x] Test public-key authentication for the dedicated account. The server found
+  the installed ED25519 and RSA public keys but rejected their signed login,
+  including modern and legacy RSA signatures. Treat key authentication as
+  unsupported for this virtual FTP/SFTP account and use its protected password.
 - [x] Probe the current legacy deployment endpoint without changing remote data.
   Record only sanitized transport results; keep its host and credentials private.
 - [ ] Prefer SFTP/SSH with verified host keys. If this account only supports FTPS,
@@ -168,7 +171,7 @@ ED25519 fingerprint was subsequently matched from the authenticated Webglobe
 WebSSH environment, giving an independent provider-side path to the same key.
 The fingerprint is retained privately and the exact `known_hosts` entry still
 has to be stored in the protected GitHub environment. No remote data changed.
-Before credentials can be configured, verify key authentication and
+Before deployment, configure and verify protected password authentication and
 choose either a separately enabled command-capable account or a documented manual
 maintenance/cache procedure alongside SFTP. See
 [webglobe-capability-checklist.md](webglobe-capability-checklist.md).
@@ -180,10 +183,14 @@ the control panel now confirms its application-root mapping and all seven requir
 file/directory permissions. An external password-authenticated read-only SFTP
 probe then opened at `/`; `cd ..` remained at `/`, confirming the account's
 effective application-root boundary. The account-relative deployment target is
-therefore `.`. Write/create/rename/delete behavior and key authentication remain
-to be tested in an isolated directory. Browser WebSSH was activated temporarily
-for the independent host-key check; a permanent console is a separate paid
-option and was not activated. Provider-managed
+therefore `.`. Write/create/rename/delete behavior remains to be tested in an
+isolated directory. ED25519 and RSA public-key login attempts reached signature
+verification but were rejected by the provider's `mod_sftp` endpoint, so the
+approved workflow design uses the dedicated account password without exposing it
+on the command line. The temporary public-key files were removed from the account,
+and their private counterparts were destroyed locally. Browser WebSSH was
+activated temporarily for the independent host-key check; a permanent console is
+a separate paid option and was not activated. Provider-managed
 daily FTP and database backups are available, but a fresh independently verified
 pre-deployment backup and a recovery rehearsal remain required.
 
@@ -341,9 +348,9 @@ passed.
   A password-authenticated read-only probe opened at `/`, and `cd ..` remained at
   `/`; the account is chrooted to the application directory. The legacy account
   remains rejected because it can navigate into the wider hosting tree.
-- [ ] After key authentication succeeds, verify write, create, rename, and delete
-  behavior in an isolated test directory before allowing deployment to update
-  production files.
+- [ ] After the protected password is configured, verify write, create, rename,
+  and delete behavior in an isolated test directory before allowing deployment
+  to update production files.
 - [x] Store the provider-documented SFTP port `222` as a non-secret environment
   variable.
 - [x] Verify the SFTP target path with an authenticated read-only probe. For the
@@ -351,8 +358,9 @@ passed.
 - [x] Store the verified `SFTP_REMOTE_PATH=.` value as an environment-scoped
   variable without exposing credentials.
 - [ ] Pin the independently corroborated host key in the protected environment
-  and verify key authentication from the runner network. The fingerprint matched
-  from both the development workstation and authenticated Webglobe WebSSH.
+  and verify password authentication from the runner network. The fingerprint
+  matched from both the development workstation and authenticated Webglobe
+  WebSSH.
 - [ ] Bind deployment to the trusted CI workflow, repository, successful tested
   commit and artifact digest; select revisions from protected `main`, including
   an explicitly chosen earlier revision for rollback. Do not rebuild dependencies

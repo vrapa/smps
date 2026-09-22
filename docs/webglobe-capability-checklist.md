@@ -5,7 +5,7 @@ move from the transitional GitLab job to GitHub Actions. Private hostnames,
 accounts, credentials, database details, and absolute hosting paths belong only
 in the owner's protected operational record.
 
-## Verified without remote changes
+## Verified hosting capabilities
 
 Checked on 2026-09-17 and refreshed on 2026-09-22:
 
@@ -18,8 +18,7 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   The existing account authenticates noninteractively with its current password
   and can enter the expected application target over SFTP.
 - The same account completes SSH authentication, but the server explicitly
-  disables command execution. Key authentication has not yet been configured or
-  verified.
+  disables command execution.
 - Read-only directory navigation showed that the legacy account can leave the
   application target and reach the wider hosting tree. It is not sufficiently
   scoped for unattended GitHub deployment.
@@ -34,6 +33,13 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   at `/`. After `cd ..`, it remained at `/`, confirming that the account is
   chrooted to the application directory. Its deployment target is therefore `.`.
   No remote file was changed.
+- Public-key authentication was tested with dedicated ED25519 and RSA keys. The
+  `mod_sftp` endpoint found each installed public key but rejected the signed
+  login, including modern and legacy RSA signatures. Temporary private keys were
+  destroyed locally, and the test `authorized_keys` plus its `.ssh` directory were
+  removed from the account. They are not stored in GitHub or the repository. The
+  approved fallback is the dedicated account's password in the protected
+  environment.
 - The production subdomain currently maps to the application root. Its editable
   directory mapping can be changed to the application's `www` directory; no
   setting was changed during inspection.
@@ -54,13 +60,15 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
 - Port 990 is not available on that endpoint.
 - Authenticated, certificate-verified explicit and implicit FTPS probes did not
   succeed.
-- The probes listed or checked capabilities only. They did not upload, delete,
-  rename, or modify remote data.
+- The initial probes listed or checked capabilities only. The later approved
+  public-key test temporarily uploaded and then removed only its `.ssh` test data;
+  it did not modify application files, runtime data, or production settings.
 
-The prepared GitHub SFTP workflow is transport-compatible through port 222, but
-password authentication and a network-observed host key are not sufficient for
-the production workflow. Plain FTP is not an acceptable fallback because it does
-not protect credentials or transferred application code in transit. Webglobe
+The prepared GitHub SFTP workflow is transport-compatible through port 222 and
+uses password authentication without placing the password on the command line.
+It still requires protected environment secrets, the pinned corroborated host
+key, and a runner-originated rehearsal. Plain FTP is not an acceptable fallback
+because it does not protect credentials or transferred application code. Webglobe
 documents SFTP/SCP/SSHFS on port 222 in its official
 [encrypted transfer instructions](https://www.webglobe.cz/poradna/sifrovane-ftp-tls).
 
@@ -68,10 +76,10 @@ documents SFTP/SCP/SSHFS on port 222 in its official
 
 Preferred outcome:
 
-1. Install a dedicated key for noninteractive access on port 222.
-2. Pin the independently corroborated SSH host key in the GitHub `production`
+1. Store the dedicated account password only in the GitHub `production`
    environment.
-3. Verify key-authenticated SFTP upload against an isolated directory before
+2. Pin the independently corroborated SSH host key in that environment.
+3. Verify password-authenticated SFTP upload against an isolated directory before
    production handover.
 4. Either enable a separate command-capable SSH account or document and rehearse
    the manual WebSSH/control-panel procedure for maintenance, cache handling, and
@@ -87,10 +95,10 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Install and test a dedicated key, then verify write/create/rename/delete
-  behavior in an isolated directory.
-- Store the independently corroborated host key and verify key authentication
-  from the GitHub runner network.
+- Store the dedicated password and independently corroborated host key in the
+  protected environment, then verify authentication from the GitHub runner
+  network.
+- Verify write/create/rename/delete behavior in an isolated directory.
 - CLI PHP version and extensions, filesystem permissions, disk headroom, and
   database version.
 - Cache/maintenance commands and the exact backup download, restore, and rollback

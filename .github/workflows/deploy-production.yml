@@ -108,7 +108,7 @@ jobs:
         env:
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
           SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
-          SFTP_PRIVATE_KEY: ${{ secrets.SFTP_PRIVATE_KEY }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
           SFTP_KNOWN_HOSTS: ${{ secrets.SFTP_KNOWN_HOSTS }}
           SFTP_PORT: ${{ vars.SFTP_PORT || '22' }}
           SFTP_REMOTE_PATH: ${{ vars.SFTP_REMOTE_PATH }}
@@ -117,7 +117,7 @@ jobs:
           for required_value in \
             "$SFTP_HOST" \
             "$SFTP_USERNAME" \
-            "$SFTP_PRIVATE_KEY" \
+            "$SFTP_PASSWORD" \
             "$SFTP_KNOWN_HOSTS" \
             "$SFTP_REMOTE_PATH"; do
             if [[ -z "$required_value" ]]; then
@@ -132,15 +132,20 @@ jobs:
           fi
 
           install -d -m 700 "$RUNNER_TEMP/smps-ssh"
-          printf '%s\n' "$SFTP_PRIVATE_KEY" > "$RUNNER_TEMP/smps-ssh/id_ed25519"
           printf '%s\n' "$SFTP_KNOWN_HOSTS" > "$RUNNER_TEMP/smps-ssh/known_hosts"
-          chmod 600 "$RUNNER_TEMP/smps-ssh/id_ed25519" "$RUNNER_TEMP/smps-ssh/known_hosts"
+          cat > "$RUNNER_TEMP/smps-ssh/askpass.sh" <<'EOF'
+          #!/bin/sh
+          printf '%s\n' "$SFTP_PASSWORD"
+          EOF
+          chmod 600 "$RUNNER_TEMP/smps-ssh/known_hosts"
+          chmod 700 "$RUNNER_TEMP/smps-ssh/askpass.sh"
 
       - name: Upload without deleting remote files
         shell: bash
         env:
           SFTP_HOST: ${{ secrets.SFTP_HOST }}
           SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
           SFTP_PORT: ${{ vars.SFTP_PORT || '22' }}
           SFTP_REMOTE_PATH: ${{ vars.SFTP_REMOTE_PATH }}
         run: |
@@ -161,11 +166,15 @@ jobs:
             > "$batch_file"
 
           cd "$RUNNER_TEMP/release"
-          sftp \
+          export SSH_ASKPASS="$RUNNER_TEMP/smps-ssh/askpass.sh"
+          export SSH_ASKPASS_REQUIRE=force
+          export DISPLAY=:0
+          setsid --wait sftp \
             -b "$batch_file" \
-            -i "$RUNNER_TEMP/smps-ssh/id_ed25519" \
-            -o BatchMode=yes \
-            -o IdentitiesOnly=yes \
+            -o BatchMode=no \
+            -o PreferredAuthentications=password \
+            -o PubkeyAuthentication=no \
+            -o NumberOfPasswordPrompts=1 \
             -o StrictHostKeyChecking=yes \
             -o "UserKnownHostsFile=$RUNNER_TEMP/smps-ssh/known_hosts" \
             -P "$SFTP_PORT" \
