@@ -107,12 +107,18 @@ until the development, CI, and Webglobe runtimes have all been checked.
 
 ## GitHub environment setup
 
-Create a `production` environment after the GitHub repository is public and:
+The `production` environment was created on 2026-09-22 and is restricted to
+protected branches. Because the repository currently has one eligible
+administrator, it deliberately has no required reviewer: manual workflow
+dispatch is the owner's approval action. If a second trusted maintainer is added,
+require that reviewer and prevent self-review. No environment secrets are stored
+until the secure account, target path, and trusted host key have been verified.
 
-1. Require at least one reviewer and prevent self-review.
-2. Restrict deployments to the protected default branch.
-3. Disable administrator bypass if the repository policy permits it.
-4. Store the following values on the environment, not as repository-wide
+Environment rules are:
+
+1. Restrict deployments to the protected default branch.
+2. Keep production deployment manual and serialized.
+3. Store the following values on the environment, not as repository-wide
    credentials.
 
 Environment secrets:
@@ -126,8 +132,7 @@ Environment secrets:
 
 Environment variables:
 
-- `SFTP_PORT`: SFTP port; defaults to `22` when omitted. Webglobe documents port
-  `222`; set it explicitly after verifying this account.
+- `SFTP_PORT`: set to Webglobe's documented port `222` (configured 2026-09-22).
 - `SFTP_REMOTE_PATH`: application root as seen by the restricted SFTP account.
 
 The account must be restricted to this application and must not provide access
