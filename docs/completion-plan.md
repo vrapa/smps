@@ -1,6 +1,6 @@
 # Completion plan: localization, one public repository, and Webglobe deployment
 
-Updated: 2026-09-16. This is the coordinating execution plan for the final
+Updated: 2026-09-22. This is the coordinating execution plan for the final
 state. It takes precedence over the transitional dual-repository workflow in
 the earlier plans. Detailed localization checklists remain in
 [localization-plan.md](localization-plan.md); the publication record remains in
@@ -60,21 +60,22 @@ or old GitLab history. Those remain outside the public development repository.
 
 ## Verified starting point
 
-Read-only inspection on 2026-09-16 established:
+Read-only inspection through 2026-09-22 established:
 
 | Area | Evidence and remaining work |
 | --- | --- |
-| GitHub | Public repository, default branch `main`. Previous verified release `7c960cb` completed CI on 2026-09-11; recheck protections before cutover. |
+| GitHub | Public repository, default branch `main`, protected required CI, and a branch-restricted `production` environment. Manual dispatch is the approved single-maintainer production gate. |
 | Publication | Clean public snapshot and MIT licensing are recorded as complete. Repeat the content audit for the final release. |
-| Localization | Infrastructure and shared UI stages are recorded complete; songs/files, concerts/dates, users/settings, and final acceptance remain. Catalogue parity tests exist. |
-| GitHub deployment | `.github/workflows/deploy-production.yml` exists, but the environments API returned no environments and no deployment runs were listed. Hosting connectivity is unverified. |
-| Current transfer design | SFTP key authentication, default port 22, in-place recursive upload without deletion. No implemented release activation, cache lifecycle, health check, or stale-file reconciliation. |
+| Localization | All three implementation increments and four catalogues are complete. Final real-path, responsive, failure-path, and fluent-speaker acceptance remains. |
+| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. Password SFTP connectivity and the current target were verified read-only; dedicated key credentials and trusted host identity are not configured. |
+| Current transfer design | SFTP key authentication on provider port 222, in-place recursive upload without deletion. No implemented release activation, cache lifecycle, health check, or stale-file reconciliation. |
 | Artifact recovery | CI artifacts expire after 14 days; an older artifact alone is not a durable recovery strategy. |
-| GitLab | The versioned pipeline still defines automatic deployment from `master`, plain FTP, deletion mirrors, and separate application/vendor jobs. Its current remote operational state was not inspected. |
-| Documentation | `AGENTS.md` still describes Nette Database and an ignored lock file, although `composer.lock` is now tracked and deployment documentation records the Doctrine-only transition. Reconcile during cutover. |
+| GitLab | A sanitized inventory found no active pipeline, schedule, hook, deploy key, or environment, but CI and two runners remain enabled and a future successful default-branch push could still trigger the legacy FTP jobs. Freeze remains pending. |
+| Documentation | `AGENTS.md`, README, contribution guidance, and deployment plans are reconciled with Doctrine, the tracked lock file, four locales, and the GitHub-only development flow. |
 
 Successful artifact construction is not evidence of a successful Webglobe
-deployment. No connection to the hosting account was made for this plan.
+deployment. The hosting inspection and connection probes were read-only; no
+account, service, configuration, remote file, backup, or production data changed.
 
 ## Execution rules
 
@@ -97,10 +98,11 @@ storage; public progress notes contain only sanitized results.
 
 ## 1. Verify the Webglobe hosting contract
 
-- [ ] Establish the actual hosting product/platform serving `smps.rkcomputer.cz`.
-  Check whether temporary hosting staging is easy to provide; it is optional.
-  Record privately the application root, document root, protocol, port, account
-  restrictions, and host identity. Do not infer them from the old FTP pipeline.
+- [x] Establish the actual hosting product/platform serving `smps.rkcomputer.cz`
+  as managed Webglobe Webhosting Plus. Record privately the application root,
+  current document root, protocol, port, and account restrictions. Host identity
+  still requires confirmation through a trusted provider channel.
+- [ ] Check whether temporary hosting staging is easy to provide; it is optional.
 - [x] Verify noninteractive SFTP password authentication from an external client
   on the provider-documented port and confirm the application target without
   changing remote data.
@@ -113,11 +115,14 @@ storage; public progress notes contain only sanitized results.
   specify a TLS-verified FTPS implementation and the necessary CLI/activation
   procedure. If neither can meet the acceptance criteria, document the exact
   hosting change needed before implementation; do not fall back to plain FTP.
-- [ ] Check the actual web and CLI PHP versions and extensions, especially
-  `pdo_mysql`, `intl`, `mbstring`, and `fileinfo`, against the locked application
-  requirements. Check memory, execution/upload limits, timezone, OPcache, disk
-  quota, filesystem permissions, and database version. Symlink support is only
-  relevant if it simplifies this installation; it is not required.
+- [x] Check the actual web PHP runtime against the locked application requirements.
+  It runs PHP 8.1.34 through FPM with `pdo_mysql`, `intl`, `mbstring`, `fileinfo`,
+  and OPcache enabled; its inspected memory, execution, upload, and post limits
+  are sufficient for the current application. The server default timezone differs
+  from the application's explicit `Europe/Prague` setting.
+- [ ] Check CLI PHP and extensions, filesystem permissions, disk headroom, and
+  database version. Symlink support is only relevant if it simplifies this
+  installation; it is not required.
 - [ ] Verify how the host serves `www/index.php`, honours rewrite/access rules,
   and prevents HTTP access to configuration, vendor code, logs, and backups.
   The tested artifact must contain the project-root fail-closed guard, but the
@@ -144,6 +149,12 @@ requests for configuration, dependency, metadata, log, and Git paths returned
 HTTP 403. The permanent hosting acceptance item remains open until the document
 root points to `www` and the complete access boundary is rechecked.
 
+The 2026-09-22 control-panel inspection confirmed that the `smps` subdomain
+currently targets the application root and that its editable directory mapping
+can be changed to the application's `www` directory. No setting was changed.
+Make that correction only in the approved maintenance window, after backups and
+with immediate HTTP/access-boundary verification.
+
 Current transport status (2026-09-22): an authenticated read-only probe of the
 legacy deployment endpoint confirmed plain FTP on port 21; standard SSH port 22
 and implicit FTPS port 990 were unavailable, and certificate-verified explicit
@@ -157,6 +168,14 @@ changed. Before credentials can be configured, verify key authentication and
 choose either a separately enabled command-capable account or a documented manual
 maintenance/cache procedure alongside SFTP. See
 [webglobe-capability-checklist.md](webglobe-capability-checklist.md).
+
+The 2026-09-22 control-panel inspection also confirmed that a separate FTP/SFTP
+account can be rooted at the application directory with granular file and
+directory permissions. Browser WebSSH can be activated temporarily for one hour
+after two-factor authentication; a permanent console is a separate paid option.
+Neither an account nor either console option was activated. Provider-managed
+daily FTP and database backups are available, but a fresh independently verified
+pre-deployment backup and a recovery rehearsal remain required.
 
 ## 2. Make GitHub the sole development source
 
@@ -309,11 +328,16 @@ passed.
   uploads/configuration merely because the upload script excludes those paths.
   The current legacy account can navigate above the application target into the
   wider hosting tree and is therefore not accepted as the final deployment
-  account.
+  account. The control panel can create a separate account rooted at the
+  application directory with granular permissions; creating it and installing
+  its key remain controlled operational actions.
 - [x] Store the provider-documented SFTP port `222` as a non-secret environment
   variable.
 - [x] Verify the SFTP target path with an authenticated read-only probe and store
   it as an environment-scoped variable without exposing credentials.
+  Recalculate and reverify this value after the dedicated account is rooted; the
+  account-relative application root will probably become `.` rather than the
+  legacy account's wider-tree path.
 - [ ] Pin the host key obtained through a trusted provider channel and verify key
   authentication from the runner network. A key learned from the same untrusted
   connection is not sufficient identity evidence.
@@ -345,6 +369,12 @@ passed.
   current hosting version before the first update; it may predate the GitHub
   releases. Preserve private configuration/database/upload backups separately and
   verify restoration. A simple private backup location is sufficient.
+
+Webglobe currently provides daily FTP snapshots and daily database backups, plus
+manual preparation/download and restore controls. These improve recovery options
+but do not close this item: request or create fresh backups in the maintenance
+window, preserve an independent copy where practical, and verify the exact
+restore procedure before replacing production files.
 
 Gate: an isolated rehearsal demonstrates protected-path preservation, exact revision
 identity, interrupted-upload recovery, stale-file handling, and application
