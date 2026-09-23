@@ -6,7 +6,7 @@ param(
     [ValidateRange(1, [long]::MaxValue)]
     [long] $CiRunId,
 
-    [ValidateSet('Prepare', 'Preflight', 'Deploy')]
+    [ValidateSet('Prepare', 'Preflight', 'WriteTest', 'Deploy')]
     [string] $Mode = 'Prepare',
 
     [string] $ConfigPath,
@@ -354,6 +354,47 @@ try {
 
     if ($Mode -eq 'Preflight') {
         Write-Host 'Preflight completed. No remote write command was issued.'
+        return
+    }
+
+    if ($Mode -eq 'WriteTest') {
+        $writeTestId = [guid]::NewGuid().ToString('N').Substring(0, 12)
+        $remoteTestDirectory = ".smps-deploy-check-$writeTestId"
+        $localMarkerName = "smps-write-test-$writeTestId.txt"
+        $localMarkerPath = Join-Path $releaseDirectory $localMarkerName
+        [IO.File]::WriteAllText(
+            $localMarkerPath,
+            "Synthetic SMPS SFTP write test $writeTestId. No production data.",
+            [Text.UTF8Encoding]::new($false)
+        )
+
+        Write-Host ''
+        Write-Host "The next operation creates and completely removes isolated directory '$remoteTestDirectory'."
+        Write-Host 'It uploads one synthetic marker, renames it, removes it, and removes the empty directory.'
+        $expectedConfirmation = "WRITE TEST $writeTestId"
+        $confirmation = Read-Host "Type '$expectedConfirmation' to run the isolated remote write test"
+        if ($confirmation -cne $expectedConfirmation) {
+            throw 'Isolated remote write test was not confirmed.'
+        }
+
+        Write-Host 'Starting isolated SFTP write test. OpenSSH will prompt for the password again.'
+        Invoke-SftpCommands `
+            -Sftp $sftp `
+            -Configuration $configuration `
+            -Commands @(
+                "mkdir $remoteTestDirectory",
+                "cd $remoteTestDirectory",
+                "put $localMarkerName marker.txt",
+                'rename marker.txt marker-renamed.txt',
+                'rm marker-renamed.txt',
+                'cd ..',
+                "rmdir $remoteTestDirectory",
+                'pwd',
+                'quit'
+            ) `
+            -LocalDirectory $releaseDirectory | Out-Null
+
+        Write-Host "Isolated write/create/rename/delete behavior verified; '$remoteTestDirectory' was removed."
         return
     }
 
