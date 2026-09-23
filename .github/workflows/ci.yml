@@ -146,6 +146,27 @@ jobs:
       - name: Run database integration tests
         run: SMPS_ENV=test SMPS_DATABASE_TESTS=1 php vendor/bin/phpunit
 
+      - name: Prepare synthetic legacy-like transition schema
+        run: php tools/rehearse-database-upgrade.php prepare config/phinx.php testing
+
+      - name: Verify application compatibility before transition migrations
+        run: >-
+          SMPS_ENV=test SMPS_DATABASE_TESTS=1 php vendor/bin/phpunit
+          tests/Integration/UserAuthenticationTest.php
+          tests/Integration/SongConcertFileTest.php
+
+      - name: Seed records for transition preservation check
+        run: php tools/rehearse-database-upgrade.php seed config/phinx.php testing
+
+      - name: Apply pending transition migrations
+        run: php vendor/bin/phinx migrate --environment testing --configuration config/phinx.php
+
+      - name: Verify upgraded schema, sentinel data, and application
+        run: |
+          php tools/rehearse-database-upgrade.php verify config/phinx.php testing
+          SMPS_ENV=test php bin/console orm:validate-schema
+          SMPS_ENV=test SMPS_DATABASE_TESTS=1 php vendor/bin/phpunit
+
   artifact:
     name: Build deploy artifact
     needs: [secrets, quality, database]
