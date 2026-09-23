@@ -226,8 +226,11 @@ The server default timezone differs from the application's explicit
 during acceptance. A WebSSH check on 2026-09-23 confirmed the matching `php8.1`
 CLI and required extensions, suitable ownership/modes for protected and runtime
 paths, a 901 MB installation, and 281 GB free on its backing filesystem. The
-account-level quota remains to be checked in Webglobe Admin. The database reports
-MySQL 5.5.62 and requires the compatibility gate described above.
+Webglobe control panel subsequently confirmed more than 90 GB free within the
+hosting account's own quota, comfortably above the temporary deployment and
+recovery allowance. Private control-panel evidence and hosting identifiers are
+not stored in the repository. The database reports MySQL 5.5.62 and requires the
+compatibility gate described above.
 
 The account exposes a temporary browser WebSSH console for one hour after
 two-factor authentication. Permanent console access is a separate paid option.
