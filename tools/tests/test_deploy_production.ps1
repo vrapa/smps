@@ -34,6 +34,7 @@ if ($configuration.RemotePath -ne '.') {
 $scriptContent = Get-Content -Raw -LiteralPath $scriptPath
 foreach ($requiredText in @(
     "[ValidateSet('Prepare', 'Preflight', 'Deploy')]",
+    '$Commands | & $Sftp @arguments',
     "'StrictHostKeyChecking=yes'",
     "'PreferredAuthentications=password'",
     "'PubkeyAuthentication=no'",

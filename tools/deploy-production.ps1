@@ -154,23 +154,15 @@ function Read-DeploymentConfiguration {
     }
 }
 
-function Invoke-SftpBatch {
+function Invoke-SftpCommands {
     param(
         [Parameter(Mandatory)][string] $Sftp,
         [Parameter(Mandatory)][hashtable] $Configuration,
-        [Parameter(Mandatory)][string] $BatchFile,
         [Parameter(Mandatory)][string[]] $Commands,
         [Parameter(Mandatory)][string] $LocalDirectory
     )
 
-    [IO.File]::WriteAllLines(
-        $BatchFile,
-        $Commands,
-        [Text.UTF8Encoding]::new($false)
-    )
-
     $arguments = @(
-        '-b', $BatchFile,
         '-o', 'BatchMode=no',
         '-o', 'PreferredAuthentications=password',
         '-o', 'PubkeyAuthentication=no',
@@ -183,20 +175,30 @@ function Invoke-SftpBatch {
         "$($Configuration.UserName)@$($Configuration.Host):$($Configuration.RemotePath)"
     )
 
+    $output = [Collections.Generic.List[string]]::new()
+    $exitCode = -1
     Push-Location $LocalDirectory
     try {
-        $output = @(& $Sftp @arguments 2>&1)
+        $Commands | & $Sftp @arguments 2>&1 | ForEach-Object {
+            $line = $_.ToString()
+            $output.Add($line)
+            Write-Host $line
+        }
         $exitCode = $LASTEXITCODE
     } finally {
         Pop-Location
     }
 
-    $output | ForEach-Object { Write-Host $_ }
     if ($exitCode -ne 0) {
         throw "SFTP failed with exit code $exitCode."
     }
+    foreach ($line in $output) {
+        if ($line -match '(?i)(permission denied|no such file|not found|couldn.t|failure|connection closed)') {
+            throw "SFTP reported a failed command: $line"
+        }
+    }
 
-    return @($output | ForEach-Object { $_.ToString() })
+    return $output.ToArray()
 }
 
 $git = Resolve-RequiredCommand 'git'
@@ -274,9 +276,8 @@ $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 $workspace = Join-Path $temporaryRoot "smps-deploy-$([guid]::NewGuid().ToString('N'))"
 $artifactDirectory = Join-Path $workspace 'artifact'
 $releaseDirectory = Join-Path $workspace 'release'
-$batchDirectory = Join-Path $workspace 'sftp'
 
-New-Item -ItemType Directory -Path $artifactDirectory, $releaseDirectory, $batchDirectory | Out-Null
+New-Item -ItemType Directory -Path $artifactDirectory, $releaseDirectory | Out-Null
 
 try {
     $artifactName = "smps-$deploySha"
@@ -339,10 +340,9 @@ try {
     $configuration = Read-DeploymentConfiguration -Path $ConfigPath -SshKeygen $sshKeygen
 
     Write-Host 'Starting read-only SFTP preflight. OpenSSH will prompt for the password.'
-    $preflightOutput = Invoke-SftpBatch `
+    $preflightOutput = Invoke-SftpCommands `
         -Sftp $sftp `
         -Configuration $configuration `
-        -BatchFile (Join-Path $batchDirectory 'preflight.sftp') `
         -Commands @('pwd', 'cd ..', 'pwd', 'quit') `
         -LocalDirectory $releaseDirectory
 
@@ -369,10 +369,9 @@ try {
     }
 
     Write-Host 'Starting production overlay. OpenSSH will prompt for the password again.'
-    Invoke-SftpBatch `
+    Invoke-SftpCommands `
         -Sftp $sftp `
         -Configuration $configuration `
-        -BatchFile (Join-Path $batchDirectory 'deploy.sftp') `
         -Commands @(
             'put .htaccess',
             'put -R app',
