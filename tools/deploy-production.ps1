@@ -201,7 +201,13 @@ function Invoke-LocalDeploymentRehearsal {
     if (-not (Test-Path -LiteralPath (Join-Path $liveDirectory 'obsolete-release-file.txt') -PathType Leaf)) {
         throw 'The rehearsal did not reproduce no-delete stale-file behavior.'
     }
-    foreach ($candidatePath in @('.htaccess', 'composer.lock', 'www/index.php')) {
+    foreach ($candidatePath in @(
+        '.htaccess',
+        'composer.lock',
+        'RELEASE_MANIFEST.sha256',
+        'RELEASE_SHA',
+        'www/index.php'
+    )) {
         $releaseHash = (Get-FileHash -LiteralPath (Join-Path $ReleaseDirectory $candidatePath) -Algorithm SHA256).Hash
         $liveHash = (Get-FileHash -LiteralPath (Join-Path $liveDirectory $candidatePath) -Algorithm SHA256).Hash
         if ($releaseHash -ne $liveHash) {
@@ -439,7 +445,13 @@ try {
         '--extract', '--gzip', '--file', $archive, '--directory', $releaseDirectory
     )
 
-    foreach ($requiredPath in @('.htaccess', 'composer.lock', 'www/index.php')) {
+    foreach ($requiredPath in @(
+        '.htaccess',
+        'composer.lock',
+        'RELEASE_MANIFEST.sha256',
+        'RELEASE_SHA',
+        'www/index.php'
+    )) {
         if (-not (Test-Path -LiteralPath (Join-Path $releaseDirectory $requiredPath))) {
             throw "The extracted artifact is missing '$requiredPath'."
         }
@@ -457,6 +469,11 @@ try {
         if (Test-Path -LiteralPath (Join-Path $releaseDirectory $protectedPath)) {
             throw "The extracted artifact contains protected path '$protectedPath'."
         }
+    }
+
+    $releaseSha = (Get-Content -Raw -LiteralPath (Join-Path $releaseDirectory 'RELEASE_SHA')).Trim()
+    if ($releaseSha -cne $deploySha) {
+        throw "The artifact release marker '$releaseSha' does not match CI revision '$deploySha'."
     }
 
     Write-Host "Repository: $repository"
@@ -563,6 +580,8 @@ try {
             'put -R www',
             'put composer.json',
             'put composer.lock',
+            'put RELEASE_MANIFEST.sha256',
+            'put RELEASE_SHA',
             'put README.md',
             'put THIRD_PARTY_NOTICES.md',
             'quit'

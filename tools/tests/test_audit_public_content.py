@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import io
 import tarfile
 import tempfile
@@ -44,18 +45,61 @@ class PublicContentPolicyTest(unittest.TestCase):
     def test_safe_archive_is_accepted(self) -> None:
         archive = self._archive_path()
         with tarfile.open(archive, "w:gz") as tar:
-            self._add_file(tar, ".htaccess")
-            self._add_file(tar, "composer.lock")
-            self._add_file(tar, "www/index.php")
-            self._add_file(tar, "vendor/package/docs/logo.png")
+            self._add_release_files(
+                tar,
+                {
+                    ".htaccess": b"guard",
+                    "composer.lock": b"lock",
+                    "www/index.php": b"index",
+                    "vendor/package/docs/logo.png": b"logo",
+                },
+            )
         audit.audit_archive(archive)
 
     def test_archive_requires_project_root_guard(self) -> None:
         archive = self._archive_path()
         with tarfile.open(archive, "w:gz") as tar:
-            self._add_file(tar, "composer.lock")
-            self._add_file(tar, "www/index.php")
+            self._add_release_files(
+                tar,
+                {"composer.lock": b"lock", "www/index.php": b"index"},
+            )
         with self.assertRaisesRegex(audit.PolicyViolation, r"required.*\.htaccess"):
+            audit.audit_archive(archive)
+
+    def test_archive_rejects_manifest_hash_mismatch(self) -> None:
+        archive = self._archive_path()
+        with tarfile.open(archive, "w:gz") as tar:
+            files = {
+                ".htaccess": b"guard",
+                "composer.lock": b"lock",
+                "RELEASE_SHA": (b"a" * 40) + b"\n",
+                "www/index.php": b"index",
+            }
+            for name, content in files.items():
+                self._add_file(tar, name, content)
+            manifest = b"".join(
+                f"{'0' * 64 if name == '.htaccess' else hashlib.sha256(content).hexdigest()}  {name}\n".encode(
+                    "utf-8",
+                )
+                for name, content in sorted(files.items())
+            )
+            self._add_file(tar, "RELEASE_MANIFEST.sha256", manifest)
+        with self.assertRaisesRegex(audit.PolicyViolation, r"hash mismatch.*\.htaccess"):
+            audit.audit_archive(archive)
+
+    def test_archive_rejects_file_missing_from_manifest(self) -> None:
+        archive = self._archive_path()
+        with tarfile.open(archive, "w:gz") as tar:
+            self._add_release_files(
+                tar,
+                {
+                    ".htaccess": b"guard",
+                    "composer.lock": b"lock",
+                    "www/index.php": b"index",
+                },
+            )
+            self._add_file(tar, "app/unlisted.php", b"unlisted")
+        with self.assertRaisesRegex(audit.PolicyViolation, r"manifest path mismatch"):
             audit.audit_archive(archive)
 
     def test_archive_rejects_traversal_and_links(self) -> None:
@@ -67,8 +111,14 @@ class PublicContentPolicyTest(unittest.TestCase):
             with self.subTest(name=name):
                 archive = self._archive_path()
                 with tarfile.open(archive, "w:gz") as tar:
-                    self._add_file(tar, "composer.lock")
-                    self._add_file(tar, "www/index.php")
+                    self._add_release_files(
+                        tar,
+                        {
+                            ".htaccess": b"guard",
+                            "composer.lock": b"lock",
+                            "www/index.php": b"index",
+                        },
+                    )
                     info = tarfile.TarInfo(name)
                     info.type = entry_type
                     if entry_type == tarfile.SYMTYPE:
@@ -80,9 +130,15 @@ class PublicContentPolicyTest(unittest.TestCase):
     def test_archive_rejects_a_file_disguised_as_a_root_directory(self) -> None:
         archive = self._archive_path()
         with tarfile.open(archive, "w:gz") as tar:
-            self._add_file(tar, "composer.lock")
+            self._add_release_files(
+                tar,
+                {
+                    ".htaccess": b"guard",
+                    "composer.lock": b"lock",
+                    "www/index.php": b"index",
+                },
+            )
             self._add_file(tar, "www")
-            self._add_file(tar, "www/index.php")
         with self.assertRaises(audit.PolicyViolation):
             audit.audit_archive(archive)
 
@@ -96,9 +152,19 @@ class PublicContentPolicyTest(unittest.TestCase):
         self.addCleanup(path.unlink, missing_ok=True)
         return path
 
+    @classmethod
+    def _add_release_files(cls, tar: tarfile.TarFile, files: dict[str, bytes]) -> None:
+        release_files = {**files, "RELEASE_SHA": (b"a" * 40) + b"\n"}
+        manifest = b"".join(
+            f"{hashlib.sha256(content).hexdigest()}  {name}\n".encode("utf-8")
+            for name, content in sorted(release_files.items())
+        )
+        for name, content in release_files.items():
+            cls._add_file(tar, name, content)
+        cls._add_file(tar, "RELEASE_MANIFEST.sha256", manifest)
+
     @staticmethod
-    def _add_file(tar: tarfile.TarFile, name: str) -> None:
-        content = b"test"
+    def _add_file(tar: tarfile.TarFile, name: str, content: bytes = b"test") -> None:
         info = tarfile.TarInfo(name)
         info.size = len(content)
         tar.addfile(info, io.BytesIO(content))

@@ -193,6 +193,12 @@ jobs:
         shell: bash
         run: |
           mkdir build
+          printf '%s\n' "${GITHUB_SHA}" > RELEASE_SHA
+          {
+            find app bin config db vendor www -type f -print0
+            printf '%s\0' .htaccess composer.json composer.lock README.md THIRD_PARTY_NOTICES.md RELEASE_SHA
+          } | sort --zero-terminated | xargs --null sha256sum > RELEASE_MANIFEST.sha256
+          sha256sum --check --strict RELEASE_MANIFEST.sha256
           tar --create --gzip --file "build/smps-${GITHUB_SHA}.tar.gz" \
             --exclude='config/local.neon' \
             --exclude='config/test.neon' \
@@ -203,7 +209,8 @@ jobs:
             --exclude='log' \
             --exclude='temp' \
             app bin config db vendor www .htaccess \
-            composer.json composer.lock README.md THIRD_PARTY_NOTICES.md
+            composer.json composer.lock README.md THIRD_PARTY_NOTICES.md \
+            RELEASE_SHA RELEASE_MANIFEST.sha256
 
       - name: Validate artifact content and structure
         run: python3 tools/audit_public_content.py archive "build/smps-${GITHUB_SHA}.tar.gz"

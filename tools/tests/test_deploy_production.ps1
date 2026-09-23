@@ -53,6 +53,9 @@ foreach ($requiredText in @(
     "'put -R app'",
     "'put -R vendor'",
     "'put -R www'",
+    "'put RELEASE_MANIFEST.sha256'",
+    "'put RELEASE_SHA'",
+    'does not match CI revision',
     'tools/audit_public_content.py'
 )) {
     if (-not $scriptContent.Contains($requiredText)) {

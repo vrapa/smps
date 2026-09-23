@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import re
 import subprocess
 import sys
 import tarfile
@@ -104,6 +106,8 @@ APPROVED_SOURCE_PLACEHOLDERS = {"log/.gitignore", "temp/.gitignore"}
 ARTIFACT_ROOT_DIRECTORIES = {"app", "bin", "config", "db", "vendor", "www"}
 ARTIFACT_ROOT_FILES = {
     ".htaccess",
+    "RELEASE_MANIFEST.sha256",
+    "RELEASE_SHA",
     "composer.json",
     "composer.lock",
     "README.md",
@@ -225,6 +229,8 @@ def audit_git(root: Path, *, history: bool) -> None:
 def audit_archive(archive: Path) -> None:
     seen: set[str] = set()
     total_size = 0
+    file_hashes: dict[str, str] = {}
+    metadata_content: dict[str, bytes] = {}
 
     try:
         with tarfile.open(archive, "r:gz") as tar:
@@ -247,14 +253,73 @@ def audit_archive(archive: Path) -> None:
                     if total_size > 1024 * 1024 * 1024:
                         raise PolicyViolation("uncompressed archive exceeds 1 GiB")
 
+                    extracted = tar.extractfile(member)
+                    if extracted is None:
+                        raise PolicyViolation(f"cannot read archive entry: {normalized}")
+                    digest = hashlib.sha256()
+                    chunks: list[bytes] = []
+                    while chunk := extracted.read(1024 * 1024):
+                        digest.update(chunk)
+                        if normalized in {"RELEASE_MANIFEST.sha256", "RELEASE_SHA"}:
+                            chunks.append(chunk)
+                    file_hashes[normalized] = digest.hexdigest()
+                    if normalized in {"RELEASE_MANIFEST.sha256", "RELEASE_SHA"}:
+                        metadata_content[normalized] = b"".join(chunks)
+
                 check_path(normalized, artifact=True)
     except (tarfile.TarError, OSError) as exception:
         raise PolicyViolation(f"cannot inspect archive: {exception}") from exception
 
-    required = {".htaccess", "composer.lock", "www/index.php"}
+    required = {
+        ".htaccess",
+        "composer.lock",
+        "RELEASE_MANIFEST.sha256",
+        "RELEASE_SHA",
+        "www/index.php",
+    }
     missing = sorted(required - seen)
     if missing:
         raise PolicyViolation(f"required artifact paths missing: {', '.join(missing)}")
+
+    try:
+        release_sha = metadata_content["RELEASE_SHA"].decode("ascii").strip()
+    except UnicodeDecodeError as exception:
+        raise PolicyViolation("RELEASE_SHA is not ASCII") from exception
+    if re.fullmatch(r"[0-9a-f]{40}", release_sha) is None:
+        raise PolicyViolation("RELEASE_SHA must contain one lowercase 40-character Git SHA")
+
+    try:
+        manifest_text = metadata_content["RELEASE_MANIFEST.sha256"].decode("utf-8")
+    except UnicodeDecodeError as exception:
+        raise PolicyViolation("release manifest is not UTF-8") from exception
+
+    manifest_hashes: dict[str, str] = {}
+    for line in manifest_text.splitlines():
+        match = re.fullmatch(r"([0-9a-f]{64})  (.+)", line)
+        if match is None:
+            raise PolicyViolation(f"invalid release manifest line: {line!r}")
+        digest, raw_path = match.groups()
+        normalized = normalize_path(raw_path)
+        if normalized == "RELEASE_MANIFEST.sha256":
+            raise PolicyViolation("release manifest must not include itself")
+        if normalized in manifest_hashes:
+            raise PolicyViolation(f"duplicate release manifest path: {normalized}")
+        manifest_hashes[normalized] = digest
+
+    expected_paths = set(file_hashes) - {"RELEASE_MANIFEST.sha256"}
+    if set(manifest_hashes) != expected_paths:
+        missing_paths = sorted(expected_paths - set(manifest_hashes))
+        unexpected_paths = sorted(set(manifest_hashes) - expected_paths)
+        details = []
+        if missing_paths:
+            details.append(f"missing: {', '.join(missing_paths)}")
+        if unexpected_paths:
+            details.append(f"unexpected: {', '.join(unexpected_paths)}")
+        raise PolicyViolation(f"release manifest path mismatch ({'; '.join(details)})")
+
+    for path, expected_digest in manifest_hashes.items():
+        if file_hashes[path] != expected_digest:
+            raise PolicyViolation(f"release manifest hash mismatch: {path}")
 
 
 def main() -> int:
