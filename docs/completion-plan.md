@@ -158,6 +158,10 @@ before any remote command. The command now streams the fixed command list into a
 normal interactive SFTP session so OpenSSH can read the password directly from
 the console. The corrected command passed CI and the repeated preflight verified
 the restricted root without a remote write.
+The owner approved the next isolated write/create/rename/delete check. A dedicated
+`WriteTest` mode now limits it to one random `.smps-deploy-check-*` directory and
+one synthetic marker, with an exact confirmation and explicit cleanup. Live
+execution remains pending until this change is merged and CI passes.
 
 ## 1. Verify the Webglobe hosting contract
 

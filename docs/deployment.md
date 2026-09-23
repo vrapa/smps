@@ -183,6 +183,9 @@ numeric run ID in one of these modes:
 # Additionally verify password login, target, and chroot using only pwd/cd/pwd.
 ./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Preflight
 
+# After explicit approval, test create/rename/delete in one disposable directory.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode WriteTest
+
 # Repeat the preflight, require an exact SHA confirmation, then overlay files.
 ./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Deploy
 ```
@@ -206,6 +209,13 @@ opening the upload connection. The upload uses the reviewed allowlist and no
 remote delete command. It does not create backups, enable maintenance, change
 `config/local.neon`, run migrations, clear caches, or perform acceptance checks.
 Those remain explicit maintenance-window steps.
+
+`WriteTest` also starts with the read-only preflight. After an exact confirmation
+it creates one random `.smps-deploy-check-*` directory at the restricted account
+root, uploads a synthetic marker, renames and removes the marker, then removes the
+empty directory. It neither reads nor changes application files. Treat any failed
+cleanup as a stop condition and remove only the printed test directory after
+inspection; never broaden cleanup to a wildcard.
 
 ## Transitional GitHub environment setup
 

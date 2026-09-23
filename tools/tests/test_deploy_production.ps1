@@ -33,11 +33,15 @@ if ($configuration.RemotePath -ne '.') {
 
 $scriptContent = Get-Content -Raw -LiteralPath $scriptPath
 foreach ($requiredText in @(
-    "[ValidateSet('Prepare', 'Preflight', 'Deploy')]",
+    "[ValidateSet('Prepare', 'Preflight', 'WriteTest', 'Deploy')]",
     '$Commands | & $Sftp @arguments',
     "'StrictHostKeyChecking=yes'",
     "'PreferredAuthentications=password'",
     "'PubkeyAuthentication=no'",
+    'mkdir $remoteTestDirectory',
+    "'rename marker.txt marker-renamed.txt'",
+    "'rm marker-renamed.txt'",
+    'rmdir $remoteTestDirectory',
     "'put -R app'",
     "'put -R vendor'",
     "'put -R www'",
