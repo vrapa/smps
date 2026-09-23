@@ -91,8 +91,9 @@ Completed setup:
 - The reviewed local command, ignored non-password configuration template, and
   CI syntax/safety test are implemented. Local prepare successfully verified the
   exact artifact from merged `main` run `35838496796`, including archive policy,
-  extraction, and digest, without contacting production. Read-only SFTP preflight
-  remains pending.
+  extraction, and digest, without contacting production. The subsequent
+  password-authenticated read-only SFTP preflight verified strict host identity,
+  target `.`, and the restricted root without issuing a write command.
 
 Remaining outcome:
 
@@ -112,9 +113,6 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Verify the local command's read-only preflight from merged trusted `main`. The
-  alternative deployment origin is selected; provider investigation of the two
-  hosted-runner timeouts is optional rather than a production blocker.
 - Verify write/create/rename/delete behavior in an isolated directory.
 - CLI PHP version and extensions, filesystem permissions, disk headroom, and
   database version.
