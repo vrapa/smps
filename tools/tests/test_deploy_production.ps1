@@ -33,7 +33,7 @@ if ($configuration.RemotePath -ne '.') {
 
 $scriptContent = Get-Content -Raw -LiteralPath $scriptPath
 foreach ($requiredText in @(
-    "[ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'MaintenanceOn', 'MaintenanceOff', 'Deploy')]",
+    "[ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'MaintenanceOn', 'CacheRotate', 'CacheRestore', 'MaintenanceOff', 'Deploy')]",
     'Invoke-LocalDeploymentRehearsal',
     'Copy-DeploymentOverlay',
     'Assert-ManifestEqual',
@@ -65,10 +65,17 @@ foreach ($requiredText in @(
     "'www/maintenance.html'",
     'MAINTENANCE ON',
     'MAINTENANCE OFF',
+    'CACHE ROTATE',
+    'CACHE RESTORE',
     "'mkdir .maintenance'",
     'put $maintenanceMarkerName release',
     'get .maintenance/release $maintenanceReadBackName',
-    "@('MaintenanceOff', 'Deploy')",
+    "@('CacheRotate', 'CacheRestore', 'MaintenanceOff', 'Deploy')",
+    'rename temp/cache temp/cache.before-$shortSha',
+    'rename temp/cache temp/cache.failed-$shortSha',
+    'rename temp/cache.before-$shortSha temp/cache',
+    'No cache directory or cached file is deleted.',
+    'No cache directory or cached application file is deleted.',
     "@('rm .maintenance/release', 'rmdir .maintenance', 'quit')",
     'Production maintenance marker is missing or belongs to a different release',
     'tools/audit_public_content.py'
@@ -78,7 +85,7 @@ foreach ($requiredText in @(
     }
 }
 
-$maintenanceCheckPosition = $scriptContent.IndexOf("if (`$Mode -in @('MaintenanceOff', 'Deploy'))")
+$maintenanceCheckPosition = $scriptContent.IndexOf("if (`$Mode -in @('CacheRotate', 'CacheRestore', 'MaintenanceOff', 'Deploy'))")
 $uploadPosition = $scriptContent.IndexOf("The next operation overlays application files without remote deletion.")
 if ($maintenanceCheckPosition -lt 0 -or $uploadPosition -lt 0 -or $maintenanceCheckPosition -ge $uploadPosition) {
     throw 'Deployment must verify the candidate-bound maintenance marker before offering the upload.'

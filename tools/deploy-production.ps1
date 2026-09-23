@@ -6,7 +6,7 @@ param(
     [ValidateRange(1, [long]::MaxValue)]
     [long] $CiRunId,
 
-    [ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'MaintenanceOn', 'MaintenanceOff', 'Deploy')]
+    [ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'MaintenanceOn', 'CacheRotate', 'CacheRestore', 'MaintenanceOff', 'Deploy')]
     [string] $Mode = 'Prepare',
 
     [string] $ConfigPath,
@@ -152,7 +152,8 @@ function Copy-DeploymentOverlay {
 function Invoke-LocalDeploymentRehearsal {
     param(
         [Parameter(Mandatory)][string] $Workspace,
-        [Parameter(Mandatory)][string] $ReleaseDirectory
+        [Parameter(Mandatory)][string] $ReleaseDirectory,
+        [Parameter(Mandatory)][string] $ReleaseSha
     )
 
     $rehearsalRoot = Join-Path $Workspace 'rehearsal'
@@ -216,6 +217,28 @@ function Invoke-LocalDeploymentRehearsal {
         }
     }
 
+    $shortSha = $ReleaseSha.Substring(0, 12)
+    $cacheDirectory = Join-Path $liveDirectory 'temp/cache'
+    $cacheBackupDirectory = Join-Path $liveDirectory "temp/cache.before-$shortSha"
+    $failedCacheDirectory = Join-Path $liveDirectory "temp/cache.failed-$shortSha"
+    $cacheBeforeManifest = Get-FileManifest -Root $cacheDirectory
+
+    Move-Item -LiteralPath $cacheDirectory -Destination $cacheBackupDirectory
+    New-Item -ItemType Directory -Path $cacheDirectory | Out-Null
+    if ((Get-ChildItem -LiteralPath $cacheDirectory -Force).Count -ne 0) {
+        throw 'The rehearsed replacement cache directory was not empty.'
+    }
+
+    Write-SyntheticFile `
+        -Root $cacheDirectory `
+        -RelativePath 'candidate-cache.txt' `
+        -Content 'synthetic candidate cache'
+    Move-Item -LiteralPath $cacheDirectory -Destination $failedCacheDirectory
+    Move-Item -LiteralPath $cacheBackupDirectory -Destination $cacheDirectory
+    $cacheAfterManifest = Get-FileManifest -Root $cacheDirectory
+    Assert-ManifestEqual -Expected $cacheBeforeManifest -Actual $cacheAfterManifest
+    Remove-Item -LiteralPath $failedCacheDirectory -Recurse -Force
+
     $resolvedRoot = [IO.Path]::GetFullPath($rehearsalRoot).TrimEnd(
         [IO.Path]::DirectorySeparatorChar,
         [IO.Path]::AltDirectorySeparatorChar
@@ -234,6 +257,7 @@ function Invoke-LocalDeploymentRehearsal {
     Assert-ManifestEqual -Expected $beforeManifest -Actual $restoredManifest
 
     Write-Host 'Local rehearsal verified candidate overlay, protected-path preservation, no-delete stale-file behavior, and exact snapshot rollback.'
+    Write-Host 'It also verified reversible cache-directory rotation without deleting the previous cache.'
     Write-Host 'Only synthetic data inside the temporary deployment workspace was used.'
 }
 
@@ -503,7 +527,10 @@ try {
     }
 
     if ($Mode -eq 'Rehearse') {
-        Invoke-LocalDeploymentRehearsal -Workspace $workspace -ReleaseDirectory $releaseDirectory
+        Invoke-LocalDeploymentRehearsal `
+            -Workspace $workspace `
+            -ReleaseDirectory $releaseDirectory `
+            -ReleaseSha $deploySha
         return
     }
 
@@ -582,6 +609,26 @@ try {
         [Text.UTF8Encoding]::new($false)
     )
 
+    $cacheBackupMarkerName = ".smps-cache-backup-$shortSha"
+    $cacheCandidateMarkerName = '.smps-cache-release'
+    $cacheBackupUploadName = '.smps-cache-backup-upload'
+    $cacheCandidateUploadName = '.smps-cache-release-upload'
+    $cacheBackupReadBackName = '.smps-cache-backup-readback'
+    $cacheCandidateReadBackName = '.smps-cache-release-readback'
+    $cacheRestoreReadBackName = '.smps-cache-restore-readback'
+    $cacheBackupMarker = "SMPS previous cache preserved for release $deploySha`n"
+    $cacheCandidateMarker = "SMPS active cache for release $deploySha`n"
+    [IO.File]::WriteAllText(
+        (Join-Path $releaseDirectory $cacheBackupUploadName),
+        $cacheBackupMarker,
+        [Text.UTF8Encoding]::new($false)
+    )
+    [IO.File]::WriteAllText(
+        (Join-Path $releaseDirectory $cacheCandidateUploadName),
+        $cacheCandidateMarker,
+        [Text.UTF8Encoding]::new($false)
+    )
+
     if ($Mode -eq 'MaintenanceOn') {
         Write-Host ''
         Write-Host 'The next operation enables the candidate-bound maintenance marker.'
@@ -613,7 +660,7 @@ try {
         return
     }
 
-    if ($Mode -in @('MaintenanceOff', 'Deploy')) {
+    if ($Mode -in @('CacheRotate', 'CacheRestore', 'MaintenanceOff', 'Deploy')) {
         Write-Host 'Verifying the candidate-bound production maintenance marker. OpenSSH will prompt for the password again.'
         Invoke-SftpCommands `
             -Sftp $sftp `
@@ -624,6 +671,92 @@ try {
         if ((Get-Content -Raw -LiteralPath $maintenanceReadBackPath) -cne $maintenanceMarker) {
             throw 'Production maintenance marker is missing or belongs to a different release.'
         }
+    }
+
+    if ($Mode -eq 'CacheRotate') {
+        Write-Host ''
+        Write-Host "The next operation preserves the current cache as 'temp/cache.before-$shortSha'."
+        Write-Host 'It then creates a new empty writable cache directory and verifies both release-bound markers.'
+        Write-Host 'No cache directory or cached file is deleted.'
+        $expectedConfirmation = "CACHE ROTATE $shortSha"
+        $confirmation = Read-Host "Type '$expectedConfirmation' to rotate the production cache"
+        if ($confirmation -cne $expectedConfirmation) {
+            throw 'Production cache rotation was not confirmed.'
+        }
+
+        Write-Host 'Rotating the production cache. OpenSSH will prompt for the password again.'
+        Invoke-SftpCommands `
+            -Sftp $sftp `
+            -Configuration $configuration `
+            -Commands @(
+                "put $cacheBackupUploadName temp/cache/$cacheBackupMarkerName",
+                "rename temp/cache temp/cache.before-$shortSha",
+                'mkdir temp/cache',
+                'chmod 755 temp/cache',
+                "put $cacheCandidateUploadName temp/cache/$cacheCandidateMarkerName",
+                "get temp/cache/$cacheCandidateMarkerName $cacheCandidateReadBackName",
+                "get temp/cache.before-$shortSha/$cacheBackupMarkerName $cacheBackupReadBackName",
+                'quit'
+            ) `
+            -LocalDirectory $releaseDirectory | Out-Null
+
+        if ((Get-Content -Raw -LiteralPath (Join-Path $releaseDirectory $cacheCandidateReadBackName)) -cne $cacheCandidateMarker) {
+            throw 'The new production cache marker does not match the selected release.'
+        }
+        if ((Get-Content -Raw -LiteralPath (Join-Path $releaseDirectory $cacheBackupReadBackName)) -cne $cacheBackupMarker) {
+            throw 'The preserved production cache marker does not match the selected release.'
+        }
+        Write-Host "Production cache rotated for revision $deploySha. The previous cache remains at 'temp/cache.before-$shortSha'."
+        return
+    }
+
+    if ($Mode -eq 'CacheRestore') {
+        Write-Host 'Verifying the active and preserved production cache markers. OpenSSH will prompt for the password again.'
+        Invoke-SftpCommands `
+            -Sftp $sftp `
+            -Configuration $configuration `
+            -Commands @(
+                "get temp/cache/$cacheCandidateMarkerName $cacheCandidateReadBackName",
+                "get temp/cache.before-$shortSha/$cacheBackupMarkerName $cacheBackupReadBackName",
+                'quit'
+            ) `
+            -LocalDirectory $releaseDirectory | Out-Null
+
+        if ((Get-Content -Raw -LiteralPath (Join-Path $releaseDirectory $cacheCandidateReadBackName)) -cne $cacheCandidateMarker) {
+            throw 'The active production cache does not belong to the selected release.'
+        }
+        if ((Get-Content -Raw -LiteralPath (Join-Path $releaseDirectory $cacheBackupReadBackName)) -cne $cacheBackupMarker) {
+            throw 'The preserved production cache does not belong to the selected release.'
+        }
+
+        Write-Host ''
+        Write-Host "The next operation preserves the candidate cache as 'temp/cache.failed-$shortSha'."
+        Write-Host 'It restores the previously preserved cache and removes only its release-bound marker.'
+        Write-Host 'No cache directory or cached application file is deleted.'
+        $expectedConfirmation = "CACHE RESTORE $shortSha"
+        $confirmation = Read-Host "Type '$expectedConfirmation' to restore the previous production cache"
+        if ($confirmation -cne $expectedConfirmation) {
+            throw 'Production cache restoration was not confirmed.'
+        }
+
+        Write-Host 'Restoring the previous production cache. OpenSSH will prompt for the password again.'
+        Invoke-SftpCommands `
+            -Sftp $sftp `
+            -Configuration $configuration `
+            -Commands @(
+                "rename temp/cache temp/cache.failed-$shortSha",
+                "rename temp/cache.before-$shortSha temp/cache",
+                "get temp/cache/$cacheBackupMarkerName $cacheRestoreReadBackName",
+                "rm temp/cache/$cacheBackupMarkerName",
+                'quit'
+            ) `
+            -LocalDirectory $releaseDirectory | Out-Null
+
+        if ((Get-Content -Raw -LiteralPath (Join-Path $releaseDirectory $cacheRestoreReadBackName)) -cne $cacheBackupMarker) {
+            throw 'The restored production cache marker does not match the selected release.'
+        }
+        Write-Host "Previous production cache restored. The candidate cache remains at 'temp/cache.failed-$shortSha' for inspection."
+        return
     }
 
     if ($Mode -eq 'MaintenanceOff') {

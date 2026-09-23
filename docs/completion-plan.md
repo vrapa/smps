@@ -492,7 +492,8 @@ approved upload, it downloads the remote revision marker and manifest through th
 same strict SFTP session and requires the expected revision plus an identical
 manifest digest before reporting success. The implementation is merged; live
 upload verification remains pending until an exact deployment is separately
-approved. Disk headroom, cache/OPcache handling, and full remote-file verification
+approved. Backing-filesystem headroom and relevant path ownership/modes have been
+checked, but the account quota, OPcache handling, and full remote-file verification
 remain open.
 
 Maintenance implementation status (2026-09-23): `MaintenanceOn` atomically
@@ -507,6 +508,16 @@ enablement, 503 verification, upload, and reopening remain production-window
 actions. An isolated Apache test passed with both the required `www` document
 root and the legacy application-root mapping; the latter also retained HTTP 403
 for direct protected-configuration access.
+
+Cache implementation status (2026-09-23): the local command now provides
+release-bound `CacheRotate` and `CacheRestore` operations after verifying the
+exact maintenance marker. Rotation preserves the complete previous
+`temp/cache` directory under a SHA-specific name, creates a fresh writable cache,
+and reads back markers from both locations without recursive deletion. Rollback
+preserves the candidate cache for inspection and restores the previous directory.
+The isolated rehearsal proves byte-identical cache restoration with synthetic
+data. Live use remains a maintenance-window action. CLI OPcache reset is not
+accepted as a web-runtime reset; the Webglobe-safe FPM procedure is still open.
 - [ ] Reconcile obsolete code using the previous release manifest. A no-delete
   overlay leaves obsolete files behind and does
   not by itself provide an exact rollback. Never use broad mirror deletion.
@@ -551,7 +562,8 @@ the dependency is retained. Deployment serialization is implemented. A read-only
 pre-deployment baseline and acceptance probe passed on 2026-09-23 with a
 same-origin login redirect, the sign-in page and a public asset at HTTP 200, and
 protected paths plus `/www/index.php` returning only HTTP 403/404. Post-upload
-acceptance, cache handling, and stale-file reconciliation remain open.
+acceptance, live cache rotation, OPcache handling, and stale-file reconciliation
+remain open.
 
 Gate: an isolated rehearsal demonstrates protected-path preservation, exact revision
 identity, interrupted-upload recovery, stale-file handling, and application
