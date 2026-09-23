@@ -213,6 +213,11 @@ archive, extracts it into a temporary directory, and rejects protected paths.
 Use `-KeepWorkspace` only for local troubleshooting; the default scopes cleanup
 strictly to its generated temporary directory.
 
+The command holds an exclusive workstation-local deployment lock for its entire
+run. A concurrent SMPS prepare, rehearsal, preflight, write test, or deployment
+fails before artifact work begins; an abandoned process releases the operating
+system file lock automatically.
+
 `Preflight` and `Deploy` let OpenSSH request the password directly in the console;
 the script does not receive, store, print, or pass it on the command line.
 On Windows the fixed SFTP commands are streamed to a normal interactive session;
@@ -225,6 +230,10 @@ opening the upload connection. The upload uses the reviewed allowlist and no
 remote delete command. It does not create backups, enable maintenance, change
 `config/local.neon`, run migrations, clear caches, or perform acceptance checks.
 Those remain explicit maintenance-window steps.
+After the overlay, the same SFTP session downloads the remote `RELEASE_SHA` and
+`RELEASE_MANIFEST.sha256` into the temporary workspace. Their revision and
+manifest digest must match the verified local artifact or the deployment command
+fails before reporting upload success.
 
 `WriteTest` also starts with the read-only preflight. After an exact confirmation
 it creates one random `.smps-deploy-check-*` directory at the restricted account

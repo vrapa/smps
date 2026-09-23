@@ -474,6 +474,15 @@ passed.
 - [ ] Add deployment serialization, disk/permission preflight, targeted
   application-cache invalidation, and hosting-appropriate OPcache handling. No
   public cache-clearing or migration endpoint is introduced.
+
+Serialization/read-back implementation status (2026-09-23): the local command
+now holds an exclusive operating-system file lock for its full run. After an
+approved upload, it downloads the remote revision marker and manifest through the
+same strict SFTP session and requires the expected revision plus an identical
+manifest digest before reporting success. Live upload verification remains
+pending until this change is merged, passes `main` CI, and an exact deployment is
+separately approved. Disk headroom, cache/OPcache handling, and full remote-file
+verification remain open.
 - [ ] Reconcile obsolete code using the previous release manifest. A no-delete
   overlay leaves obsolete files behind and does
   not by itself provide an exact rollback. Never use broad mirror deletion.

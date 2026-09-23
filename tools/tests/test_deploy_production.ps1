@@ -56,6 +56,12 @@ foreach ($requiredText in @(
     "'put RELEASE_MANIFEST.sha256'",
     "'put RELEASE_SHA'",
     'does not match CI revision',
+    'smps-production-deployment.lock',
+    '[IO.FileShare]::None',
+    'Another SMPS deployment operation is already running',
+    'get RELEASE_SHA $readBackShaName',
+    'get RELEASE_MANIFEST.sha256 $readBackManifestName',
+    'Remote release manifest does not match',
     'tools/audit_public_content.py'
 )) {
     if (-not $scriptContent.Contains($requiredText)) {
