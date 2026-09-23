@@ -207,9 +207,10 @@ rollback without opening a production connection.
   ownership and modes; the 901 MB installation is primarily 738 MB of protected
   uploads; its filesystem reported 281 GB free. The database reports MySQL
   5.5.62. Symlink support is not required.
-- [ ] Confirm the hosting account's storage quota in Webglobe Admin; the WebSSH
-  container has no `quota` command and filesystem-wide free space does not prove
-  account-level headroom.
+- [x] Confirm the hosting account's storage quota in Webglobe Admin. The account
+  has more than 90 GB free, which is comfortably above the documented temporary
+  1–2 GB deployment and recovery allowance. The private control-panel screenshot
+  and hosting identifiers are not stored in the public repository.
 - [ ] Verify how the host serves `www/index.php`, honours rewrite/access rules,
   and prevents HTTP access to configuration, vendor code, logs, and backups.
   The tested artifact must contain the project-root fail-closed guard, but the
@@ -492,9 +493,9 @@ approved upload, it downloads the remote revision marker and manifest through th
 same strict SFTP session and requires the expected revision plus an identical
 manifest digest before reporting success. The implementation is merged; live
 upload verification remains pending until an exact deployment is separately
-approved. Backing-filesystem headroom and relevant path ownership/modes have been
-checked, but the account quota, OPcache handling, and full remote-file verification
-remain open.
+approved. Backing-filesystem headroom, account-level quota, and relevant path
+ownership/modes have been checked; OPcache handling and full remote-file
+verification remain open.
 
 Maintenance implementation status (2026-09-23): `MaintenanceOn` atomically
 creates `.maintenance/`, then uploads and reads back a marker containing the

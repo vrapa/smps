@@ -53,8 +53,9 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   `fileinfo`, and OPcache. The application, protected configuration, cache, logs,
   uploads, and carousel paths have suitable ownership and modes for the hosting
   account. The 901 MB installation consists primarily of 738 MB of protected
-  uploads; its backing filesystem reported 281 GB free. Account quota is not
-  exposed through the WebSSH container and still needs a control-panel check.
+  uploads; its backing filesystem reported 281 GB free. A private Webglobe
+  control-panel check then confirmed more than 90 GB free within the hosting
+  account quota, well above the temporary deployment and recovery allowance.
 - The production database reports MySQL 5.5.62. A read-only schema/history query
   confirmed only the three 2023 migrations, the legacy non-null
   `users.deprecated_role` column, and `skladby.active` as non-null `bit(1)`.
@@ -125,7 +126,6 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Confirm the account-level storage quota in Webglobe Admin.
 - Run the tested candidate's read-only boot/schema and representative reads
   against MySQL 5.5 before applying either pending migration.
 - Cache/maintenance commands and the exact backup download, restore, and rollback
