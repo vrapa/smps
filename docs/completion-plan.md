@@ -1,6 +1,6 @@
 # Completion plan: localization, one public repository, and Webglobe deployment
 
-Updated: 2026-09-22. This is the coordinating execution plan for the final
+Updated: 2026-09-23. This is the coordinating execution plan for the final
 state. It takes precedence over the transitional dual-repository workflow in
 the earlier plans. Detailed localization checklists remain in
 [localization-plan.md](localization-plan.md); the publication record remains in
@@ -48,7 +48,9 @@ downtime does not authorize data loss or deployment as part of this planning edi
   `parameters.locale`, with Czech as the installation default. User content and
   stored role/category identifiers remain unchanged.
 - [ ] A tested GitHub artifact can update the existing Webglobe production site
-  through a documented, repeatable workflow with protected credentials.
+  through a documented, repeatable local handoff. GitHub remains the source of
+  the tested artifact; the workstation supplies the working SFTP network path,
+  strict host-key verification, and an interactive password prompt.
 - [ ] Deployment preserves configuration, uploads, photographs, logs, and database
   contents; application rollback has been rehearsed in an isolated test environment and the
   production recovery procedure is ready and verified.
@@ -67,8 +69,8 @@ Read-only inspection through 2026-09-22 established:
 | GitHub | Public repository, default branch `main`, protected required CI, and a branch-restricted `production` environment. Manual dispatch is the approved single-maintainer production gate. |
 | Publication | Clean public snapshot and MIT licensing are recorded as complete. Repeat the content audit for the final release. |
 | Localization | All three implementation increments and four catalogues are complete. Final real-path, responsive, failure-path, and fluent-speaker acceptance remains. |
-| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist. The dedicated account's boundary, account-relative target `.`, protected password credentials, and independently corroborated host key are configured. The first GitHub-hosted runner probe timed out before SSH authentication even though the account permits all countries and IPs; hosted-runner connectivity and the isolated write rehearsal remain. |
-| Current transfer design | SFTP password authentication on provider port 222 with a pinned host key, in-place recursive upload without deletion. No implemented release activation, cache lifecycle, health check, or stale-file reconciliation. |
+| GitHub deployment | `.github/workflows/deploy-production.yml` and the protected `production` environment exist, but two GitHub-hosted runner probes timed out before SSH authentication while a simultaneous workstation TCP probe succeeded. Direct hosted-runner transfer is not the selected handoff path. The GitHub SFTP secrets remain temporarily until the first local deployment is accepted, then must be removed. |
+| Current transfer design | GitHub CI builds the tested SHA-named artifact. A local PowerShell command will validate and download that exact artifact, audit it again, and transfer its allowlisted paths over SFTP with the workstation's pinned host identity and an interactive password. The upload is an in-place overlay without deletion. |
 | Artifact recovery | CI artifacts expire after 14 days; an older artifact alone is not a durable recovery strategy. |
 | GitLab | A sanitized inventory found no active pipeline, schedule, hook, deploy key, or environment, but CI and two runners remain enabled and a future successful default-branch push could still trigger the legacy FTP jobs. Freeze remains pending. |
 | Documentation | `AGENTS.md`, README, contribution guidance, and deployment plans are reconciled with Doctrine, the tracked lock file, four locales, and the GitHub-only development flow. |
@@ -97,6 +99,44 @@ identified operational actions. Prepare their exact revision, target, backup,
 test evidence, and rollback before requesting any outstanding authorization.
 Keep credentials and private connection details in protected operational
 storage; public progress notes contain only sanitized results.
+
+## Approved local deployment handoff
+
+The owner selected the following transition on 2026-09-23 after the second
+GitHub-hosted runner probe timed out while the same Webglobe SFTP port remained
+reachable from the development workstation:
+
+1. [ ] Add a Windows PowerShell deployment command and ignored local configuration
+   template. It must accept an explicit successful `CI` push run ID from protected
+   `main`, verify the repository/run/status/SHA, download the existing SHA-named
+   artifact, run `tools/audit_public_content.py archive`, and extract only after
+   that audit succeeds.
+2. [ ] Add separate prepare, read-only preflight, and deployment modes. SFTP must
+   use the already corroborated local `known_hosts` entry with strict checking,
+   prompt for the dedicated account password interactively, and upload the same
+   no-delete allowlist as the reviewed workflow. It must not store or print the
+   password, run migrations, clear caches, edit protected configuration, or
+   delete remote files.
+3. [ ] Validate PowerShell syntax and failure handling, then run prepare mode
+   against a successful current `main` CI artifact. Run the read-only SFTP
+   preflight separately. Write/create/rename/delete checks remain confined to an
+   explicitly approved isolated remote test directory.
+4. [ ] Rehearse update and recovery, prepare fresh backups and maintenance, and
+   request explicit approval for the exact production SHA and target. The first
+   production upload is followed immediately by application and protected-path
+   acceptance checks; failure keeps maintenance enabled for recovery.
+5. [ ] Only after that deployment is accepted, disable/remove the direct GitHub
+   SFTP deployment and verification workflows and delete `SFTP_HOST`,
+   `SFTP_USERNAME`, `SFTP_PASSWORD`, `SFTP_KNOWN_HOSTS`, `SFTP_PORT`, and
+   `SFTP_REMOTE_PATH` from the GitHub `production` environment. Retain GitHub CI
+   and artifact construction. Verify the removed secrets are no longer referenced
+   before marking this cleanup complete.
+
+The ignored local deployment configuration may contain the non-password
+connection identity and target. The password remains only in the operator's
+interactive SFTP prompt. A local Docker container is unnecessary: it would use
+the same workstation network path while adding another credential and host-key
+boundary.
 
 ## 1. Verify the Webglobe hosting contract
 
@@ -368,16 +408,17 @@ passed.
   `.github/workflows/verify-production-sftp.yml` check performs only `pwd`,
   `cd ..`, and `pwd`, and publishes no production directory listing. Run
   `35747056690` timed out at TCP connection setup before authentication; Webglobe
-  Admin showed that all countries and IPs are allowed for the account. The
-  workflows now fail this condition after a bounded connection timeout.
-- [ ] Bind deployment to the trusted CI workflow, repository, successful tested
-  commit and artifact digest; select revisions from protected `main`, including
-  an explicitly chosen earlier revision for rollback. Do not rebuild dependencies
-  or run Composer update on production. Fork PRs receive no deployment secrets.
-- [ ] Deploy the same artifact that passed CI and the isolated rehearsal; reuse
-  it on hosting staging if available. Make artifact lookup
-  explicit about repository and run ID; the existing download command runs
-  without a checkout and must be checked in that context.
+  Admin showed that all countries and IPs are allowed for the account. A second
+  run, `35836160474` on 2026-09-23, failed with the same bounded TCP timeout while
+  the port succeeded from the workstation. The current handoff therefore uses
+  the workstation as deployment origin; provider investigation remains optional.
+- [ ] Bind the local deployment command to the trusted GitHub repository,
+  successful `CI` push run, protected default branch, tested commit, SHA-named
+  artifact, and current trusted local policy checkout. Do not rebuild dependencies
+  or run Composer update during deployment.
+- [ ] Deploy the same artifact that passed CI and the isolated rehearsal; reuse it
+  on hosting staging if available. Make artifact lookup explicit about repository
+  and run ID and audit it again before extraction and transfer.
 - [ ] Implement in-place deployment during a planned maintenance window. Keep
   existing configuration and upload locations, block application requests/writes
   independently of the code being replaced, and verify uploaded files before
@@ -451,7 +492,8 @@ Keep private connection details and operational evidence outside public records.
 - [ ] Apply separately authorized configuration cleanup and CLI migrations, if
   needed. Deployment does not silently run schema changes; database restore is a
   distinct operation and must account for writes since the backup.
-- [ ] Deploy the tested artifact in place through the protected production workflow.
+- [ ] Deploy the tested artifact in place through the reviewed local deployment
+  command after its production confirmation prompt.
   Preserve `locale: cs` unless an installation-language change is requested.
 - [ ] Verify startup, login, roles, representative data, songs/concerts,
   upload/download, settings, cache, and permissions. Complete hosting-specific
