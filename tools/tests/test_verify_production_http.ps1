@@ -19,7 +19,7 @@ if ($parseErrors.Count -ne 0) {
 
 $scriptContent = Get-Content -Raw -LiteralPath $scriptPath
 foreach ($requiredText in @(
-	"[ValidateSet('Baseline', 'Acceptance')]",
+	"[ValidateSet('Baseline', 'Maintenance', 'Acceptance')]",
 	"requires an HTTPS base URL",
 	'$handler.AllowAutoRedirect = $false',
 	'[Net.Http.HttpCompletionOption]::ResponseHeadersRead',
@@ -32,6 +32,8 @@ foreach ($requiredText in @(
 	"'/www/dokumenty/'",
 	"'/RELEASE_SHA'",
 	"'/RELEASE_MANIFEST.sha256'",
+	"'/maintenance.html'",
+	"if (`$Mode -eq 'Maintenance') { @(403, 404, 503) } else { @(403, 404) }",
 	"'/sign/in'",
 	"'/www/index.php'",
 	'Response bodies were not read.'
@@ -55,6 +57,26 @@ try {
 }
 if (-not $httpRejected) {
 	throw 'HTTP verification script must reject a non-HTTPS production URL before connecting.'
+}
+
+$webRootGuard = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'www/.htaccess')
+foreach ($requiredText in @(
+	'ErrorDocument 503 /maintenance.html',
+	'%{DOCUMENT_ROOT}/.maintenance -d',
+	'%{DOCUMENT_ROOT}/../.maintenance -d',
+	'%{ENV:REDIRECT_STATUS} !=503',
+	'RewriteRule ^ - [R=503,L]'
+)) {
+	if (-not $webRootGuard.Contains($requiredText)) {
+		throw "Web-root guard is missing required maintenance behavior: $requiredText"
+	}
+}
+
+$maintenancePage = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'www/maintenance.html')
+foreach ($languageMarker in @('lang="cs"', 'lang="en"', 'lang="de"', 'lang="nl"')) {
+	if (-not $maintenancePage.Contains($languageMarker)) {
+		throw "Static maintenance page is missing language marker: $languageMarker"
+	}
 }
 
 Write-Host 'Production HTTP verification script checks passed.'

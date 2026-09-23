@@ -1,6 +1,11 @@
 # Apache configuration file (see https://httpd.apache.org/docs/current/mod/quickreference.html)
 Require all granted
 
+# A marker in the application root keeps maintenance active while www/ is
+# overwritten. The two locations support both the legacy project-root mapping
+# and the required www/ document root.
+ErrorDocument 503 /maintenance.html
+
 # disable directory listing
 <IfModule mod_autoindex.c>
 	Options -Indexes
@@ -10,6 +15,12 @@ Require all granted
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 	# RewriteBase /
+
+	RewriteCond %{DOCUMENT_ROOT}/.maintenance -d [OR]
+	RewriteCond %{DOCUMENT_ROOT}/../.maintenance -d
+	RewriteCond %{ENV:REDIRECT_STATUS} !=503
+	RewriteCond %{REQUEST_URI} !^/(?:www/)?maintenance\.html$ [NC]
+	RewriteRule ^ - [R=503,L]
 
 	# use HTTPS
 	# RewriteCond %{HTTPS} !on

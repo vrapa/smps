@@ -471,9 +471,14 @@ passed.
 - [x] Add a release manifest and revision marker. CI and the local handoff verify
   exact artifact path coverage, every file digest, and the selected successful
   `main` revision before any transfer.
-- [ ] Add deployment serialization, disk/permission preflight, targeted
-  application-cache invalidation, and hosting-appropriate OPcache handling. No
-  public cache-clearing or migration endpoint is introduced.
+- [x] Add deployment serialization so concurrent local operations cannot overlap.
+- [x] Add a release-bound maintenance marker with exact confirmations and remote
+  read-back. The versioned static HTTP 503 response remains available while the
+  application and dependencies are overwritten; deployment refuses to start
+  without the marker for the selected release.
+- [ ] Add disk/permission preflight, targeted application-cache invalidation, and
+  hosting-appropriate OPcache handling. No public cache-clearing or migration
+  endpoint is introduced.
 
 Serialization/read-back implementation status (2026-09-23): the local command
 now holds an exclusive operating-system file lock for its full run. After an
@@ -483,6 +488,19 @@ manifest digest before reporting success. The implementation is merged; live
 upload verification remains pending until an exact deployment is separately
 approved. Disk headroom, cache/OPcache handling, and full remote-file verification
 remain open.
+
+Maintenance implementation status (2026-09-23): `MaintenanceOn` atomically
+creates `.maintenance/`, then uploads and reads back a marker containing the
+exact tested release SHA; it refuses to overwrite an existing maintenance
+operation. `www/.htaccess` returns a dependency-free static HTTP 503 while that
+directory exists under either the legacy application-root mapping or the required
+`www` document root. Deploy requires the same marker. `MaintenanceOff` refuses
+to remove an unknown or different-release marker and requires an exact
+confirmation before removing only the marker and empty directory. Live
+enablement, 503 verification, upload, and reopening remain production-window
+actions. An isolated Apache test passed with both the required `www` document
+root and the legacy application-root mapping; the latter also retained HTTP 403
+for direct protected-configuration access.
 - [ ] Reconcile obsolete code using the previous release manifest. A no-delete
   overlay leaves obsolete files behind and does
   not by itself provide an exact rollback. Never use broad mirror deletion.
