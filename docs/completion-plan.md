@@ -192,18 +192,24 @@ rollback without opening a production connection.
   unsupported for this virtual FTP/SFTP account and use its protected password.
 - [x] Probe the current legacy deployment endpoint without changing remote data.
   Record only sanitized transport results; keep its host and credentials private.
-- [ ] Prefer SFTP/SSH with verified host keys. If this account only supports FTPS,
-  specify a TLS-verified FTPS implementation and the necessary CLI/activation
-  procedure. If neither can meet the acceptance criteria, document the exact
-  hosting change needed before implementation; do not fall back to plain FTP.
+- [x] Use SFTP with a verified host key and the dedicated account restricted to
+  the application root. Password authentication, read-only preflight, and the
+  isolated create/rename/delete rehearsal passed from the workstation; plain FTP
+  and unsuccessful FTPS probes are not deployment fallbacks.
 - [x] Check the actual web PHP runtime against the locked application requirements.
   It runs PHP 8.1.34 through FPM with `pdo_mysql`, `intl`, `mbstring`, `fileinfo`,
   and OPcache enabled; its inspected memory, execution, upload, and post limits
   are sufficient for the current application. The server default timezone differs
   from the application's explicit `Europe/Prague` setting.
-- [ ] Check CLI PHP and extensions, filesystem permissions, disk headroom, and
-  database version. Symlink support is only relevant if it simplifies this
-  installation; it is not required.
+- [x] Check CLI PHP and extensions, filesystem permissions, application size,
+  backing-filesystem headroom, and database version. The versioned CLI is PHP
+  8.1.34 with all required extensions; protected/runtime paths have suitable
+  ownership and modes; the 901 MB installation is primarily 738 MB of protected
+  uploads; its filesystem reported 281 GB free. The database reports MySQL
+  5.5.62. Symlink support is not required.
+- [ ] Confirm the hosting account's storage quota in Webglobe Admin; the WebSSH
+  container has no `quota` command and filesystem-wide free space does not prove
+  account-level headroom.
 - [ ] Verify how the host serves `www/index.php`, honours rewrite/access rules,
   and prevents HTTP access to configuration, vendor code, logs, and backups.
   The tested artifact must contain the project-root fail-closed guard, but the
@@ -569,10 +575,13 @@ rollback. This milestone updates both workflows and [deployment.md](deployment.m
   target is easy to provide, use it for additional hosting checks; a permanent
   staging site is not a release requirement. Disable real notifications and
   prevent indexing of any hosted test site.
-- [ ] Recheck actual production migration status and remove only the obsolete
-  `database:` block from protected production configuration before scheduling
-  the two transition migrations. Do not replay the initial baseline over an
-  existing database.
+- [x] Recheck actual production migration status without changing the database.
+  Production contains the three 2023 migrations, `users.deprecated_role` as
+  non-null `varchar(100)`, and `skladby.active` as non-null `bit(1)`. The two
+  transition migrations are not applied.
+- [ ] Remove only the obsolete `database:` block from protected production
+  configuration before scheduling the two transition migrations. Do not replay
+  the initial baseline over an existing database.
 
 Implementation status (2026-09-23): CI now prepares a local `_test` database in
 the known pre-transition state, including a synthetic `deprecated_role`, a

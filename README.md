@@ -73,6 +73,13 @@ php vendor/bin/phinx status -e development -c config/phinx.php
 php vendor/bin/phinx migrate -e development -c config/phinx.php
 ```
 
+An existing installation can instead copy
+`config/phinx.production.example.php` to the ignored `config/phinx.php`. That
+configuration reuses the protected Doctrine connection from `local.neon`
+without duplicating its password. Follow the production backup, status, approval,
+and compatibility gates in [`docs/deployment.md`](docs/deployment.md); never use
+the production environment for local development or tests.
+
 For integration tests, also copy `config/test.example.neon` to the ignored
 `config/test.neon` and use a disposable database whose name ends in `_test`:
 
@@ -243,6 +250,13 @@ cp config/phinx.example.php config/phinx.php
 php vendor/bin/phinx status -e development -c config/phinx.php
 php vendor/bin/phinx migrate -e development -c config/phinx.php
 ```
+
+Existující instalace může místo toho zkopírovat
+`config/phinx.production.example.php` do ignorovaného `config/phinx.php`. Tato
+konfigurace převezme chráněné Doctrine připojení z `local.neon`, takže se heslo
+nemusí duplikovat. Dodržte zálohy, kontrolu stavu, schválení a kontrolu
+kompatibility popsané v [`docs/deployment.md`](docs/deployment.md); produkční
+prostředí nikdy nepoužívejte pro lokální vývoj ani testy.
 
 Pro integrační testy zkopírujte také `config/test.example.neon` do ignorovaného
 `config/test.neon` a použijte jednorázovou databázi s názvem končícím `_test`:
