@@ -516,6 +516,16 @@ rollback. This milestone updates both workflows and [deployment.md](deployment.m
   config removal, `users.deprecated_role` removal, and the `skladby.active` type
   normalization. Recheck actual production migration status before scheduling it;
   do not replay the initial baseline over an existing database.
+
+Implementation status (2026-09-23): CI now prepares a local `_test` database in
+the known pre-transition state, including a synthetic `deprecated_role`, a
+`BIT(1)` song flag, sentinel records, and Phinx history immediately before the
+two pending migrations. It exercises representative Doctrine reads/writes before
+the migrations, applies only the missing transition versions, and then verifies
+the normalized schema, preserved sentinel data, Doctrine schema, and full test
+suite. This remains pending until merged CI passes. The protected production
+configuration cleanup and actual production migration status remain manual
+maintenance-window checks.
 - [ ] Deploy the candidate, exercise all locales, roles, password changes, song
   and concert flows, upload/download/delete, pagination, dates, and error responses.
 - [ ] Check unauthenticated access to upload URLs as well as presenter download
