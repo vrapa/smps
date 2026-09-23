@@ -149,6 +149,11 @@ the operator documentation are implemented. The merged `main` CI and local
 `Prepare` mode passed for the revision recorded above. Live `Preflight` still
 requires the ignored connection record and an interactive password entry; no
 production connection or write was made by the implementation/prepare steps.
+An initial local `Preflight` attempt confirmed that Windows OpenSSH suppresses
+password prompting when `sftp -b` is used and therefore failed authentication
+before any remote command. The command now streams the fixed command list into a
+normal interactive SFTP session so OpenSSH can read the password directly from
+the console; this correction requires CI and another read-only preflight.
 
 ## 1. Verify the Webglobe hosting contract
 

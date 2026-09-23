@@ -195,6 +195,10 @@ strictly to its generated temporary directory.
 
 `Preflight` and `Deploy` let OpenSSH request the password directly in the console;
 the script does not receive, store, print, or pass it on the command line.
+On Windows the fixed SFTP commands are streamed to a normal interactive session;
+the script deliberately does not use `sftp -b`, because batch mode disables the
+console password prompt. The exit status, error output, and restricted-root result
+are still checked.
 `Deploy` prompts twice because it completes and checks a separate read-only
 connection before asking for the exact `DEPLOY <short-SHA>` confirmation and
 opening the upload connection. The upload uses the reviewed allowlist and no
