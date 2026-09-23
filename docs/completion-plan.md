@@ -506,16 +506,21 @@ rollback. This milestone updates both workflows and [deployment.md](deployment.m
   Run `35849397823` verified protected-path preservation, explicit no-delete
   stale-file behavior, and an exact restored file/hash manifest without real
   notifications, production data, scores, credentials, or a production connection.
-- [ ] Extend the isolated environment to its database and complete presenter
-  flows. If a temporary Webglobe staging target is easy to provide, use it for
-  additional hosting checks; a permanent staging site is not a release requirement.
-  Disable real notifications and prevent indexing of any hosted test site.
-- [ ] Verify fresh schema installation and rehearse the upgrade path against a
-  synthetic database matching the existing schema and migration history.
-- [ ] Test the known pending schema/configuration transition: obsolete `database:`
-  config removal, `users.deprecated_role` removal, and the `skladby.active` type
-  normalization. Recheck actual production migration status before scheduling it;
-  do not replay the initial baseline over an existing database.
+- [x] Extend the isolated environment to its database, verify fresh schema
+  installation, and rehearse the upgrade path against a synthetic database
+  matching the known schema and migration history.
+- [x] Test the database portion of the pending transition: current application
+  compatibility with `users.deprecated_role` plus `skladby.active` as `BIT(1)`,
+  removal/normalization by the two pending migrations, and sentinel-data
+  preservation.
+- [ ] Complete the real presenter-flow rehearsal. If a temporary Webglobe staging
+  target is easy to provide, use it for additional hosting checks; a permanent
+  staging site is not a release requirement. Disable real notifications and
+  prevent indexing of any hosted test site.
+- [ ] Recheck actual production migration status and remove only the obsolete
+  `database:` block from protected production configuration before scheduling
+  the two transition migrations. Do not replay the initial baseline over an
+  existing database.
 
 Implementation status (2026-09-23): CI now prepares a local `_test` database in
 the known pre-transition state, including a synthetic `deprecated_role`, a
@@ -523,9 +528,10 @@ the known pre-transition state, including a synthetic `deprecated_role`, a
 two pending migrations. It exercises representative Doctrine reads/writes before
 the migrations, applies only the missing transition versions, and then verifies
 the normalized schema, preserved sentinel data, Doctrine schema, and full test
-suite. This remains pending until merged CI passes. The protected production
-configuration cleanup and actual production migration status remain manual
-maintenance-window checks.
+suite. Merged `main` run `35850585556` passed every phase for revision
+`6603e41b8dd7b7d1502fda869884cee8bc4d5e9d`. The protected production
+configuration cleanup, actual production migration status, and any production
+migration remain manual maintenance-window checks.
 - [ ] Deploy the candidate, exercise all locales, roles, password changes, song
   and concert flows, upload/download/delete, pagination, dates, and error responses.
 - [ ] Check unauthenticated access to upload URLs as well as presenter download
