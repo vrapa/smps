@@ -225,7 +225,7 @@ function Invoke-LocalDeploymentRehearsal {
 
     Move-Item -LiteralPath $cacheDirectory -Destination $cacheBackupDirectory
     New-Item -ItemType Directory -Path $cacheDirectory | Out-Null
-    if ((Get-ChildItem -LiteralPath $cacheDirectory -Force).Count -ne 0) {
+    if (@(Get-ChildItem -LiteralPath $cacheDirectory -Force).Count -ne 0) {
         throw 'The rehearsed replacement cache directory was not empty.'
     }
 
