@@ -141,6 +141,40 @@ The deployment artifact deliberately excludes `config/local.neon`, so the
 workflow cannot perform this cleanup and must never replace that protected
 file.
 
+## Production migration configuration
+
+The legacy production `config/phinx.yaml` is not a usable deployment interface.
+Its default environment is obsolete, it depends on the optional YAML parser, and
+its local-socket connection failed from WebSSH. No migration ran during that
+read-only status attempt.
+
+The artifact instead includes `config/phinx.production.example.php`. It reads
+the existing protected Doctrine connection from `config/local.neon` at runtime,
+so no database password is duplicated in a command, tracked file, or second
+manually maintained configuration. During the approved maintenance window,
+after backing up protected configuration and uploading the tested artifact:
+
+```sh
+cp config/phinx.production.example.php config/phinx.php
+php8.1 vendor/bin/phinx status --environment production --configuration config/phinx.php
+```
+
+`config/phinx.php` is ignored and excluded from deployment artifacts. Verify that
+status shows only the expected three 2023 migrations as applied and the two
+reviewed transition migrations as pending. Run `migrate` only after separate
+explicit authorization and only with `php8.1`, the `production` environment, and
+this PHP configuration. Preserve the legacy YAML file in the private pre-update
+backup; remove it from the live tree only after the PHP configuration and recovery
+procedure have been accepted.
+
+The production server reports MySQL 5.5.62. The locked Doctrine DBAL 3.9 branch
+already deprecates MySQL 5.6 in favour of 5.7 or newer, so this still older server
+requires an explicit candidate boot/schema check and representative read tests
+during maintenance before any migration. The two pending SQL changes themselves
+are simple column operations, but the local MariaDB 10.11 rehearsal is not proof
+of full MySQL 5.5 runtime compatibility. A database-service upgrade is a separate
+hosting/data-migration decision, not part of the application SFTP overlay.
+
 ## Installation language
 
 The user-interface language is selected once for the whole installation by
@@ -179,8 +213,11 @@ Zend OPcache enabled. The observed 256 MB memory limit, 90-second execution
 limit, and 256 MB upload/post limits are compatible with the current application.
 The server default timezone differs from the application's explicit
 `Europe/Prague` setting, so keep the application setting and verify date handling
-during acceptance. CLI PHP, CLI extensions, filesystem permissions, disk
-headroom, and database version still require private verification.
+during acceptance. A WebSSH check on 2026-09-23 confirmed the matching `php8.1`
+CLI and required extensions, suitable ownership/modes for protected and runtime
+paths, a 901 MB installation, and 281 GB free on its backing filesystem. The
+account-level quota remains to be checked in Webglobe Admin. The database reports
+MySQL 5.5.62 and requires the compatibility gate described above.
 
 The account exposes a temporary browser WebSSH console for one hour after
 two-factor authentication. Permanent console access is a separate paid option.

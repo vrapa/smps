@@ -49,6 +49,18 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   `mbstring`, `fileinfo`, and OPcache enabled. The observed memory, execution,
   upload, and post limits are compatible with the current application. The
   application explicitly sets its own timezone.
+- WebSSH exposes the matching `php8.1` CLI with `pdo_mysql`, `intl`, `mbstring`,
+  `fileinfo`, and OPcache. The application, protected configuration, cache, logs,
+  uploads, and carousel paths have suitable ownership and modes for the hosting
+  account. The 901 MB installation consists primarily of 738 MB of protected
+  uploads; its backing filesystem reported 281 GB free. Account quota is not
+  exposed through the WebSSH container and still needs a control-panel check.
+- The production database reports MySQL 5.5.62. A read-only schema/history query
+  confirmed only the three 2023 migrations, the legacy non-null
+  `users.deprecated_role` column, and `skladby.active` as non-null `bit(1)`.
+  The two reviewed transition migrations have not run. The legacy Phinx YAML
+  uses a WebSSH-inaccessible local socket; the reviewed PHP bridge must replace
+  it before migration status or migration execution.
 - Temporary browser WebSSH is available for one hour after two-factor
   authentication. One temporary session was activated for the host-key check.
   Permanent console access is a separate paid option and was not activated.
@@ -113,9 +125,9 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Verify write/create/rename/delete behavior in an isolated directory.
-- CLI PHP version and extensions, filesystem permissions, disk headroom, and
-  database version.
+- Confirm the account-level storage quota in Webglobe Admin.
+- Run the tested candidate's read-only boot/schema and representative reads
+  against MySQL 5.5 before applying either pending migration.
 - Cache/maintenance commands and the exact backup download, restore, and rollback
   procedure. Rehearse rather than relying on backup availability alone.
 - Whether a small isolated staging directory can be provisioned temporarily.
