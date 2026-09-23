@@ -1,7 +1,8 @@
 # Webglobe capability checklist
 
 This is the sanitized hosting capability record required before production can
-move from the transitional GitLab job to GitHub Actions. Private hostnames,
+move from the transitional GitLab job to GitHub CI with a reviewed local SFTP
+handoff. Private hostnames,
 accounts, credentials, database details, and absolute hosting paths belong only
 in the owner's protected operational record.
 
@@ -61,7 +62,9 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
 - The dedicated account's control-panel settings permit all countries and all IP
   addresses. Nevertheless, the first GitHub-hosted runner read-only probe timed
   out while opening TCP port 222, before authentication or any remote command.
-  This is a hosting/network-path constraint, not an account-level GeoIP rule.
+  A second runner probe on 2026-09-23 failed at the same stage while a simultaneous
+  workstation TCP probe succeeded. This is a hosting/network-path constraint,
+  not an account-level GeoIP rule. The workstation is the selected transfer origin.
 - Port 990 is not available on that endpoint.
 - Authenticated, certificate-verified explicit and implicit FTPS probes did not
   succeed.
@@ -69,10 +72,11 @@ Checked on 2026-09-17 and refreshed on 2026-09-22:
   public-key test temporarily uploaded and then removed only its `.ssh` test data;
   it did not modify application files, runtime data, or production settings.
 
-The prepared GitHub SFTP workflow is transport-compatible through port 222 and
-uses password authentication without placing the password on the command line.
-It still requires protected environment secrets, the pinned corroborated host
-key, and a runner-originated rehearsal. Plain FTP is not an acceptable fallback
+The prepared direct GitHub SFTP workflow is transport-compatible through port 222
+but cannot reach the endpoint from the tested hosted runners. The implemented
+local PowerShell handoff downloads and re-audits the exact successful GitHub CI
+artifact, verifies the locally pinned corroborated host key, and lets OpenSSH
+prompt for the password. Plain FTP is not an acceptable fallback
 because it does not protect credentials or transferred application code. Webglobe
 documents SFTP/SCP/SSHFS on port 222 in its official
 [encrypted transfer instructions](https://www.webglobe.cz/poradna/sifrovane-ftp-tls).
@@ -84,6 +88,9 @@ Completed setup:
 - The dedicated account password is stored only in the GitHub `production`
   environment.
 - The independently corroborated SSH host key is pinned in that environment.
+- The reviewed local command, ignored non-password configuration template, and
+  CI syntax/safety test are implemented. Live artifact preparation and read-only
+  preflight wait until the implementation is merged to trusted `main`.
 
 Remaining outcome:
 
@@ -103,11 +110,9 @@ silently point the SFTP workflow at the legacy FTP service.
 
 ## Still to verify privately
 
-- Verify authentication from the GitHub runner network with the prepared manual
-  read-only workflow, which checks only the target and chroot working directory
-  without listing or modifying production files. The first attempt timed out
-  before authentication; resolve hosted-runner reachability or select a reviewed
-  alternative deployment origin.
+- Verify the local command's read-only preflight from merged trusted `main`. The
+  alternative deployment origin is selected; provider investigation of the two
+  hosted-runner timeouts is optional rather than a production blocker.
 - Verify write/create/rename/delete behavior in an isolated directory.
 - CLI PHP version and extensions, filesystem permissions, disk headroom, and
   database version.
@@ -120,3 +125,5 @@ owner-approved single-maintainer model uses manual workflow dispatch as the
 approval action. `SFTP_PORT=222` and the verified `SFTP_REMOTE_PATH=.` are
 configured as environment variables. The four environment-scoped connection
 secrets are also configured; only their names and update times were read back.
+They remain temporarily during the handoff and must be removed together with the
+direct-transfer workflows only after the first accepted local deployment.
