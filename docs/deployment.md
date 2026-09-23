@@ -25,8 +25,7 @@ local synthetic overlay and exact snapshot rollback then passed from merged
 `main` run `35849397823` for revision
 `42ab07fa20416be989b1c6ea9536cb4e4ea78c88`. The manifest-bound artifact and
 repeat overlay/rollback rehearsal passed for merged `main` run `35858438441`,
-revision `3a88ab655310d72af99043eb9ece35f6e685cd61`. Release activation, cache
-handling, durable artifact
+revision `3a88ab655310d72af99043eb9ece35f6e685cd61`. Release activation, durable artifact
 retention, exact rollback, isolated rehearsal, and production acceptance remain
 open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
@@ -37,8 +36,10 @@ this existing installation. A planned outage is acceptable: the target procedure
 is maintenance mode, a consistent backup, in-place update of application and
 dependencies, any separately approved configuration/schema changes, cache refresh,
 functional checks, and reopening the site. Preserve all existing runtime data.
-Atomic switching and a permanent staging site are not required. The current
-transfer-only workflow still needs maintenance and recovery handling implemented.
+Atomic switching and a permanent staging site are not required. Candidate-bound
+maintenance and reversible Nette cache rotation are implemented; their first live
+use, OPcache handling, stale-file reconciliation, and full release recovery remain
+production-window work.
 
 The production workflow deploys only an artifact created by a successful `CI`
 push run on the repository's default branch. It is started manually with the
@@ -274,7 +275,15 @@ numeric run ID in one of these modes:
 # Require that marker, repeat the preflight and exact confirmation, then overlay.
 ./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Deploy
 
-# After non-HTTP checks pass, remove only the verified marker and test immediately.
+# After reviewed configuration/schema work, preserve the old Nette cache and
+# create a clean cache for the same tested release.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode CacheRotate
+
+# Rollback only: while maintenance is still enabled, restore the preserved cache.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode CacheRestore
+
+# Success path: after non-HTTP checks pass, remove only the verified marker and
+# test immediately.
 ./tools/deploy-production.ps1 -CiRunId 123456789 -Mode MaintenanceOff
 ./tools/verify-production-http.ps1 -BaseUrl https://smps.rkcomputer.cz -Mode Acceptance
 ```
@@ -308,6 +317,33 @@ After the overlay, the same SFTP session downloads the remote `RELEASE_SHA` and
 `RELEASE_MANIFEST.sha256` into the temporary workspace. Their revision and
 manifest digest must match the verified local artifact or the deployment command
 fails before reporting upload success.
+
+`CacheRotate` is also bound to the selected artifact and first verifies the same
+maintenance marker. After an exact confirmation it adds a release marker to the
+existing `temp/cache`, atomically renames that directory to
+`temp/cache.before-<short-SHA>`, creates a fresh mode-755 `temp/cache`, and reads
+back markers from both directories. It does not recursively delete cached files.
+If any step fails, keep maintenance enabled and inspect those two exact paths
+before doing anything else. The local `Rehearse` mode exercises the equivalent
+rotation and exact restoration using only synthetic files.
+
+`CacheRestore` is the rollback counterpart. It verifies both release-bound cache
+markers before asking for confirmation, preserves the candidate cache as
+`temp/cache.failed-<short-SHA>`, restores the previous cache directory, and
+removes only the marker that the rotation inserted there. The failed cache stays
+available for inspection. After a successful production acceptance and the
+agreed rollback-retention period, remove the SHA-named old cache manually through
+WebSSH; never use a wildcard or a broad `temp` deletion.
+
+This rotates the Nette filesystem cache only. `php8.1` in WebSSH is a separate CLI
+SAPI, so calling `opcache_reset()` there would not prove that the web PHP-FPM
+cache was reset. [Webglobe documents PHP settings](https://www.webglobe.cz/poradna/jak-zjistit-a-zmenit-verzi-php)
+under **Hosting > Web > PHP settings** and notes that changes can take up to 20
+minutes, but does not document a per-site OPcache restart in the reviewed public
+guidance. Do not toggle the PHP version merely as an undocumented cache-reset
+shortcut. Confirm the hosting-safe method in Webglobe Admin or with support;
+until then, keep HTTP acceptance and log review as mandatory gates before
+reopening.
 
 `MaintenanceOn` atomically creates `.maintenance/`, uploads its release marker,
 reads it back, and requires it to contain the exact selected release SHA. Creation
@@ -343,8 +379,11 @@ the selected tested artifact, verifies that ignored configuration, uploads,
 carousel photographs, logs, and cache remain byte-identical, and confirms that
 the no-delete method leaves a deliberately obsolete file in place. It then
 replaces the synthetic tree from the snapshot and requires an exact file/hash
-manifest match. This proves the local update and snapshot-rollback mechanics;
-hosting backup restoration, cache handling, and HTTP acceptance remain separate
+manifest match. It additionally rotates the synthetic Nette cache, writes a
+candidate-only cache entry, restores the previous cache byte-for-byte, and removes
+only the synthetic failed cache inside the bounded temporary workspace. This
+proves the local update, cache and snapshot-rollback mechanics; hosting backup
+restoration, OPcache handling, and HTTP acceptance remain separate
 production-window checks.
 
 ## Transitional GitHub environment setup
