@@ -127,8 +127,11 @@ reachable from the development workstation:
    preflight. Password authentication, strict host-key verification, target `.`,
    and the restricted root were verified from the workstation; the command issued
    only `pwd`, `cd ..`, `pwd`, and `quit` and reported no remote write.
-5. [ ] Verify write/create/rename/delete behavior only in an explicitly approved
-   isolated remote test directory before any application upload.
+5. [x] Verify write/create/rename/delete behavior only in an explicitly approved
+   isolated remote test directory before any application upload. The owner ran
+   `WriteTest` from the successful merged `main` CI run `35848005204`; the
+   synthetic marker and random test directory were removed without touching
+   application files.
 6. [ ] Rehearse update and recovery, prepare fresh backups and maintenance, and
    request explicit approval for the exact production SHA and target. The first
    production upload is followed immediately by application and protected-path
@@ -158,10 +161,11 @@ before any remote command. The command now streams the fixed command list into a
 normal interactive SFTP session so OpenSSH can read the password directly from
 the console. The corrected command passed CI and the repeated preflight verified
 the restricted root without a remote write.
-The owner approved the next isolated write/create/rename/delete check. A dedicated
-`WriteTest` mode now limits it to one random `.smps-deploy-check-*` directory and
-one synthetic marker, with an exact confirmation and explicit cleanup. Live
-execution remains pending until this change is merged and CI passes.
+The owner approved and completed the isolated write/create/rename/delete check.
+The dedicated `WriteTest` mode limited it to one random
+`.smps-deploy-check-*` directory and one synthetic marker, with an exact
+confirmation and explicit cleanup. It passed from merged `main` CI run
+`35848005204`; no application file was read or changed.
 
 ## 1. Verify the Webglobe hosting contract
 
@@ -248,8 +252,9 @@ the control panel now confirms its application-root mapping and all seven requir
 file/directory permissions. An external password-authenticated read-only SFTP
 probe then opened at `/`; `cd ..` remained at `/`, confirming the account's
 effective application-root boundary. The account-relative deployment target is
-therefore `.`. Write/create/rename/delete behavior remains to be tested in an
-isolated directory. ED25519 and RSA public-key login attempts reached signature
+therefore `.`. Write/create/rename/delete behavior was subsequently verified in
+an isolated random directory and the test data was removed. ED25519 and RSA
+public-key login attempts reached signature
 verification but were rejected by the provider's `mod_sftp` endpoint, so the
 approved workflow design uses the dedicated account password without exposing it
 on the command line. The temporary public-key files were removed from the account,
@@ -416,9 +421,11 @@ passed.
   A password-authenticated read-only probe opened at `/`, and `cd ..` remained at
   `/`; the account is chrooted to the application directory. The legacy account
   remains rejected because it can navigate into the wider hosting tree.
-- [ ] After the protected password is configured, verify write, create, rename,
+- [x] After the protected password is configured, verify write, create, rename,
   and delete behavior in an isolated test directory before allowing deployment
-  to update production files.
+  to update production files. The owner completed the bounded `WriteTest` from
+  merged `main` run `35848005204`; its synthetic marker and directory were
+  removed successfully.
 - [x] Store the provider-documented SFTP port `222` as a non-secret environment
   variable.
 - [x] Verify the SFTP target path with an authenticated read-only probe. For the
@@ -473,6 +480,13 @@ manual preparation/download and restore controls. These improve recovery options
 but do not close this item: request or create fresh backups in the maintenance
 window, preserve an independent copy where practical, and verify the exact
 restore procedure before replacing production files.
+
+Backup status (2026-09-23): the owner reports creating a fresh production
+database backup independently. Its contents and location are intentionally not
+recorded in the public repository. The production configuration, application
+release and uploads still require a fresh pre-deployment backup, and database
+restore access/compatibility still requires verification in the maintenance
+window.
 
 Gate: an isolated rehearsal demonstrates protected-path preservation, exact revision
 identity, interrupted-upload recovery, stale-file handling, and application
