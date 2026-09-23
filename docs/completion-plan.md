@@ -123,14 +123,17 @@ reachable from the development workstation:
    its metadata, ancestry, archive policy, extraction, and SHA-256 digest
    `b3ba991d045928ba176d28bfa3c61ebf6d4381174b1337933fc01b69f15a0d48`
    without connecting to production.
-4. [ ] Create the ignored local connection record and run the read-only SFTP
-   preflight. Write/create/rename/delete checks remain confined to an explicitly
-   approved isolated remote test directory.
-5. [ ] Rehearse update and recovery, prepare fresh backups and maintenance, and
+4. [x] Create the ignored local connection record and run the read-only SFTP
+   preflight. Password authentication, strict host-key verification, target `.`,
+   and the restricted root were verified from the workstation; the command issued
+   only `pwd`, `cd ..`, `pwd`, and `quit` and reported no remote write.
+5. [ ] Verify write/create/rename/delete behavior only in an explicitly approved
+   isolated remote test directory before any application upload.
+6. [ ] Rehearse update and recovery, prepare fresh backups and maintenance, and
    request explicit approval for the exact production SHA and target. The first
    production upload is followed immediately by application and protected-path
    acceptance checks; failure keeps maintenance enabled for recovery.
-6. [ ] Only after that deployment is accepted, disable/remove the direct GitHub
+7. [ ] Only after that deployment is accepted, disable/remove the direct GitHub
    SFTP deployment and verification workflows and delete `SFTP_HOST`,
    `SFTP_USERNAME`, `SFTP_PASSWORD`, `SFTP_KNOWN_HOSTS`, `SFTP_PORT`, and
    `SFTP_REMOTE_PATH` from the GitHub `production` environment. Retain GitHub CI
@@ -145,15 +148,16 @@ boundary.
 
 Implementation status (2026-09-23): `tools/deploy-production.ps1`,
 `config/deploy.example.psd1`, its Git ignore rule, CI syntax/safety checks, and
-the operator documentation are implemented. The merged `main` CI and local
-`Prepare` mode passed for the revision recorded above. Live `Preflight` still
-requires the ignored connection record and an interactive password entry; no
-production connection or write was made by the implementation/prepare steps.
+the operator documentation are implemented. The merged `main` CI, local
+`Prepare`, and password-authenticated read-only `Preflight` passed for the
+revision recorded above. The local connection record is ignored and contains no
+password. No production write was made by these steps.
 An initial local `Preflight` attempt confirmed that Windows OpenSSH suppresses
 password prompting when `sftp -b` is used and therefore failed authentication
 before any remote command. The command now streams the fixed command list into a
 normal interactive SFTP session so OpenSSH can read the password directly from
-the console; this correction requires CI and another read-only preflight.
+the console. The corrected command passed CI and the repeated preflight verified
+the restricted root without a remote write.
 
 ## 1. Verify the Webglobe hosting contract
 
@@ -420,15 +424,17 @@ passed.
 - [x] Pin the independently corroborated host key in the protected environment.
   The fingerprint matched from both the development workstation and authenticated
   Webglobe WebSSH, and the secret name was read back successfully.
-- [ ] Verify password authentication from the GitHub runner network without
-  modifying production application data. The manual
+- [x] Resolve the unusable GitHub-hosted runner transfer path by selecting the
+  verified workstation origin. The manual
   `.github/workflows/verify-production-sftp.yml` check performs only `pwd`,
   `cd ..`, and `pwd`, and publishes no production directory listing. Run
   `35747056690` timed out at TCP connection setup before authentication; Webglobe
   Admin showed that all countries and IPs are allowed for the account. A second
   run, `35836160474` on 2026-09-23, failed with the same bounded TCP timeout while
   the port succeeded from the workstation. The current handoff therefore uses
-  the workstation as deployment origin; provider investigation remains optional.
+  the workstation as deployment origin; its password-authenticated read-only
+  preflight verified the pinned host, target, and chroot. Provider investigation
+  remains optional.
 - [x] Bind the local deployment command to the trusted GitHub repository,
   successful `CI` push run, protected default branch, tested commit, SHA-named
   artifact, and current trusted local policy checkout. Do not rebuild dependencies
