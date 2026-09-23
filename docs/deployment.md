@@ -20,8 +20,11 @@ independently corroborated host key remain configured only for the transition
 and must be removed after the first accepted local deployment. Local
 prepare and password-authenticated read-only SFTP preflight are complete for
 `main` run `35838496796`. The bounded write/create/rename/delete rehearsal passed
-from merged `main` run `35848005204` and removed its synthetic test data. Release
-activation, cache handling, durable artifact
+from merged `main` run `35848005204` and removed its synthetic test data. The
+local synthetic overlay and exact snapshot rollback then passed from merged
+`main` run `35849397823` for revision
+`42ab07fa20416be989b1c6ea9536cb4e4ea78c88`. Release activation, cache handling,
+durable artifact
 retention, exact rollback, isolated rehearsal, and production acceptance remain
 open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.

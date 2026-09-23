@@ -166,11 +166,13 @@ The dedicated `WriteTest` mode limited it to one random
 `.smps-deploy-check-*` directory and one synthetic marker, with an exact
 confirmation and explicit cleanup. It passed from merged `main` CI run
 `35848005204`; no application file was read or changed.
-The next implementation adds a `Rehearse` mode that uses only a synthetic local
-installation. It verifies artifact overlay, byte-identical preservation of
-ignored runtime paths, explicit no-delete stale-file behavior, and exact snapshot
-rollback before any production upload. Live execution remains pending until the
-change is merged and its `main` artifact passes CI.
+The `Rehearse` mode uses only a synthetic local installation. It passed for
+merged `main` CI run `35849397823`, revision
+`42ab07fa20416be989b1c6ea9536cb4e4ea78c88`, and artifact SHA-256
+`36bec7be0ada889487b323e8dafd16ca9ae6c848b6c84070adfac10901a5feff`.
+The run verified candidate overlay, byte-identical preservation of ignored
+runtime paths, explicit no-delete stale-file behavior, and exact snapshot
+rollback without opening a production connection.
 
 ## 1. Verify the Webglobe hosting contract
 
@@ -499,15 +501,15 @@ rollback. This milestone updates both workflows and [deployment.md](deployment.m
 
 ## 7. Rehearse in an isolated test environment
 
-- [ ] Use an isolated local/CI environment with separate config, database and
-  storage. If a temporary Webglobe staging target is easy to provide, use it for
+- [x] Use an isolated local environment with separate synthetic configuration
+  and storage to rehearse the exact tested artifact overlay and snapshot rollback.
+  Run `35849397823` verified protected-path preservation, explicit no-delete
+  stale-file behavior, and an exact restored file/hash manifest without real
+  notifications, production data, scores, credentials, or a production connection.
+- [ ] Extend the isolated environment to its database and complete presenter
+  flows. If a temporary Webglobe staging target is easy to provide, use it for
   additional hosting checks; a permanent staging site is not a release requirement.
-  Disable real notifications and prevent indexing of any hosted test site. Use
-  synthetic data and generated documents rather than production data or scores.
-  A local artifact-overlay and snapshot-rollback rehearsal using synthetic files
-  is implemented in `tools/deploy-production.ps1`; execute it from merged `main`
-  and record its tested revision before closing this item. Database and complete
-  presenter-flow rehearsal remain separate work.
+  Disable real notifications and prevent indexing of any hosted test site.
 - [ ] Verify fresh schema installation and rehearse the upgrade path against a
   synthetic database matching the existing schema and migration history.
 - [ ] Test the known pending schema/configuration transition: obsolete `database:`
