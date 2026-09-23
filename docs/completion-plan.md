@@ -468,14 +468,18 @@ passed.
 - [ ] Provide a simple recovery path: keep maintenance enabled on failure, restore
   the backed-up compatible code/dependencies and refresh cache, then verify before
   reopening. A manual recovery during the outage is acceptable.
-- [ ] Add deployment serialization, disk/permission preflight, a release manifest,
-  targeted application-cache invalidation, and hosting-appropriate OPcache handling.
-  No public cache-clearing or migration endpoint is introduced.
+- [x] Add a release manifest and revision marker. CI and the local handoff verify
+  exact artifact path coverage, every file digest, and the selected successful
+  `main` revision before any transfer.
+- [ ] Add deployment serialization, disk/permission preflight, targeted
+  application-cache invalidation, and hosting-appropriate OPcache handling. No
+  public cache-clearing or migration endpoint is introduced.
 - [ ] Reconcile obsolete code using the previous release manifest. A no-delete
   overlay leaves obsolete files behind and does
   not by itself provide an exact rollback. Never use broad mirror deletion.
-- [ ] Add health checks and a deployed-revision record without sensitive output;
-  failed activation leaves or restores the last working compatible version.
+- [ ] Add HTTP health checks and verify the deployed revision marker without
+  sensitive output; failed activation leaves or restores the last working
+  compatible version.
 - [ ] Keep the new artifact and at least the last working production version,
   including its manifest, outside short-lived CI retention. Back up the actual
   current hosting version before the first update; it may predate the GitHub
@@ -495,14 +499,19 @@ release and uploads still require a fresh pre-deployment backup, and database
 restore access/compatibility still requires verification in the maintenance
 window.
 
-Release-identity implementation status (2026-09-23): CI now generates a
+Release-identity status (2026-09-23): CI generates a
 `RELEASE_SHA` marker and a SHA-256 manifest covering every other regular artifact
 file. The public-content archive audit verifies the marker format, exact manifest
 path set, and every digest; the local handoff additionally requires the marker to
-match the selected successful CI revision and uploads both metadata files. Live
-verification remains pending until this change is merged and a `main` artifact
-passes CI. Deployment serialization, HTTP health/acceptance checks, cache
-handling, and stale-file reconciliation remain open.
+match the selected successful CI revision and uploads both metadata files. Merged
+`main` run `35858438441` produced revision
+`3a88ab655310d72af99043eb9ece35f6e685cd61` with archive SHA-256
+`3270c4fb21ed549a7eac0718b689f873dc52e472702755dc7830663feba1f4c7`.
+The archive audit and local synthetic overlay/rollback rehearsal both passed.
+During implementation the manifest exposed that the old broad tar exclusion for
+`log` also removed `vendor/psr/log`; the exclusion was removed and CI now verifies
+the dependency is retained. Deployment serialization, HTTP health/acceptance
+checks, cache handling, and stale-file reconciliation remain open.
 
 Gate: an isolated rehearsal demonstrates protected-path preservation, exact revision
 identity, interrupted-upload recovery, stale-file handling, and application
