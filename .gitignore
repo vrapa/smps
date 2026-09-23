@@ -13,6 +13,7 @@
 /temp/*
 /config/local.neon
 /config/test.neon
+/config/deploy.local.psd1
 
 !README
 # ============================================

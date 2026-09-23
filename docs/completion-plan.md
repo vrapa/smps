@@ -106,12 +106,12 @@ The owner selected the following transition on 2026-09-23 after the second
 GitHub-hosted runner probe timed out while the same Webglobe SFTP port remained
 reachable from the development workstation:
 
-1. [ ] Add a Windows PowerShell deployment command and ignored local configuration
+1. [x] Add a Windows PowerShell deployment command and ignored local configuration
    template. It must accept an explicit successful `CI` push run ID from protected
    `main`, verify the repository/run/status/SHA, download the existing SHA-named
    artifact, run `tools/audit_public_content.py archive`, and extract only after
    that audit succeeds.
-2. [ ] Add separate prepare, read-only preflight, and deployment modes. SFTP must
+2. [x] Add separate prepare, read-only preflight, and deployment modes. SFTP must
    use the already corroborated local `known_hosts` entry with strict checking,
    prompt for the dedicated account password interactively, and upload the same
    no-delete allowlist as the reviewed workflow. It must not store or print the
@@ -137,6 +137,12 @@ connection identity and target. The password remains only in the operator's
 interactive SFTP prompt. A local Docker container is unnecessary: it would use
 the same workstation network path while adding another credential and host-key
 boundary.
+
+Implementation status (2026-09-23): `tools/deploy-production.ps1`,
+`config/deploy.example.psd1`, its Git ignore rule, CI syntax/safety checks, and
+the operator documentation are implemented. Live `Prepare` and `Preflight`
+verification deliberately wait until this change is merged to trusted `main`;
+no production connection or write was made by the implementation step.
 
 ## 1. Verify the Webglobe hosting contract
 

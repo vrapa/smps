@@ -1,7 +1,11 @@
 # GitHub production deployment
 
-Implementation status (2026-09-22): the workflow below is a prepared SFTP
-transfer, not yet a verified Webglobe deployment. The protected GitHub
+Implementation status (2026-09-23): GitHub CI remains the trusted artifact
+builder, but direct GitHub-hosted runner transfer is not the selected production
+path. Two runner probes timed out before SFTP authentication while the same port
+was reachable from the development workstation. The local
+`tools/deploy-production.ps1` handoff is implemented but must be verified from
+merged `main` before its first approved production use. The protected GitHub
 `production` environment exists, port 222 is configured as an environment
 variable, and an external read-only probe verified the dedicated account's
 password-authenticated SFTP boundary and target `.`. The protected environment
@@ -12,7 +16,9 @@ document-root mapping, and the ability to create a directory-scoped transfer
 account. Public-key authentication was tested and rejected by the provider's
 SFTP endpoint, so the prepared workflow now uses a protected password without
 placing it on the command line. The environment-scoped connection secrets and
-independently corroborated host key are configured. Runner authentication,
+independently corroborated host key remain configured only for the transition
+and must be removed after the first accepted local deployment. Local
+prepare/preflight verification,
 release activation, cache handling, durable artifact
 retention, exact rollback, isolated rehearsal, and production acceptance remain
 open and are tracked in
@@ -147,7 +153,56 @@ request fresh backups, preserve an independent copy where practical, verify
 download/restore access, and retain the last compatible application artifact and
 manifest. Provider retention alone is not the rollback plan.
 
-## GitHub environment setup
+## Local artifact handoff
+
+The supported transfer origin is a trusted Windows workstation with PowerShell
+7.2 or newer, authenticated GitHub CLI, Python, `tar`, and Windows OpenSSH
+`sftp`/`ssh-keygen`. GitHub CI still performs all tests and creates the production
+dependency artifact. The workstation never rebuilds it.
+
+Create the private local connection file once:
+
+```powershell
+Copy-Item config/deploy.example.psd1 config/deploy.local.psd1
+```
+
+Fill `Host`, `UserName`, `Port`, `RemotePath`, and `KnownHostsFile` in the ignored
+copy. Keep `RemotePath = '.'` for the verified restricted account. The file must
+not contain a password. `KnownHostsFile` must reference the local entry whose key
+was independently corroborated; the script uses strict host-key checking and does
+not learn a key from the network during deployment.
+
+Select a successful `CI` run created by a push to protected `main`, then use its
+numeric run ID in one of these modes:
+
+```powershell
+# Validate and audit the exact GitHub artifact; no production connection.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Prepare
+
+# Additionally verify password login, target, and chroot using only pwd/cd/pwd.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Preflight
+
+# Repeat the preflight, require an exact SHA confirmation, then overlay files.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Deploy
+```
+
+Every mode requires a clean local checkout of the current GitHub default-branch
+head. It verifies the repository, successful completed `CI` push run, default
+branch and commit SHA, downloads the existing `smps-<SHA>` artifact, audits the
+archive, extracts it into a temporary directory, and rejects protected paths.
+Use `-KeepWorkspace` only for local troubleshooting; the default scopes cleanup
+strictly to its generated temporary directory.
+
+`Preflight` and `Deploy` let OpenSSH request the password directly in the console;
+the script does not receive, store, print, or pass it on the command line.
+`Deploy` prompts twice because it completes and checks a separate read-only
+connection before asking for the exact `DEPLOY <short-SHA>` confirmation and
+opening the upload connection. The upload uses the reviewed allowlist and no
+remote delete command. It does not create backups, enable maintenance, change
+`config/local.neon`, run migrations, clear caches, or perform acceptance checks.
+Those remain explicit maintenance-window steps.
+
+## Transitional GitHub environment setup
 
 The `production` environment was created on 2026-09-22 and is restricted to
 protected branches. Because the repository currently has one eligible
@@ -186,16 +241,18 @@ to database data, user uploads outside the application root, or unrelated
 hosting content. Test transfer and account restrictions using an isolated target
 where practical; verify the exact production paths before the maintenance update.
 
-Before the first upload, run the manual `Verify production SFTP access` workflow
-from protected `main`. It authenticates with the production environment, verifies
-the pinned host key and target, then runs only `pwd`, `cd ..`, and `pwd`. It does
-not list production filenames or issue any write command. A successful result
-must show that both working-directory checks remained at the account root `/`.
+The earlier direct-runner design used the manual `Verify production SFTP access`
+workflow from protected `main`. It authenticates with the production environment,
+verifies the pinned host key and target, then runs only `pwd`, `cd ..`, and `pwd`.
+It does not list production filenames or issue any write command. A successful
+result must show that both working-directory checks remained at the account root
+`/`.
 The first GitHub-hosted runner attempt, run `35747056690` on 2026-09-22, timed
 out while opening TCP port 222 before authentication or any remote command.
-Webglobe Admin showed no country or IP restriction on the dedicated account.
-Both workflows use a bounded connection timeout while provider-side access or an
-alternative deployment origin is resolved.
+Run `35836160474` repeated the same bounded timeout on 2026-09-23 while a
+workstation TCP probe succeeded. Webglobe Admin showed no country or IP
+restriction on the dedicated account. The reviewed local handoff is therefore
+the selected alternative deployment origin.
 
 The existing hosting account accepts password-authenticated SFTP on port 222 and
 can enter the configured application target. It authenticates to SSH but the
@@ -227,9 +284,9 @@ application file or production setting was changed.
 ## Deploying and rolling back
 
 Open a successful `CI` run created by a push to the default branch and copy its
-numeric run ID from the URL. Start `Deploy production`, enter that ID, review
-the pending environment deployment, and approve it only after checking the
-commit SHA and artifact.
+numeric run ID from the URL. Run local `Prepare`, complete the maintenance and
+backup prerequisites, then run local `Deploy` with that same ID. Confirm only
+the SHA printed by the command and only inside the approved maintenance window.
 
 The target rollback procedure keeps maintenance enabled and restores the last
 working application/dependencies from a retained artifact or the pre-update
@@ -243,3 +300,8 @@ Webglobe staging is useful if readily available, but is optional. The first
 hosting deployment may update production during the agreed outage, after backup
 and rehearsal, with hosting-specific checks completed before reopening. Retire
 GitLab deployment after successful production verification and recovery readiness.
+
+After the first local deployment is accepted, remove the obsolete direct-transfer
+workflows and delete the six SFTP secrets/variables from the GitHub `production`
+environment. Do not remove them earlier during the handoff. GitHub CI and artifact
+construction remain active after this cleanup.
