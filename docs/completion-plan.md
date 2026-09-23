@@ -117,15 +117,20 @@ reachable from the development workstation:
    no-delete allowlist as the reviewed workflow. It must not store or print the
    password, run migrations, clear caches, edit protected configuration, or
    delete remote files.
-3. [ ] Validate PowerShell syntax and failure handling, then run prepare mode
-   against a successful current `main` CI artifact. Run the read-only SFTP
-   preflight separately. Write/create/rename/delete checks remain confined to an
-   explicitly approved isolated remote test directory.
-4. [ ] Rehearse update and recovery, prepare fresh backups and maintenance, and
+3. [x] Validate PowerShell syntax and failure handling, then run prepare mode
+   against a successful current `main` CI artifact. Run `35838496796` produced
+   revision `077b723ba21bb575b9cc1cd72eb313218c7f5c40`; local prepare verified
+   its metadata, ancestry, archive policy, extraction, and SHA-256 digest
+   `b3ba991d045928ba176d28bfa3c61ebf6d4381174b1337933fc01b69f15a0d48`
+   without connecting to production.
+4. [ ] Create the ignored local connection record and run the read-only SFTP
+   preflight. Write/create/rename/delete checks remain confined to an explicitly
+   approved isolated remote test directory.
+5. [ ] Rehearse update and recovery, prepare fresh backups and maintenance, and
    request explicit approval for the exact production SHA and target. The first
    production upload is followed immediately by application and protected-path
    acceptance checks; failure keeps maintenance enabled for recovery.
-5. [ ] Only after that deployment is accepted, disable/remove the direct GitHub
+6. [ ] Only after that deployment is accepted, disable/remove the direct GitHub
    SFTP deployment and verification workflows and delete `SFTP_HOST`,
    `SFTP_USERNAME`, `SFTP_PASSWORD`, `SFTP_KNOWN_HOSTS`, `SFTP_PORT`, and
    `SFTP_REMOTE_PATH` from the GitHub `production` environment. Retain GitHub CI
@@ -140,9 +145,10 @@ boundary.
 
 Implementation status (2026-09-23): `tools/deploy-production.ps1`,
 `config/deploy.example.psd1`, its Git ignore rule, CI syntax/safety checks, and
-the operator documentation are implemented. Live `Prepare` and `Preflight`
-verification deliberately wait until this change is merged to trusted `main`;
-no production connection or write was made by the implementation step.
+the operator documentation are implemented. The merged `main` CI and local
+`Prepare` mode passed for the revision recorded above. Live `Preflight` still
+requires the ignored connection record and an interactive password entry; no
+production connection or write was made by the implementation/prepare steps.
 
 ## 1. Verify the Webglobe hosting contract
 
@@ -418,10 +424,11 @@ passed.
   run, `35836160474` on 2026-09-23, failed with the same bounded TCP timeout while
   the port succeeded from the workstation. The current handoff therefore uses
   the workstation as deployment origin; provider investigation remains optional.
-- [ ] Bind the local deployment command to the trusted GitHub repository,
+- [x] Bind the local deployment command to the trusted GitHub repository,
   successful `CI` push run, protected default branch, tested commit, SHA-named
   artifact, and current trusted local policy checkout. Do not rebuild dependencies
-  or run Composer update during deployment.
+  or run Composer update during deployment. Local prepare passed against the
+  merged `main` artifact from run `35838496796`.
 - [ ] Deploy the same artifact that passed CI and the isolated rehearsal; reuse it
   on hosting staging if available. Make artifact lookup explicit about repository
   and run ID and audit it again before extraction and transfer.

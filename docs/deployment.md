@@ -18,7 +18,7 @@ SFTP endpoint, so the prepared workflow now uses a protected password without
 placing it on the command line. The environment-scoped connection secrets and
 independently corroborated host key remain configured only for the transition
 and must be removed after the first accepted local deployment. Local
-prepare/preflight verification,
+prepare verification is complete for `main` run `35838496796`; SFTP preflight,
 release activation, cache handling, durable artifact
 retention, exact rollback, isolated rehearsal, and production acceptance remain
 open and are tracked in

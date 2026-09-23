@@ -89,8 +89,10 @@ Completed setup:
   environment.
 - The independently corroborated SSH host key is pinned in that environment.
 - The reviewed local command, ignored non-password configuration template, and
-  CI syntax/safety test are implemented. Live artifact preparation and read-only
-  preflight wait until the implementation is merged to trusted `main`.
+  CI syntax/safety test are implemented. Local prepare successfully verified the
+  exact artifact from merged `main` run `35838496796`, including archive policy,
+  extraction, and digest, without contacting production. Read-only SFTP preflight
+  remains pending.
 
 Remaining outcome:
 
