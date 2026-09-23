@@ -495,6 +495,15 @@ release and uploads still require a fresh pre-deployment backup, and database
 restore access/compatibility still requires verification in the maintenance
 window.
 
+Release-identity implementation status (2026-09-23): CI now generates a
+`RELEASE_SHA` marker and a SHA-256 manifest covering every other regular artifact
+file. The public-content archive audit verifies the marker format, exact manifest
+path set, and every digest; the local handoff additionally requires the marker to
+match the selected successful CI revision and uploads both metadata files. Live
+verification remains pending until this change is merged and a `main` artifact
+passes CI. Deployment serialization, HTTP health/acceptance checks, cache
+handling, and stale-file reconciliation remain open.
+
 Gate: an isolated rehearsal demonstrates protected-path preservation, exact revision
 identity, interrupted-upload recovery, stale-file handling, and application
 rollback. This milestone updates both workflows and [deployment.md](deployment.md).

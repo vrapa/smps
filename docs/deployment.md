@@ -69,6 +69,13 @@ top-level paths. Media shipped inside Composer dependencies is permitted; the
 small reviewed first-party icon allowlist is explicit in
 `tools/audit_public_content.py`.
 
+Every artifact also contains `RELEASE_SHA` and `RELEASE_MANIFEST.sha256`.
+`RELEASE_SHA` must equal the successful selected CI run revision. The manifest
+lists every other regular artifact file exactly once with its SHA-256 digest;
+the archive audit rejects missing, extra, duplicate, malformed, or mismatched
+entries. Both metadata files are uploaded with the application so the installed
+revision and exact candidate file set can be checked without exposing secrets.
+
 Do not invoke this workflow while the GitHub staging repository is private.
 Required environment reviewers are available only to public repositories on
 GitHub Free, Pro, and Team plans, and environment secrets are unavailable to
