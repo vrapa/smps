@@ -479,16 +479,20 @@ Serialization/read-back implementation status (2026-09-23): the local command
 now holds an exclusive operating-system file lock for its full run. After an
 approved upload, it downloads the remote revision marker and manifest through the
 same strict SFTP session and requires the expected revision plus an identical
-manifest digest before reporting success. Live upload verification remains
-pending until this change is merged, passes `main` CI, and an exact deployment is
-separately approved. Disk headroom, cache/OPcache handling, and full remote-file
-verification remain open.
+manifest digest before reporting success. The implementation is merged; live
+upload verification remains pending until an exact deployment is separately
+approved. Disk headroom, cache/OPcache handling, and full remote-file verification
+remain open.
 - [ ] Reconcile obsolete code using the previous release manifest. A no-delete
   overlay leaves obsolete files behind and does
   not by itself provide an exact rollback. Never use broad mirror deletion.
-- [ ] Add HTTP health checks and verify the deployed revision marker without
-  sensitive output; failed activation leaves or restores the last working
-  compatible version.
+- [x] Add a read-only HTTPS health/access-boundary command that does not follow
+  off-origin redirects or read response bodies. Baseline mode checks availability,
+  a public asset, and denial of protected paths; acceptance mode additionally
+  checks anonymous sign-in and denial of direct `/www/index.php` access.
+- [ ] Run HTTP acceptance after the exact upload and pair it with the authenticated
+  SFTP revision/manifest read-back. Failed activation leaves maintenance enabled
+  and restores the last working compatible version.
 - [ ] Keep the new artifact and at least the last working production version,
   including its manifest, outside short-lived CI retention. Back up the actual
   current hosting version before the first update; it may predate the GitHub
@@ -519,8 +523,11 @@ match the selected successful CI revision and uploads both metadata files. Merge
 The archive audit and local synthetic overlay/rollback rehearsal both passed.
 During implementation the manifest exposed that the old broad tar exclusion for
 `log` also removed `vendor/psr/log`; the exclusion was removed and CI now verifies
-the dependency is retained. Deployment serialization, HTTP health/acceptance
-checks, cache handling, and stale-file reconciliation remain open.
+the dependency is retained. Deployment serialization is implemented. A read-only
+pre-deployment baseline and acceptance probe passed on 2026-09-23 with a
+same-origin login redirect, the sign-in page and a public asset at HTTP 200, and
+protected paths plus `/www/index.php` returning only HTTP 403/404. Post-upload
+acceptance, cache handling, and stale-file reconciliation remain open.
 
 Gate: an isolated rehearsal demonstrates protected-path preservation, exact revision
 identity, interrupted-upload recovery, stale-file handling, and application

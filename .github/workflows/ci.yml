@@ -38,9 +38,11 @@ jobs:
       - name: Test public content policy
         run: python3 -m unittest discover -s tools/tests -p 'test_*.py'
 
-      - name: Validate local deployment command
+      - name: Validate production operations commands
         shell: pwsh
-        run: ./tools/tests/test_deploy_production.ps1
+        run: |
+          ./tools/tests/test_deploy_production.ps1
+          ./tools/tests/test_verify_production_http.ps1
 
       - name: Reject private or unreviewed public content
         run: python3 tools/audit_public_content.py source --history

@@ -78,6 +78,31 @@ the archive audit rejects missing, extra, duplicate, malformed, or mismatched
 entries. Both metadata files are uploaded with the application so the installed
 revision and exact candidate file set can be checked without exposing secrets.
 
+## Read-only HTTP verification
+
+Run the repeatable HTTP boundary check before maintenance to record a baseline,
+and run the stricter acceptance mode before reopening the site:
+
+```powershell
+./tools/verify-production-http.ps1 -BaseUrl https://smps.rkcomputer.cz -Mode Baseline
+./tools/verify-production-http.ps1 -BaseUrl https://smps.rkcomputer.cz -Mode Acceptance
+```
+
+The command performs HTTPS GET requests without following redirects or reading
+response bodies. It requires the application entry point and a known public
+asset to respond, rejects redirects away from the production origin, and
+requires configuration, dependencies, runtime storage, Git metadata, uploads,
+and release metadata to return only HTTP 403 or 404. Acceptance mode also checks
+the anonymous sign-in page and rejects direct access through `/www/index.php`.
+The release SHA itself is verified through the authenticated SFTP metadata
+read-back; it is deliberately not exposed through HTTP.
+
+A read-only pre-deployment baseline and acceptance probe on 2026-09-23 passed:
+`/` redirected within the same origin, the anonymous sign-in page and favicon
+returned HTTP 200, and the tested protected paths plus `/www/index.php` returned
+only HTTP 403 or 404. This does not replace the post-upload acceptance run or
+prove that the hosting document root has been changed to `www`.
+
 Do not invoke this workflow while the GitHub staging repository is private.
 Required environment reviewers are available only to public repositories on
 GitHub Free, Pro, and Team plans, and environment secrets are unavailable to
