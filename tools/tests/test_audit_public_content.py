@@ -26,6 +26,22 @@ class PublicContentPolicyTest(unittest.TestCase):
         self.assertNotIn("--exclude='log'", workflow)
         self.assertNotIn("--exclude='temp'", workflow)
 
+    def test_retired_sftp_workflow_points_to_local_preflight(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "verify-production-sftp.yml").read_text(
+            encoding="utf-8",
+        )
+
+        self.assertIn(
+            "GitHub-hosted runners cannot reliably reach the production SFTP endpoint on port 222.",
+            workflow,
+        )
+        self.assertIn(
+            "./tools/deploy-production.ps1 -CiRunId <successful-ci-run-id> -Mode Preflight",
+            workflow,
+        )
+        self.assertNotIn("setsid --wait sftp", workflow)
+        self.assertNotIn("SFTP_PASSWORD", workflow)
+
     def test_approved_ui_image_is_allowed(self) -> None:
         audit.check_path(
             "www/jquery-ui-1.13.2/images/ui-icons_444444_256x240.png",

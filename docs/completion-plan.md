@@ -443,16 +443,16 @@ passed.
   The fingerprint matched from both the development workstation and authenticated
   Webglobe WebSSH, and the secret name was read back successfully.
 - [x] Resolve the unusable GitHub-hosted runner transfer path by selecting the
-  verified workstation origin. The manual
-  `.github/workflows/verify-production-sftp.yml` check performs only `pwd`,
-  `cd ..`, and `pwd`, and publishes no production directory listing. Run
-  `35747056690` timed out at TCP connection setup before authentication; Webglobe
-  Admin showed that all countries and IPs are allowed for the account. A second
-  run, `35836160474` on 2026-09-23, failed with the same bounded TCP timeout while
-  the port succeeded from the workstation. The current handoff therefore uses
-  the workstation as deployment origin; its password-authenticated read-only
-  preflight verified the pinned host, target, and chroot. Provider investigation
-  remains optional.
+  verified workstation origin. Run `35747056690` timed out at TCP connection
+  setup before authentication; Webglobe Admin showed that all countries and IPs
+  are allowed for the account. A second run, `35836160474` on 2026-09-23, failed
+  with the same bounded TCP timeout while the port succeeded from the
+  workstation. The manual `.github/workflows/verify-production-sftp.yml`
+  workflow is therefore retired and now points operators to the reviewed local
+  preflight command instead of attempting another hosted-runner SFTP session.
+  The current handoff uses the workstation as deployment origin; its
+  password-authenticated read-only preflight verified the pinned host, target,
+  and chroot. Provider investigation remains optional.
 - [x] Bind the local deployment command to the trusted GitHub repository,
   successful `CI` push run, protected default branch, tested commit, SHA-named
   artifact, and current trusted local policy checkout. Do not rebuild dependencies

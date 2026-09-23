@@ -350,17 +350,17 @@ hosting content. Test transfer and account restrictions using an isolated target
 where practical; verify the exact production paths before the maintenance update.
 
 The earlier direct-runner design used the manual `Verify production SFTP access`
-workflow from protected `main`. It authenticates with the production environment,
-verifies the pinned host key and target, then runs only `pwd`, `cd ..`, and `pwd`.
-It does not list production filenames or issue any write command. A successful
-result must show that both working-directory checks remained at the account root
-`/`.
+workflow from protected `main`. After two GitHub-hosted runner attempts timed out
+while opening TCP port 222, that workflow was retired and now exits with guidance
+to use the reviewed local preflight instead:
+`./tools/deploy-production.ps1 -CiRunId <successful-ci-run-id> -Mode Preflight`.
 The first GitHub-hosted runner attempt, run `35747056690` on 2026-09-22, timed
 out while opening TCP port 222 before authentication or any remote command.
 Run `35836160474` repeated the same bounded timeout on 2026-09-23 while a
 workstation TCP probe succeeded. Webglobe Admin showed no country or IP
 restriction on the dedicated account. The reviewed local handoff is therefore
-the selected alternative deployment origin.
+the selected alternative deployment origin, and GitHub-hosted SFTP verification
+is no longer attempted.
 
 The existing hosting account accepts password-authenticated SFTP on port 222 and
 can enter the configured application target. It authenticates to SSH but the
