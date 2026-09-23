@@ -516,8 +516,15 @@ exact maintenance marker. Rotation preserves the complete previous
 and reads back markers from both locations without recursive deletion. Rollback
 preserves the candidate cache for inspection and restores the previous directory.
 The isolated rehearsal proves byte-identical cache restoration with synthetic
-data. Live use remains a maintenance-window action. CLI OPcache reset is not
-accepted as a web-runtime reset; the Webglobe-safe FPM procedure is still open.
+data. The first post-merge rehearsal exposed and stopped on a PowerShell
+StrictMode empty-list check before any production connection. PR #49 fixed it;
+merged `main` run `35901054288`, revision
+`616e3510232038619a1026ea8197b34d1d7c9602`, then passed the complete artifact
+audit, overlay, cache rotation/restoration, and exact snapshot rollback with
+artifact SHA-256
+`f4c13986db927dc01ebc2ea54636549114714113ac2a706e867f571814644a59`.
+Live use remains a maintenance-window action. CLI OPcache reset is not accepted
+as a web-runtime reset; the Webglobe-safe FPM procedure is still open.
 - [ ] Reconcile obsolete code using the previous release manifest. A no-delete
   overlay leaves obsolete files behind and does
   not by itself provide an exact rollback. Never use broad mirror deletion.

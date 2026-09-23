@@ -26,9 +26,18 @@ local synthetic overlay and exact snapshot rollback then passed from merged
 `42ab07fa20416be989b1c6ea9536cb4e4ea78c88`. The manifest-bound artifact and
 repeat overlay/rollback rehearsal passed for merged `main` run `35858438441`,
 revision `3a88ab655310d72af99043eb9ece35f6e685cd61`. Release activation, durable artifact
-retention, exact rollback, isolated rehearsal, and production acceptance remain
-open and are tracked in
+retention, hosting-specific recovery, presenter-flow rehearsal, and production
+acceptance remain open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
+
+The reversible cache operation was added in PR #48 and its StrictMode empty-list
+regression was caught by the first post-merge rehearsal, fixed in PR #49, and
+retested from merged `main`. Run `35901054288` produced revision
+`616e3510232038619a1026ea8197b34d1d7c9602` with artifact SHA-256
+`f4c13986db927dc01ebc2ea54636549114714113ac2a706e867f571814644a59`.
+The full local rehearsal then passed candidate overlay, protected-path
+preservation, no-delete stale-file behavior, reversible cache rotation, and exact
+snapshot rollback using only synthetic data.
 
 The owner confirmed that production already runs on Webglobe at
 [https://smps.rkcomputer.cz](https://smps.rkcomputer.cz). Future deployment updates
