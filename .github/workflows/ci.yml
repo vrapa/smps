@@ -206,8 +206,6 @@ jobs:
             --exclude='config/phinx.php' \
             --exclude='www/dokumenty' \
             --exclude='www/images/carousel' \
-            --exclude='log' \
-            --exclude='temp' \
             app bin config db vendor www .htaccess \
             composer.json composer.lock README.md THIRD_PARTY_NOTICES.md \
             RELEASE_SHA RELEASE_MANIFEST.sha256

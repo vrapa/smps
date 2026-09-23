@@ -9,7 +9,8 @@ import unittest
 from pathlib import Path
 
 
-MODULE_PATH = Path(__file__).parents[1] / "audit_public_content.py"
+ROOT = Path(__file__).resolve().parents[2]
+MODULE_PATH = ROOT / "tools" / "audit_public_content.py"
 SPEC = importlib.util.spec_from_file_location("audit_public_content", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 audit = importlib.util.module_from_spec(SPEC)
@@ -17,6 +18,14 @@ SPEC.loader.exec_module(audit)
 
 
 class PublicContentPolicyTest(unittest.TestCase):
+    def test_artifact_build_does_not_globally_exclude_dependency_log_paths(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(
+            encoding="utf-8",
+        )
+
+        self.assertNotIn("--exclude='log'", workflow)
+        self.assertNotIn("--exclude='temp'", workflow)
+
     def test_approved_ui_image_is_allowed(self) -> None:
         audit.check_path(
             "www/jquery-ui-1.13.2/images/ui-icons_444444_256x240.png",
