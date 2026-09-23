@@ -33,7 +33,7 @@ if ($configuration.RemotePath -ne '.') {
 
 $scriptContent = Get-Content -Raw -LiteralPath $scriptPath
 foreach ($requiredText in @(
-    "[ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'Deploy')]",
+    "[ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'MaintenanceOn', 'MaintenanceOff', 'Deploy')]",
     'Invoke-LocalDeploymentRehearsal',
     'Copy-DeploymentOverlay',
     'Assert-ManifestEqual',
@@ -62,6 +62,15 @@ foreach ($requiredText in @(
     'get RELEASE_SHA $readBackShaName',
     'get RELEASE_MANIFEST.sha256 $readBackManifestName',
     'Remote release manifest does not match',
+    "'www/maintenance.html'",
+    'MAINTENANCE ON',
+    'MAINTENANCE OFF',
+    "'mkdir .maintenance'",
+    'put $maintenanceMarkerName release',
+    'get .maintenance/release $maintenanceReadBackName',
+    "@('MaintenanceOff', 'Deploy')",
+    "@('rm .maintenance/release', 'rmdir .maintenance', 'quit')",
+    'Production maintenance marker is missing or belongs to a different release',
     'tools/audit_public_content.py'
 )) {
     if (-not $scriptContent.Contains($requiredText)) {
@@ -69,9 +78,20 @@ foreach ($requiredText in @(
     }
 }
 
+$maintenanceCheckPosition = $scriptContent.IndexOf("if (`$Mode -in @('MaintenanceOff', 'Deploy'))")
+$uploadPosition = $scriptContent.IndexOf("The next operation overlays application files without remote deletion.")
+if ($maintenanceCheckPosition -lt 0 -or $uploadPosition -lt 0 -or $maintenanceCheckPosition -ge $uploadPosition) {
+    throw 'Deployment must verify the candidate-bound maintenance marker before offering the upload.'
+}
+
 & git -C $repositoryRoot check-ignore --quiet config/deploy.local.psd1
 if ($LASTEXITCODE -ne 0) {
     throw 'config/deploy.local.psd1 must be ignored by Git.'
+}
+
+& git -C $repositoryRoot check-ignore --quiet .maintenance/
+if ($LASTEXITCODE -ne 0) {
+    throw 'The production maintenance marker must be ignored by Git.'
 }
 
 Write-Host 'Local deployment script checks passed.'

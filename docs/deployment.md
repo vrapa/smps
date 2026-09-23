@@ -94,6 +94,9 @@ asset to respond, rejects redirects away from the production origin, and
 requires configuration, dependencies, runtime storage, Git metadata, uploads,
 and release metadata to return only HTTP 403 or 404. Acceptance mode also checks
 the anonymous sign-in page and rejects direct access through `/www/index.php`.
+Maintenance mode requires the root to return HTTP 503 and the dependency-free
+maintenance page to return HTTP 200; protected paths may return 403, 404, or the
+same maintenance 503 and are checked again strictly after reopening.
 The release SHA itself is verified through the authenticated SFTP metadata
 read-back; it is deliberately not exposed through HTTP.
 
@@ -227,8 +230,16 @@ numeric run ID in one of these modes:
 # After explicit approval, test create/rename/delete in one disposable directory.
 ./tools/deploy-production.ps1 -CiRunId 123456789 -Mode WriteTest
 
-# Repeat the preflight, require an exact SHA confirmation, then overlay files.
+# Enable and read back a maintenance marker bound to the selected release.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode MaintenanceOn
+./tools/verify-production-http.ps1 -BaseUrl https://smps.rkcomputer.cz -Mode Maintenance
+
+# Require that marker, repeat the preflight and exact confirmation, then overlay.
 ./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Deploy
+
+# After non-HTTP checks pass, remove only the verified marker and test immediately.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode MaintenanceOff
+./tools/verify-production-http.ps1 -BaseUrl https://smps.rkcomputer.cz -Mode Acceptance
 ```
 
 Every mode requires a clean local checkout of the current GitHub default-branch
@@ -239,26 +250,48 @@ Use `-KeepWorkspace` only for local troubleshooting; the default scopes cleanup
 strictly to its generated temporary directory.
 
 The command holds an exclusive workstation-local deployment lock for its entire
-run. A concurrent SMPS prepare, rehearsal, preflight, write test, or deployment
-fails before artifact work begins; an abandoned process releases the operating
-system file lock automatically.
+run. A concurrent SMPS prepare, rehearsal, preflight, write test, maintenance
+change, or deployment fails before artifact work begins; an abandoned process
+releases the operating system file lock automatically.
 
-`Preflight` and `Deploy` let OpenSSH request the password directly in the console;
-the script does not receive, store, print, or pass it on the command line.
+Remote modes let OpenSSH request the password directly in the console; the script
+does not receive, store, print, or pass it on the command line.
 On Windows the fixed SFTP commands are streamed to a normal interactive session;
 the script deliberately does not use `sftp -b`, because batch mode disables the
 console password prompt. The exit status, error output, and restricted-root result
 are still checked.
 `Deploy` prompts twice because it completes and checks a separate read-only
 connection before asking for the exact `DEPLOY <short-SHA>` confirmation and
-opening the upload connection. The upload uses the reviewed allowlist and no
-remote delete command. It does not create backups, enable maintenance, change
-`config/local.neon`, run migrations, clear caches, or perform acceptance checks.
-Those remain explicit maintenance-window steps.
+opening the upload connection. It first requires the remote maintenance marker
+to match the selected full SHA. The upload uses the reviewed allowlist and no
+remote delete command. It does not create backups, change `config/local.neon`,
+run migrations, clear caches, or perform acceptance checks. Those remain explicit
+maintenance-window steps.
 After the overlay, the same SFTP session downloads the remote `RELEASE_SHA` and
 `RELEASE_MANIFEST.sha256` into the temporary workspace. Their revision and
 manifest digest must match the verified local artifact or the deployment command
 fails before reporting upload success.
+
+`MaintenanceOn` atomically creates `.maintenance/`, uploads its release marker,
+reads it back, and requires it to contain the exact selected release SHA. Creation
+fails instead of overwriting an existing maintenance operation. The versioned
+`www/.htaccess` returns HTTP 503 while that directory exists, both with the legacy
+project-root mapping and with the required `www` document root; the static
+response has no application or database dependency. The marker is outside the
+artifact, so it survives the overlay. `MaintenanceOff` first downloads the
+marker and refuses to remove it unless it belongs to the same selected release,
+then requires the exact `MAINTENANCE OFF <short-SHA>` confirmation and removes
+only the verified marker and its now-empty directory. Run HTTP
+Maintenance mode before upload. After SFTP metadata, configuration, migration,
+cache, and CLI checks pass, remove the marker and run HTTP Acceptance immediately.
+If acceptance fails, enable the same marker again before recovery.
+
+An isolated Apache test on 2026-09-23 exercised both supported mappings. With
+`www` as document root, the marker produced HTTP 503 with the reviewed static
+page. With the legacy application-root mapping, it produced the same page while
+direct access to protected configuration remained HTTP 403. The marker directory
+is ignored by Git and was removed after the local test. Production enablement is
+still pending the approved maintenance window.
 
 `WriteTest` also starts with the read-only preflight. After an exact confirmation
 it creates one random `.smps-deploy-check-*` directory at the restricted account

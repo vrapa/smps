@@ -5,7 +5,7 @@ param(
 	[Parameter(Mandatory = $true)]
 	[uri] $BaseUrl,
 
-	[ValidateSet('Baseline', 'Acceptance')]
+	[ValidateSet('Baseline', 'Maintenance', 'Acceptance')]
 	[string] $Mode = 'Baseline',
 
 	[ValidateRange(1, 120)]
@@ -82,8 +82,13 @@ function Invoke-StatusProbe {
 }
 
 try {
-	Invoke-StatusProbe -Path '/' -AllowedStatus @(200, 301, 302, 303, 307, 308) -RequireSameOriginRedirect
-	Invoke-StatusProbe -Path '/favicon.ico' -AllowedStatus @(200)
+	if ($Mode -eq 'Maintenance') {
+		Invoke-StatusProbe -Path '/' -AllowedStatus @(503)
+		Invoke-StatusProbe -Path '/maintenance.html' -AllowedStatus @(200)
+	} else {
+		Invoke-StatusProbe -Path '/' -AllowedStatus @(200, 301, 302, 303, 307, 308) -RequireSameOriginRedirect
+		Invoke-StatusProbe -Path '/favicon.ico' -AllowedStatus @(200)
+	}
 
 	$protectedPaths = @(
 		'/.git/HEAD',
@@ -99,8 +104,9 @@ try {
 		'/RELEASE_SHA',
 		'/RELEASE_MANIFEST.sha256'
 	)
+	$protectedStatus = if ($Mode -eq 'Maintenance') { @(403, 404, 503) } else { @(403, 404) }
 	foreach ($path in $protectedPaths) {
-		Invoke-StatusProbe -Path $path -AllowedStatus @(403, 404)
+		Invoke-StatusProbe -Path $path -AllowedStatus $protectedStatus
 	}
 
 	if ($Mode -eq 'Acceptance') {

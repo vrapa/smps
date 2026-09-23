@@ -11,6 +11,7 @@
 # Nette:
 /log/*
 /temp/*
+/.maintenance/
 /config/local.neon
 /config/test.neon
 /config/deploy.local.psd1

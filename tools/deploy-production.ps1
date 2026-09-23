@@ -6,7 +6,7 @@ param(
     [ValidateRange(1, [long]::MaxValue)]
     [long] $CiRunId,
 
-    [ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'Deploy')]
+    [ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'MaintenanceOn', 'MaintenanceOff', 'Deploy')]
     [string] $Mode = 'Prepare',
 
     [string] $ConfigPath,
@@ -206,7 +206,8 @@ function Invoke-LocalDeploymentRehearsal {
         'composer.lock',
         'RELEASE_MANIFEST.sha256',
         'RELEASE_SHA',
-        'www/index.php'
+        'www/index.php',
+        'www/maintenance.html'
     )) {
         $releaseHash = (Get-FileHash -LiteralPath (Join-Path $ReleaseDirectory $candidatePath) -Algorithm SHA256).Hash
         $liveHash = (Get-FileHash -LiteralPath (Join-Path $liveDirectory $candidatePath) -Algorithm SHA256).Hash
@@ -570,6 +571,81 @@ try {
     }
 
     $shortSha = $deploySha.Substring(0, 12)
+    $maintenanceMarkerName = '.smps-maintenance-upload'
+    $maintenanceReadBackName = '.smps-maintenance-readback'
+    $maintenanceMarkerPath = Join-Path $releaseDirectory $maintenanceMarkerName
+    $maintenanceReadBackPath = Join-Path $releaseDirectory $maintenanceReadBackName
+    $maintenanceMarker = "SMPS maintenance for release $deploySha`n"
+    [IO.File]::WriteAllText(
+        $maintenanceMarkerPath,
+        $maintenanceMarker,
+        [Text.UTF8Encoding]::new($false)
+    )
+
+    if ($Mode -eq 'MaintenanceOn') {
+        Write-Host ''
+        Write-Host 'The next operation enables the candidate-bound maintenance marker.'
+        Write-Host 'Application requests will return HTTP 503 until that exact marker is removed.'
+        $expectedConfirmation = "MAINTENANCE ON $shortSha"
+        $confirmation = Read-Host "Type '$expectedConfirmation' to enable production maintenance"
+        if ($confirmation -cne $expectedConfirmation) {
+            throw 'Production maintenance enablement was not confirmed.'
+        }
+
+        Write-Host 'Enabling production maintenance. OpenSSH will prompt for the password again.'
+        Invoke-SftpCommands `
+            -Sftp $sftp `
+            -Configuration $configuration `
+            -Commands @(
+                'mkdir .maintenance',
+                'cd .maintenance',
+                "put $maintenanceMarkerName release",
+                "get release $maintenanceReadBackName",
+                'cd ..',
+                'quit'
+            ) `
+            -LocalDirectory $releaseDirectory | Out-Null
+
+        if ((Get-Content -Raw -LiteralPath $maintenanceReadBackPath) -cne $maintenanceMarker) {
+            throw 'Remote maintenance marker does not match the selected release.'
+        }
+        Write-Host "Maintenance marker enabled and read back for revision $deploySha. Verify HTTP Maintenance mode before continuing."
+        return
+    }
+
+    if ($Mode -in @('MaintenanceOff', 'Deploy')) {
+        Write-Host 'Verifying the candidate-bound production maintenance marker. OpenSSH will prompt for the password again.'
+        Invoke-SftpCommands `
+            -Sftp $sftp `
+            -Configuration $configuration `
+            -Commands @("get .maintenance/release $maintenanceReadBackName", 'quit') `
+            -LocalDirectory $releaseDirectory | Out-Null
+
+        if ((Get-Content -Raw -LiteralPath $maintenanceReadBackPath) -cne $maintenanceMarker) {
+            throw 'Production maintenance marker is missing or belongs to a different release.'
+        }
+    }
+
+    if ($Mode -eq 'MaintenanceOff') {
+        Write-Host ''
+        Write-Host 'The next operation removes only the verified marker for this exact release.'
+        Write-Host 'Continue only after deployment, cache handling, and all non-HTTP checks passed.'
+        $expectedConfirmation = "MAINTENANCE OFF $shortSha"
+        $confirmation = Read-Host "Type '$expectedConfirmation' to reopen production"
+        if ($confirmation -cne $expectedConfirmation) {
+            throw 'Production maintenance removal was not confirmed.'
+        }
+
+        Write-Host 'Removing the verified production maintenance marker. OpenSSH will prompt for the password again.'
+        Invoke-SftpCommands `
+            -Sftp $sftp `
+            -Configuration $configuration `
+            -Commands @('rm .maintenance/release', 'rmdir .maintenance', 'quit') `
+            -LocalDirectory $releaseDirectory | Out-Null
+        Write-Host "Maintenance marker removed for revision $deploySha. Run HTTP Acceptance mode immediately."
+        return
+    }
+
     Write-Host ''
     Write-Host 'The next operation overlays application files without remote deletion.'
     Write-Host 'It does not create backups, enable maintenance, run migrations, edit protected configuration, clear caches, or perform acceptance checks.'
