@@ -19,8 +19,9 @@ placing it on the command line. The environment-scoped connection secrets and
 independently corroborated host key remain configured only for the transition
 and must be removed after the first accepted local deployment. Local
 prepare and password-authenticated read-only SFTP preflight are complete for
-`main` run `35838496796`; isolated write rehearsal, release activation, cache
-handling, durable artifact
+`main` run `35838496796`. The bounded write/create/rename/delete rehearsal passed
+from merged `main` run `35848005204` and removed its synthetic test data. Release
+activation, cache handling, durable artifact
 retention, exact rollback, isolated rehearsal, and production acceptance remain
 open and are tracked in
 [completion-plan.md](completion-plan.md), milestones 1 and 6–9.
@@ -282,10 +283,12 @@ is stored only as the protected GitHub environment secret `SFTP_PASSWORD`, not i
 the repository. An external password-authenticated
 read-only SFTP probe opened at `/`; attempting to move to its parent remained at
 `/`, so the effective account boundary and deployment target `.` are confirmed.
-Write/create/rename/delete behavior still needs an isolated test using the
-protected password. The password and independently corroborated host key are
-stored in the protected environment. The first runner-originated test timed out
-before authentication, so that network-path blocker remains.
+Write/create/rename/delete behavior was verified from the workstation in a
+random isolated directory using merged `main` run `35848005204`; the synthetic
+marker and directory were removed successfully. The password and independently
+corroborated host key are stored in the protected environment. The first
+runner-originated test timed out before authentication, so that network-path
+blocker remains.
 Maintenance mode, cache refresh,
 release cleanup, and
 rollback commands need either a separately enabled command-capable account or an
