@@ -76,6 +76,7 @@ foreach ($requiredText in @(
     'rename temp/cache.before-$shortSha temp/cache',
     'No cache directory or cached file is deleted.',
     'No cache directory or cached application file is deleted.',
+    '@(Get-ChildItem -LiteralPath $cacheDirectory -Force).Count',
     "@('rm .maintenance/release', 'rmdir .maintenance', 'quit')",
     'Production maintenance marker is missing or belongs to a different release',
     'tools/audit_public_content.py'
