@@ -181,6 +181,9 @@ numeric run ID in one of these modes:
 # Validate and audit the exact GitHub artifact; no production connection.
 ./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Prepare
 
+# Exercise a synthetic local overlay and exact rollback; no production connection.
+./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Rehearse
+
 # Additionally verify password login, target, and chroot using only pwd/cd/pwd.
 ./tools/deploy-production.ps1 -CiRunId 123456789 -Mode Preflight
 
@@ -217,6 +220,16 @@ root, uploads a synthetic marker, renames and removes the marker, then removes t
 empty directory. It neither reads nor changes application files. Treat any failed
 cleanup as a stop condition and remove only the printed test directory after
 inspection; never broaden cleanup to a wildcard.
+
+`Rehearse` never opens an SFTP connection. It builds a synthetic previous
+installation inside the temporary deployment workspace, snapshots it, overlays
+the selected tested artifact, verifies that ignored configuration, uploads,
+carousel photographs, logs, and cache remain byte-identical, and confirms that
+the no-delete method leaves a deliberately obsolete file in place. It then
+replaces the synthetic tree from the snapshot and requires an exact file/hash
+manifest match. This proves the local update and snapshot-rollback mechanics;
+hosting backup restoration, cache handling, and HTTP acceptance remain separate
+production-window checks.
 
 ## Transitional GitHub environment setup
 

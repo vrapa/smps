@@ -33,7 +33,15 @@ if ($configuration.RemotePath -ne '.') {
 
 $scriptContent = Get-Content -Raw -LiteralPath $scriptPath
 foreach ($requiredText in @(
-    "[ValidateSet('Prepare', 'Preflight', 'WriteTest', 'Deploy')]",
+    "[ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'Deploy')]",
+    'Invoke-LocalDeploymentRehearsal',
+    'Copy-DeploymentOverlay',
+    'Assert-ManifestEqual',
+    "'obsolete-release-file.txt'",
+    "'config/local.neon'",
+    "'www/dokumenty/upload.txt'",
+    "'www/images/carousel/a.jpg'",
+    'Only synthetic data inside the temporary deployment workspace was used.',
     '$Commands | & $Sftp @arguments',
     "'StrictHostKeyChecking=yes'",
     "'PreferredAuthentications=password'",

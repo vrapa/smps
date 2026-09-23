@@ -166,6 +166,11 @@ The dedicated `WriteTest` mode limited it to one random
 `.smps-deploy-check-*` directory and one synthetic marker, with an exact
 confirmation and explicit cleanup. It passed from merged `main` CI run
 `35848005204`; no application file was read or changed.
+The next implementation adds a `Rehearse` mode that uses only a synthetic local
+installation. It verifies artifact overlay, byte-identical preservation of
+ignored runtime paths, explicit no-delete stale-file behavior, and exact snapshot
+rollback before any production upload. Live execution remains pending until the
+change is merged and its `main` artifact passes CI.
 
 ## 1. Verify the Webglobe hosting contract
 
@@ -499,6 +504,10 @@ rollback. This milestone updates both workflows and [deployment.md](deployment.m
   additional hosting checks; a permanent staging site is not a release requirement.
   Disable real notifications and prevent indexing of any hosted test site. Use
   synthetic data and generated documents rather than production data or scores.
+  A local artifact-overlay and snapshot-rollback rehearsal using synthetic files
+  is implemented in `tools/deploy-production.ps1`; execute it from merged `main`
+  and record its tested revision before closing this item. Database and complete
+  presenter-flow rehearsal remain separate work.
 - [ ] Verify fresh schema installation and rehearse the upgrade path against a
   synthetic database matching the existing schema and migration history.
 - [ ] Test the known pending schema/configuration transition: obsolete `database:`

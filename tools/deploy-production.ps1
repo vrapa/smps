@@ -6,7 +6,7 @@ param(
     [ValidateRange(1, [long]::MaxValue)]
     [long] $CiRunId,
 
-    [ValidateSet('Prepare', 'Preflight', 'WriteTest', 'Deploy')]
+    [ValidateSet('Prepare', 'Rehearse', 'Preflight', 'WriteTest', 'Deploy')]
     [string] $Mode = 'Prepare',
 
     [string] $ConfigPath,
@@ -93,6 +93,141 @@ function Remove-TemporaryWorkspace {
     }
 
     Remove-Item -LiteralPath $resolvedWorkspace -Recurse -Force
+}
+
+function Write-SyntheticFile {
+    param(
+        [Parameter(Mandatory)][string] $Root,
+        [Parameter(Mandatory)][string] $RelativePath,
+        [Parameter(Mandatory)][string] $Content
+    )
+
+    $path = Join-Path $Root $RelativePath
+    New-Item -ItemType Directory -Path (Split-Path -Parent $path) -Force | Out-Null
+    [IO.File]::WriteAllText($path, $Content, [Text.UTF8Encoding]::new($false))
+}
+
+function Get-FileManifest {
+    param([Parameter(Mandatory)][string] $Root)
+
+    $manifest = [ordered]@{}
+    foreach ($file in Get-ChildItem -LiteralPath $Root -File -Recurse | Sort-Object FullName) {
+        $relativePath = [IO.Path]::GetRelativePath($Root, $file.FullName).Replace('\', '/')
+        $manifest[$relativePath] = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
+    }
+
+    return $manifest
+}
+
+function Assert-ManifestEqual {
+    param(
+        [Parameter(Mandatory)][Collections.IDictionary] $Expected,
+        [Parameter(Mandatory)][Collections.IDictionary] $Actual
+    )
+
+    if ($Expected.Count -ne $Actual.Count) {
+        throw "Rollback manifest count mismatch: expected $($Expected.Count), got $($Actual.Count)."
+    }
+    foreach ($path in $Expected.Keys) {
+        if (-not $Actual.Contains($path) -or $Expected[$path] -ne $Actual[$path]) {
+            throw "Rollback did not restore '$path' exactly."
+        }
+    }
+}
+
+function Copy-DeploymentOverlay {
+    param(
+        [Parameter(Mandatory)][string] $ReleaseDirectory,
+        [Parameter(Mandatory)][string] $TargetDirectory
+    )
+
+    foreach ($file in Get-ChildItem -LiteralPath $ReleaseDirectory -File -Recurse) {
+        $relativePath = [IO.Path]::GetRelativePath($ReleaseDirectory, $file.FullName)
+        $targetPath = Join-Path $TargetDirectory $relativePath
+        New-Item -ItemType Directory -Path (Split-Path -Parent $targetPath) -Force | Out-Null
+        Copy-Item -LiteralPath $file.FullName -Destination $targetPath -Force
+    }
+}
+
+function Invoke-LocalDeploymentRehearsal {
+    param(
+        [Parameter(Mandatory)][string] $Workspace,
+        [Parameter(Mandatory)][string] $ReleaseDirectory
+    )
+
+    $rehearsalRoot = Join-Path $Workspace 'rehearsal'
+    $liveDirectory = Join-Path $rehearsalRoot 'live'
+    $snapshotDirectory = Join-Path $rehearsalRoot 'snapshot'
+    New-Item -ItemType Directory -Path $liveDirectory -Force | Out-Null
+
+    $syntheticFiles = [ordered]@{
+        '.htaccess'                  = 'synthetic previous access rules'
+        'app/legacy-release.php'     = '<?php // synthetic previous release'
+        'obsolete-release-file.txt'  = 'synthetic file absent from the candidate'
+        'config/local.neon'          = 'synthetic: local configuration'
+        'config/phinx.php'           = '<?php return ["synthetic" => true];'
+        'www/dokumenty/upload.txt'   = 'synthetic private upload'
+        'www/images/carousel/a.jpg'  = 'synthetic private carousel image'
+        'log/application.log'        = 'synthetic application log'
+        'temp/cache/marker.txt'      = 'synthetic runtime cache'
+    }
+    foreach ($entry in $syntheticFiles.GetEnumerator()) {
+        Write-SyntheticFile -Root $liveDirectory -RelativePath $entry.Key -Content $entry.Value
+    }
+
+    $beforeManifest = Get-FileManifest -Root $liveDirectory
+    $protectedPaths = @(
+        'config/local.neon',
+        'config/phinx.php',
+        'www/dokumenty/upload.txt',
+        'www/images/carousel/a.jpg',
+        'log/application.log',
+        'temp/cache/marker.txt'
+    )
+    $protectedHashes = @{}
+    foreach ($path in $protectedPaths) {
+        $protectedHashes[$path] = (Get-FileHash -LiteralPath (Join-Path $liveDirectory $path) -Algorithm SHA256).Hash
+    }
+
+    Copy-Item -LiteralPath $liveDirectory -Destination $snapshotDirectory -Recurse
+    Copy-DeploymentOverlay -ReleaseDirectory $ReleaseDirectory -TargetDirectory $liveDirectory
+
+    foreach ($path in $protectedPaths) {
+        $actualHash = (Get-FileHash -LiteralPath (Join-Path $liveDirectory $path) -Algorithm SHA256).Hash
+        if ($actualHash -ne $protectedHashes[$path]) {
+            throw "Deployment overlay changed protected synthetic path '$path'."
+        }
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $liveDirectory 'obsolete-release-file.txt') -PathType Leaf)) {
+        throw 'The rehearsal did not reproduce no-delete stale-file behavior.'
+    }
+    foreach ($candidatePath in @('.htaccess', 'composer.lock', 'www/index.php')) {
+        $releaseHash = (Get-FileHash -LiteralPath (Join-Path $ReleaseDirectory $candidatePath) -Algorithm SHA256).Hash
+        $liveHash = (Get-FileHash -LiteralPath (Join-Path $liveDirectory $candidatePath) -Algorithm SHA256).Hash
+        if ($releaseHash -ne $liveHash) {
+            throw "Deployment overlay did not install candidate path '$candidatePath'."
+        }
+    }
+
+    $resolvedRoot = [IO.Path]::GetFullPath($rehearsalRoot).TrimEnd(
+        [IO.Path]::DirectorySeparatorChar,
+        [IO.Path]::AltDirectorySeparatorChar
+    ) + [IO.Path]::DirectorySeparatorChar
+    $resolvedLive = [IO.Path]::GetFullPath($liveDirectory)
+    if (
+        -not $resolvedLive.StartsWith($resolvedRoot, [StringComparison]::OrdinalIgnoreCase) -or
+        [IO.Path]::GetFileName($resolvedLive) -ne 'live'
+    ) {
+        throw "Refusing to replace unexpected rehearsal path '$resolvedLive'."
+    }
+
+    Remove-Item -LiteralPath $liveDirectory -Recurse -Force
+    Copy-Item -LiteralPath $snapshotDirectory -Destination $liveDirectory -Recurse
+    $restoredManifest = Get-FileManifest -Root $liveDirectory
+    Assert-ManifestEqual -Expected $beforeManifest -Actual $restoredManifest
+
+    Write-Host 'Local rehearsal verified candidate overlay, protected-path preservation, no-delete stale-file behavior, and exact snapshot rollback.'
+    Write-Host 'Only synthetic data inside the temporary deployment workspace was used.'
 }
 
 function Read-DeploymentConfiguration {
@@ -332,6 +467,11 @@ try {
 
     if ($Mode -eq 'Prepare') {
         Write-Host 'Preparation completed. No connection to production was attempted.'
+        return
+    }
+
+    if ($Mode -eq 'Rehearse') {
+        Invoke-LocalDeploymentRehearsal -Workspace $workspace -ReleaseDirectory $releaseDirectory
         return
     }
 
