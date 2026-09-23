@@ -417,10 +417,24 @@ $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 $workspace = Join-Path $temporaryRoot "smps-deploy-$([guid]::NewGuid().ToString('N'))"
 $artifactDirectory = Join-Path $workspace 'artifact'
 $releaseDirectory = Join-Path $workspace 'release'
+$deploymentLockPath = Join-Path $temporaryRoot 'smps-production-deployment.lock'
 
-New-Item -ItemType Directory -Path $artifactDirectory, $releaseDirectory | Out-Null
+$deploymentLock = $null
+try {
+    $deploymentLock = [IO.File]::Open(
+        $deploymentLockPath,
+        [IO.FileMode]::OpenOrCreate,
+        [IO.FileAccess]::ReadWrite,
+        [IO.FileShare]::None
+    )
+} catch [IO.IOException] {
+    throw 'Another SMPS deployment operation is already running on this workstation.'
+}
+Write-Host 'Exclusive local deployment lock acquired.'
 
 try {
+    New-Item -ItemType Directory -Path $artifactDirectory, $releaseDirectory | Out-Null
+
     $artifactName = "smps-$deploySha"
     Invoke-NativeCommand -FilePath $gh -Arguments @(
         'run', 'download', [string] $CiRunId,
@@ -567,6 +581,8 @@ try {
     }
 
     Write-Host 'Starting production overlay. OpenSSH will prompt for the password again.'
+    $readBackShaName = '.smps-readback-release-sha'
+    $readBackManifestName = '.smps-readback-release-manifest'
     Invoke-SftpCommands `
         -Sftp $sftp `
         -Configuration $configuration `
@@ -584,15 +600,35 @@ try {
             'put RELEASE_SHA',
             'put README.md',
             'put THIRD_PARTY_NOTICES.md',
+            "get RELEASE_SHA $readBackShaName",
+            "get RELEASE_MANIFEST.sha256 $readBackManifestName",
             'quit'
         ) `
         -LocalDirectory $releaseDirectory | Out-Null
 
-    Write-Host "Upload completed for tested revision $deploySha. Production acceptance and any cache/configuration work remain separate manual steps."
+    $readBackShaPath = Join-Path $releaseDirectory $readBackShaName
+    $readBackManifestPath = Join-Path $releaseDirectory $readBackManifestName
+    $remoteReleaseSha = (Get-Content -Raw -LiteralPath $readBackShaPath).Trim()
+    if ($remoteReleaseSha -cne $deploySha) {
+        throw "Remote release marker '$remoteReleaseSha' does not match deployed revision '$deploySha'."
+    }
+    $localManifestHash = (Get-FileHash -LiteralPath (Join-Path $releaseDirectory 'RELEASE_MANIFEST.sha256') -Algorithm SHA256).Hash
+    $remoteManifestHash = (Get-FileHash -LiteralPath $readBackManifestPath -Algorithm SHA256).Hash
+    if ($remoteManifestHash -cne $localManifestHash) {
+        throw 'Remote release manifest does not match the verified local artifact manifest.'
+    }
+
+    Write-Host "Upload and remote metadata read-back completed for tested revision $deploySha. Production acceptance and any cache/configuration work remain separate manual steps."
 } finally {
-    if ($KeepWorkspace) {
-        Write-Host "Temporary workspace retained at: $workspace"
-    } else {
-        Remove-TemporaryWorkspace -Workspace $workspace -TemporaryRoot $temporaryRoot
+    try {
+        if ($KeepWorkspace) {
+            Write-Host "Temporary workspace retained at: $workspace"
+        } else {
+            Remove-TemporaryWorkspace -Workspace $workspace -TemporaryRoot $temporaryRoot
+        }
+    } finally {
+        if ($null -ne $deploymentLock) {
+            $deploymentLock.Dispose()
+        }
     }
 }
