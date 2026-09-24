@@ -2,6 +2,15 @@ name: Verify production SFTP access
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Read-only preflight or isolated reversible write test
+        required: true
+        default: read-only
+        type: choice
+        options:
+          - read-only
+          - write-test
 
 permissions:
   contents: read
@@ -12,61 +21,31 @@ concurrency:
 
 jobs:
   verify:
-    name: Verify password authentication and chroot
-    runs-on: ubuntu-latest
+    name: Verify runner-originated SFTP access
+    runs-on: smps-production
     timeout-minutes: 10
     environment:
       name: production
+    env:
+      SFTP_HOST: ${{ secrets.SFTP_HOST }}
+      SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+      SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+      SFTP_KNOWN_HOSTS: ${{ secrets.SFTP_KNOWN_HOSTS }}
+      SFTP_PORT: ${{ vars.SFTP_PORT || '222' }}
+      SFTP_REMOTE_PATH: ${{ vars.SFTP_REMOTE_PATH }}
+      PROBE_DIRECTORY: .smps-deploy-probe-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
-      - name: Configure pinned SFTP host identity
+      - name: Check out the SFTP policy
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify password authentication and restricted root
         shell: bash
-        env:
-          SFTP_HOST: ${{ secrets.SFTP_HOST }}
-          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
-          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-          SFTP_KNOWN_HOSTS: ${{ secrets.SFTP_KNOWN_HOSTS }}
-          SFTP_PORT: ${{ vars.SFTP_PORT || '22' }}
-          SFTP_REMOTE_PATH: ${{ vars.SFTP_REMOTE_PATH }}
         run: |
           set -euo pipefail
-          for required_value in \
-            "$SFTP_HOST" \
-            "$SFTP_USERNAME" \
-            "$SFTP_PASSWORD" \
-            "$SFTP_KNOWN_HOSTS" \
-            "$SFTP_REMOTE_PATH"; do
-            if [[ -z "$required_value" ]]; then
-              echo 'A required production environment secret or variable is missing.' >&2
-              exit 1
-            fi
-          done
-
-          if [[ ! "$SFTP_PORT" =~ ^[0-9]+$ ]]; then
-            echo 'SFTP_PORT must contain digits only.' >&2
-            exit 1
-          fi
-
-          install -d -m 700 "$RUNNER_TEMP/smps-ssh"
-          printf '%s\n' "$SFTP_KNOWN_HOSTS" > "$RUNNER_TEMP/smps-ssh/known_hosts"
-          cat > "$RUNNER_TEMP/smps-ssh/askpass.sh" <<'EOF'
-          #!/bin/sh
-          printf '%s\n' "$SFTP_PASSWORD"
-          EOF
-          chmod 600 "$RUNNER_TEMP/smps-ssh/known_hosts"
-          chmod 700 "$RUNNER_TEMP/smps-ssh/askpass.sh"
-
-      - name: Verify read-only SFTP access
-        shell: bash
-        env:
-          SFTP_HOST: ${{ secrets.SFTP_HOST }}
-          SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
-          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-          SFTP_PORT: ${{ vars.SFTP_PORT || '22' }}
-          SFTP_REMOTE_PATH: ${{ vars.SFTP_REMOTE_PATH }}
-        run: |
-          set -euo pipefail
-          batch_file="$RUNNER_TEMP/smps-ssh/verify.sftp"
+          batch_file="$RUNNER_TEMP/read-only.sftp"
           printf '%s\n' \
             'pwd' \
             'cd ..' \
@@ -74,39 +53,45 @@ jobs:
             'quit' \
             > "$batch_file"
 
-          export SSH_ASKPASS="$RUNNER_TEMP/smps-ssh/askpass.sh"
-          export SSH_ASKPASS_REQUIRE=force
-          export DISPLAY=:0
-
-          set +e
-          sftp_output="$(
-            setsid --wait sftp \
-              -b "$batch_file" \
-              -o BatchMode=no \
-              -o PreferredAuthentications=password \
-              -o PubkeyAuthentication=no \
-              -o NumberOfPasswordPrompts=1 \
-              -o ConnectTimeout=20 \
-              -o ConnectionAttempts=1 \
-              -o StrictHostKeyChecking=yes \
-              -o "UserKnownHostsFile=$RUNNER_TEMP/smps-ssh/known_hosts" \
-              -P "$SFTP_PORT" \
-              "${SFTP_USERNAME}@${SFTP_HOST}:${SFTP_REMOTE_PATH}" \
-              2>&1
-          )"
-          sftp_status=$?
-          set -e
-
-          if [[ "$sftp_status" -ne 0 ]]; then
-            printf '%s\n' "$sftp_output" >&2
-            echo 'The read-only SFTP verification failed.' >&2
-            exit "$sftp_status"
-          fi
-
+          sftp_output="$(tools/run_production_sftp.sh "$batch_file")"
           root_count="$(grep -cFx 'Remote working directory: /' <<< "$sftp_output" || true)"
           if [[ "$root_count" -ne 2 ]]; then
-            echo 'The SFTP account did not remain at its expected chroot root.' >&2
+            echo 'The SFTP account did not remain at its expected restricted root.' >&2
             exit 1
           fi
 
-          echo 'Password authentication, pinned host identity, target path, and chroot verified.'
+          echo 'Password authentication, pinned host identity, target, and restricted root verified.'
+
+      - name: Verify isolated create, upload, rename, download, and content
+        if: inputs.mode == 'write-test'
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker="$RUNNER_TEMP/probe-marker.txt"
+          downloaded="$RUNNER_TEMP/probe-downloaded.txt"
+          printf 'SMPS deployment write probe %s/%s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > "$marker"
+
+          cat > "$RUNNER_TEMP/write-test.sftp" <<EOF
+          mkdir "$PROBE_DIRECTORY"
+          put "$marker" "$PROBE_DIRECTORY/marker.txt"
+          rename "$PROBE_DIRECTORY/marker.txt" "$PROBE_DIRECTORY/verified.txt"
+          get "$PROBE_DIRECTORY/verified.txt" "$downloaded"
+          quit
+          EOF
+          tools/run_production_sftp.sh "$RUNNER_TEMP/write-test.sftp"
+          cmp "$marker" "$downloaded"
+          echo 'Isolated create, upload, rename, download, and content verification passed.'
+
+      - name: Remove the isolated write probe
+        if: always() && inputs.mode == 'write-test'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/cleanup-write-test.sftp" <<EOF
+          -rm "$PROBE_DIRECTORY/marker.txt"
+          -rm "$PROBE_DIRECTORY/verified.txt"
+          -rmdir "$PROBE_DIRECTORY"
+          quit
+          EOF
+          tools/run_production_sftp.sh "$RUNNER_TEMP/cleanup-write-test.sftp"
+          echo 'The isolated write probe was removed.'

@@ -30,7 +30,9 @@ site unavailable until a reviewed retry or force-full recovery.
 - [x] Require approval for workflows from every external contributor and keep
   automatic production runs disabled with `AUTO_DEPLOY_ENABLED=false` during
   runner setup.
-- [ ] Register the repository runner and verify its label and online state.
+- [x] Register the repository runner and verify that it is online with only the
+  `smps-production` label. Its container configuration contains no registration
+  token, host bind mount, or Docker socket.
 - [ ] Run runner-originated SFTP preflight and isolated write verification.
 - [ ] Activate automatic deployment after successful `CI` on protected `main`.
 - [ ] Verify the first production deployment and HTTP acceptance, then retire
