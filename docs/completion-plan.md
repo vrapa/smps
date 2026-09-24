@@ -33,7 +33,10 @@ site unavailable until a reviewed retry or force-full recovery.
 - [x] Register the repository runner and verify that it is online with only the
   `smps-production` label. Its container configuration contains no registration
   token, host bind mount, or Docker socket.
-- [ ] Run runner-originated SFTP preflight and isolated write verification.
+- [x] Run runner-originated SFTP preflight and isolated write verification.
+  Main runs `35986473008` and `35987074434` verified password authentication,
+  the pinned host, restricted root, create/upload/rename/download, and complete
+  removal of the random probe directory.
 - [ ] Activate automatic deployment after successful `CI` on protected `main`.
 - [ ] Verify the first production deployment and HTTP acceptance, then retire
   the obsolete hosted-runner and GitLab deployment paths.
@@ -71,6 +74,11 @@ The next probe reached the password prompt but showed that Docker mounted its
 memory-only `/tmp` as non-executable. The runner now explicitly permits execution
 only on that 256 MB tmpfs so OpenSSH can launch the short-lived askpass provider;
 `nosuid`, `nodev`, the read-only root and dropped capabilities remain enforced.
+
+After a clean runner re-registration, the read-only and bounded write probes
+both passed from the container. No application file or persistent probe data was
+changed. The activation PR may now enable `AUTO_DEPLOY_ENABLED=true`; its merged
+`main` CI result will be the first automatic bootstrap overlay.
 
 ## Confirmed production target and acceptable downtime
 
