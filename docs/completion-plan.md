@@ -56,6 +56,12 @@ Windows-authored helper did not have a Unix executable bit. Workflows now invoke
 the helper explicitly through Bash; the read-only and write probes remain open
 until their reruns succeed.
 
+The next preflight reached the pinned Webglobe host but authentication was
+rejected even after setting the username to the account verified manually from
+the same workstation. A secret-safe marker now distinguishes an unused
+`SSH_ASKPASS` helper from credentials rejected by the server; it never prints or
+hashes the password.
+
 ## Confirmed production target and acceptable downtime
 
 The owner confirmed on 2026-09-16 that the existing production application runs

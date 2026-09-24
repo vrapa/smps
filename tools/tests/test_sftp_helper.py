@@ -71,6 +71,12 @@ class SftpHelperTest(unittest.TestCase):
         self.assertIn("PubkeyAuthentication=no", source)
         self.assertIn("UserKnownHostsFile=", source)
 
+    def test_reports_whether_askpass_was_invoked_without_printing_password(self) -> None:
+        source = HELPER.read_text(encoding="utf-8")
+        self.assertIn("SSH_ASKPASS_AUDIT", source)
+        self.assertIn("OpenSSH invoked SSH_ASKPASS", source)
+        self.assertIn("OpenSSH did not invoke SSH_ASKPASS", source)
+
 
 if __name__ == "__main__":
     unittest.main()
