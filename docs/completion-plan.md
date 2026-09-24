@@ -27,6 +27,9 @@ site unavailable until a reviewed retry or force-full recovery.
   retained in the image or Compose definition.
 - [x] Add and test the manifest-diff deployment engine and workflow policy
   checks.
+- [x] Require approval for workflows from every external contributor and keep
+  automatic production runs disabled with `AUTO_DEPLOY_ENABLED=false` during
+  runner setup.
 - [ ] Register the repository runner and verify its label and online state.
 - [ ] Run runner-originated SFTP preflight and isolated write verification.
 - [ ] Activate automatic deployment after successful `CI` on protected `main`.
