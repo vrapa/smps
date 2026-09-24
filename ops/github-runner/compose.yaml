@@ -14,7 +14,7 @@ services:
     volumes:
       - smps-runner-state:/runner
     tmpfs:
-      - /tmp:rw,noexec,nosuid,nodev,size=256m
+      - /tmp:rw,nosuid,nodev,size=256m
     cap_drop:
       - ALL
     security_opt:
