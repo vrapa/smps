@@ -1,6 +1,6 @@
 # Completion plan: localization, one public repository, and Webglobe deployment
 
-Updated: 2026-09-23. This is the coordinating execution plan for the final
+Updated: 2026-09-24. This is the coordinating execution plan for the final
 state. It takes precedence over the transitional dual-repository workflow in
 the earlier plans. Detailed localization checklists remain in
 [localization-plan.md](localization-plan.md); the publication record remains in
@@ -8,6 +8,29 @@ the earlier plans. Detailed localization checklists remain in
 
 This planning change does not activate hosting services, change credentials,
 run migrations, deploy production, or archive either repository.
+
+## Active automatic-deployment implementation
+
+The owner selected an isolated Docker self-hosted runner on the development
+workstation as the initial production transfer origin. It may later move to a
+dedicated host without changing the workflow, provided the replacement keeps
+the `smps-production` label. Routine deployments will run live without the
+maintenance marker or automatic rollback; a failed deployment may leave the
+site unavailable until a reviewed retry or force-full recovery.
+
+- [x] Record the Docker runner isolation, availability, live-update and failure
+  decisions.
+- [x] Add a checksum-pinned, non-root runner image and one-time registration and
+  removal commands without host-directory or Docker-socket mounts.
+- [x] Test the runner image and verify that registration credentials are not
+  retained in the image or Compose definition.
+- [ ] Add and test the manifest-diff deployment engine and workflow policy
+  checks.
+- [ ] Register the repository runner and verify its label and online state.
+- [ ] Run runner-originated SFTP preflight and isolated write verification.
+- [ ] Activate automatic deployment after successful `CI` on protected `main`.
+- [ ] Verify the first production deployment and HTTP acceptance, then retire
+  the obsolete hosted-runner and GitLab deployment paths.
 
 ## Confirmed production target and acceptable downtime
 

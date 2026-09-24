@@ -1,0 +1,28 @@
+services:
+  smps-production-runner:
+    build:
+      context: .
+    image: smps-github-runner:2.337.0
+    container_name: smps-production-runner
+    init: true
+    restart: unless-stopped
+    read_only: true
+    environment:
+      RUNNER_URL: https://github.com/vrapa/smps
+      RUNNER_NAME: smps-production-docker
+      RUNNER_LABELS: smps-production
+    volumes:
+      - smps-runner-state:/runner
+      - smps-deploy-cache:/deploy-cache
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=256m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  smps-runner-state:
+    name: smps-runner-state
+  smps-deploy-cache:
+    name: smps-deploy-cache
