@@ -77,6 +77,10 @@ class SftpHelperTest(unittest.TestCase):
         self.assertIn("OpenSSH invoked SSH_ASKPASS", source)
         self.assertIn("OpenSSH did not invoke SSH_ASKPASS", source)
 
+    def test_disables_batch_authentication_before_loading_command_file(self) -> None:
+        source = HELPER.read_text(encoding="utf-8")
+        self.assertLess(source.index("-o BatchMode=no"), source.index('-b "$batch_file"'))
+
 
 if __name__ == "__main__":
     unittest.main()
