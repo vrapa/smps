@@ -59,21 +59,31 @@ site unavailable until a reviewed retry or force-full recovery.
   self-hosted runner applied the exact manifest delta, verified release
   metadata, and passed all production HTTP probes. The repository variable
   remains `AUTO_DEPLOY_ENABLED=true` for subsequent pushes to `main`.
-- [ ] Add production migration execution over a non-interactive CLI channel.
-  SFTP cannot execute Phinx. Webglobe documents permanent SSH as the supported
-  unattended shell option, but it is a paid service and requires an explicit
-  owner decision before activation. Do not replace it with a public migration
-  endpoint or externally exposed database solely for deployment.
+- [x] Choose manual production migrations through Webglobe's one-hour WebSSH
+  console instead of paid permanent SSH or a public migration endpoint. The
+  versioned runbook documents release verification, protected Phinx
+  configuration, status, dry-run, migrate, explicit-target rollback and
+  post-operation checks.
+- [x] Exercise the runbook against production and apply the two reviewed
+  transitions. On 2026-09-24 the one-time cleanup removed the obsolete
+  `202309261550_create_table_roles.php` left by the no-delete bootstrap overlay;
+  it conflicted with the consolidated migration carrying the same version.
+  The dry-run then showed only `DropDeprecatedRole` and
+  `NormalizeSongActiveBoolean`. Both completed successfully and all five Phinx
+  migrations now report `up`. The home and login redirects resolve to HTTP 200
+  and the favicon returns HTTP 200. Doctrine mapping validation passes; schema
+  validation still reports the pre-existing `users` comment/collation drift
+  documented in the migration runbook, not either migrated column.
 - [ ] Retire the obsolete hosted-runner and GitLab deployment paths now that
   the self-hosted GitHub deployment has been accepted.
 
-The current automatic stage is file-only and uploads versioned migration files
-with the release. It never creates database or application backups. Applying a
-migration from the workflow remains deferred until a non-interactive production
-CLI channel is available. Do not introduce a new public migration endpoint
-meanwhile. Earlier maintenance, backup, and rollback requirements retained below
-document the superseded manual deployment design; they are not gates for this
-live automatic deployment.
+The automatic stage is file-only and uploads versioned migration files with the
+release. It never creates database or application backups and never runs Phinx.
+Production migrations are separately authorized manual operations through the
+one-hour WebSSH console, following `docs/production-migrations.md`. Do not
+introduce a public migration endpoint. Earlier maintenance, backup, and rollback
+requirements retained below document the superseded manual file-deployment
+design; they are not gates for this live automatic deployment.
 
 Automatic runs are guarded by the repository variable
 `AUTO_DEPLOY_ENABLED=true`. The runner and bounded SFTP write test have passed.
