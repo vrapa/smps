@@ -63,7 +63,6 @@ export DISPLAY=:0
 
 set +e
 setsid --wait sftp \
-	-b "$batch_file" \
 	-o BatchMode=no \
 	-o PreferredAuthentications=password \
 	-o PubkeyAuthentication=no \
@@ -73,6 +72,7 @@ setsid --wait sftp \
 	-o StrictHostKeyChecking=yes \
 	-o "UserKnownHostsFile=${ssh_directory}/known_hosts" \
 	-P "$SFTP_PORT" \
+	-b "$batch_file" \
 	"${SFTP_USERNAME}@${SFTP_HOST}:${SFTP_REMOTE_PATH}"
 sftp_status=$?
 set -e

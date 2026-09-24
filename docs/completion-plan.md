@@ -62,6 +62,11 @@ the same workstation. A secret-safe marker now distinguishes an unused
 `SSH_ASKPASS` helper from credentials rejected by the server; it never prints or
 hashes the password.
 
+The marker confirmed that OpenSSH did not invoke `SSH_ASKPASS`: the SFTP `-b`
+option enabled batch authentication before the later override was parsed. The
+helper now supplies `BatchMode=no` before loading the command file. A successful
+runner preflight is still required before activation.
+
 ## Confirmed production target and acceptable downtime
 
 The owner confirmed on 2026-09-16 that the existing production application runs
