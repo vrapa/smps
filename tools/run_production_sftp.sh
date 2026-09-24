@@ -39,7 +39,10 @@ fi
 
 readonly ssh_directory="$(mktemp --directory)"
 cleanup() {
-	rm -f "${ssh_directory}/askpass.sh" "${ssh_directory}/known_hosts"
+	rm -f \
+		"${ssh_directory}/askpass.sh" \
+		"${ssh_directory}/askpass-used" \
+		"${ssh_directory}/known_hosts"
 	rmdir "$ssh_directory" 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
@@ -47,15 +50,18 @@ trap cleanup EXIT INT TERM
 printf '%s\n' "$SFTP_KNOWN_HOSTS" > "${ssh_directory}/known_hosts"
 cat > "${ssh_directory}/askpass.sh" <<'EOF'
 #!/usr/bin/env bash
+printf 'used\n' > "$SSH_ASKPASS_AUDIT"
 printf '%s\n' "$SFTP_PASSWORD"
 EOF
 chmod 600 "${ssh_directory}/known_hosts"
 chmod 700 "${ssh_directory}/askpass.sh"
 
 export SSH_ASKPASS="${ssh_directory}/askpass.sh"
+export SSH_ASKPASS_AUDIT="${ssh_directory}/askpass-used"
 export SSH_ASKPASS_REQUIRE=force
 export DISPLAY=:0
 
+set +e
 setsid --wait sftp \
 	-b "$batch_file" \
 	-o BatchMode=no \
@@ -68,3 +74,15 @@ setsid --wait sftp \
 	-o "UserKnownHostsFile=${ssh_directory}/known_hosts" \
 	-P "$SFTP_PORT" \
 	"${SFTP_USERNAME}@${SFTP_HOST}:${SFTP_REMOTE_PATH}"
+sftp_status=$?
+set -e
+
+if ((sftp_status != 0)); then
+	if [[ -f "$SSH_ASKPASS_AUDIT" ]]; then
+		echo 'OpenSSH invoked SSH_ASKPASS; the server rejected the supplied credentials.' >&2
+	else
+		echo 'OpenSSH did not invoke SSH_ASKPASS.' >&2
+	fi
+fi
+
+exit "$sftp_status"
