@@ -153,6 +153,11 @@ file.
 
 ## Production migration configuration
 
+The operator runbook for applying and explicitly rolling back production
+migrations through Webglobe's one-hour WebSSH console is documented in
+[production-migrations.md](production-migrations.md). The automatic SFTP
+deployment uploads migration files but never executes them.
+
 The legacy production `config/phinx.yaml` is not a usable deployment interface.
 Its default environment is obsolete, it depends on the optional YAML parser, and
 its local-socket connection failed from WebSSH. No migration ran during that
@@ -169,12 +174,14 @@ cp config/phinx.production.example.php config/phinx.php
 php8.1 vendor/bin/phinx status --environment production --configuration config/phinx.php
 ```
 
-`config/phinx.php` is ignored and excluded from deployment artifacts. Verify that
-status shows only the expected three 2023 migrations as applied and the two
-reviewed transition migrations as pending. Run `migrate` only after separate
-explicit authorization and only with `php8.1`, the `production` environment, and
-this PHP configuration. Preserve the legacy YAML file in the private pre-update
-backup; remove it from the live tree only after the PHP configuration and recovery
+`config/phinx.php` is ignored and excluded from deployment artifacts. The first
+production use on 2026-09-24 showed the expected three 2023 migrations as
+applied and the two reviewed transition migrations as pending. After an
+authorized dry-run, both transitions were applied and all five migrations now
+report `up`. Run future migrations only after separate explicit authorization
+and only with `php8.1`, the `production` environment, and this PHP
+configuration. Preserve the legacy YAML file in the private pre-update backup;
+remove it from the live tree only after the PHP configuration and recovery
 procedure have been accepted.
 
 The production server reports MySQL 5.5.62. The locked Doctrine DBAL 3.9 branch
