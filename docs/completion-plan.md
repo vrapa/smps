@@ -25,13 +25,26 @@ site unavailable until a reviewed retry or force-full recovery.
   mounts.
 - [x] Test the runner image and verify that registration credentials are not
   retained in the image or Compose definition.
-- [x] Add and test the manifest-diff deployment engine; workflow policy checks
-  remain part of the activation step.
+- [x] Add and test the manifest-diff deployment engine and workflow policy
+  checks.
 - [ ] Register the repository runner and verify its label and online state.
 - [ ] Run runner-originated SFTP preflight and isolated write verification.
 - [ ] Activate automatic deployment after successful `CI` on protected `main`.
 - [ ] Verify the first production deployment and HTTP acceptance, then retire
   the obsolete hosted-runner and GitLab deployment paths.
+
+The current automatic stage is file-only and uploads versioned migration files
+with the release. It never creates database or application backups. Applying a
+migration from the workflow remains deferred until the existing Apache-callable
+mechanism, which may live in another project, is located and reviewed. Do not
+introduce a new public migration endpoint meanwhile. Earlier maintenance,
+backup, and rollback requirements retained below document the superseded manual
+deployment design; they are not gates for this live automatic deployment.
+
+Automatic runs are guarded by the repository variable
+`AUTO_DEPLOY_ENABLED=true`. Keep it absent or false while the runner and bounded
+SFTP write test are pending. Enabling it is the final activation action and must
+occur only after those checks pass.
 
 ## Confirmed production target and acceptable downtime
 
