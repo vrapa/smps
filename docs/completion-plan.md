@@ -52,25 +52,31 @@ site unavailable until a reviewed retry or force-full recovery.
   fresh remote tree comparison found 71 expected files, no extras, and no
   missing files. Final HTTPS acceptance passed for the home redirect, favicon,
   legacy and canonical login URLs, and every protected path.
+- [x] Re-enable the deployment guard and verify an ordinary end-to-end delta
+  deployment. PR #58 merged as
+  `d3daea68fdcd7c0b32580d05546609b44e8c6a23`; main CI run `36015262547`
+  passed and automatically triggered production run `36015445698`. The
+  self-hosted runner applied the exact manifest delta, verified release
+  metadata, and passed all production HTTP probes. The repository variable
+  remains `AUTO_DEPLOY_ENABLED=true` for subsequent pushes to `main`.
+- [ ] Add production migration execution over a non-interactive CLI channel.
+  SFTP cannot execute Phinx. Webglobe documents permanent SSH as the supported
+  unattended shell option, but it is a paid service and requires an explicit
+  owner decision before activation. Do not replace it with a public migration
+  endpoint or externally exposed database solely for deployment.
 - [ ] Retire the obsolete hosted-runner and GitLab deployment paths now that
   the self-hosted GitHub deployment has been accepted.
 
 The current automatic stage is file-only and uploads versioned migration files
 with the release. It never creates database or application backups. Applying a
-migration from the workflow remains deferred until the existing Apache-callable
-mechanism, which may live in another project, is located and reviewed. Do not
-introduce a new public migration endpoint meanwhile. Earlier maintenance,
-backup, and rollback requirements retained below document the superseded manual
-deployment design; they are not gates for this live automatic deployment.
+migration from the workflow remains deferred until a non-interactive production
+CLI channel is available. Do not introduce a new public migration endpoint
+meanwhile. Earlier maintenance, backup, and rollback requirements retained below
+document the superseded manual deployment design; they are not gates for this
+live automatic deployment.
 
 Automatic runs are guarded by the repository variable
 `AUTO_DEPLOY_ENABLED=true`. The runner and bounded SFTP write test have passed.
-
-During first-deployment diagnosis the variable was temporarily set to `false`
-so documentation and verifier repairs could not start another known-failing
-run. Re-enable it when the acceptance-record PR is ready to merge; its successful
-CI run must trigger the final automatic delta deployment and become the new
-recorded release SHA.
 
 ## Confirmed production target and acceptable downtime
 
