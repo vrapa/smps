@@ -21,14 +21,14 @@ RUN apt-get update \
 		zlib1g \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& useradd --create-home --uid 10001 --shell /bin/bash runner \
-	&& install -d -o runner -g runner /opt/actions-runner /runner /deploy-cache \
+	&& install -d -o runner -g runner /opt/actions-runner /runner \
 	&& curl --fail --location --silent --show-error \
 		--output /tmp/actions-runner.tar.gz \
 		"https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz" \
 	&& echo "${RUNNER_SHA256}  /tmp/actions-runner.tar.gz" | sha256sum --check --strict \
 	&& tar --extract --gzip --file /tmp/actions-runner.tar.gz --directory /opt/actions-runner \
 	&& rm /tmp/actions-runner.tar.gz \
-	&& chown -R runner:runner /opt/actions-runner /runner /deploy-cache
+	&& chown -R runner:runner /opt/actions-runner /runner
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin/smps-runner-entrypoint
 

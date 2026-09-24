@@ -13,7 +13,6 @@ services:
       RUNNER_LABELS: smps-production
     volumes:
       - smps-runner-state:/runner
-      - smps-deploy-cache:/deploy-cache
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=256m
     cap_drop:
@@ -24,5 +23,3 @@ services:
 volumes:
   smps-runner-state:
     name: smps-runner-state
-  smps-deploy-cache:
-    name: smps-deploy-cache
