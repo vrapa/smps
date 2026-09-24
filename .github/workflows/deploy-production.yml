@@ -186,7 +186,7 @@ jobs:
           -get "RELEASE_MANIFEST.sha256" "$RUNNER_TEMP/remote/RELEASE_MANIFEST.sha256"
           quit
           EOF
-          tools/run_production_sftp.sh "$RUNNER_TEMP/read-metadata.sftp"
+          bash tools/run_production_sftp.sh "$RUNNER_TEMP/read-metadata.sftp"
 
       - name: Plan the exact file delta
         shell: bash
@@ -213,7 +213,7 @@ jobs:
 
       - name: Upload changed files and exact tracked deletions
         shell: bash
-        run: tools/run_production_sftp.sh "$RUNNER_TEMP/deploy.sftp"
+        run: bash tools/run_production_sftp.sh "$RUNNER_TEMP/deploy.sftp"
 
       - name: Verify deployed release metadata
         shell: bash
@@ -225,7 +225,7 @@ jobs:
           get "RELEASE_MANIFEST.sha256" "$RUNNER_TEMP/verified/RELEASE_MANIFEST.sha256"
           quit
           EOF
-          tools/run_production_sftp.sh "$RUNNER_TEMP/verify-metadata.sftp"
+          bash tools/run_production_sftp.sh "$RUNNER_TEMP/verify-metadata.sftp"
           cmp "$RUNNER_TEMP/release/RELEASE_SHA" "$RUNNER_TEMP/verified/RELEASE_SHA"
           cmp "$RUNNER_TEMP/release/RELEASE_MANIFEST.sha256" "$RUNNER_TEMP/verified/RELEASE_MANIFEST.sha256"
 

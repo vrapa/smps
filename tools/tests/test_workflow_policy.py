@@ -39,8 +39,14 @@ class WorkflowPolicyTest(unittest.TestCase):
         self.assertIn("workflow_dispatch:", workflow)
         self.assertIn("runs-on: smps-production", workflow)
         self.assertIn(".smps-deploy-probe-", workflow)
+        self.assertIn("bash tools/run_production_sftp.sh", workflow)
         self.assertNotIn("ls -", workflow)
         self.assertNotIn("find ", workflow)
+
+        deployment_workflow = (
+            WORKFLOW_DIRECTORY / "deploy-production.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("bash tools/run_production_sftp.sh", deployment_workflow)
 
     def test_ci_jobs_stay_on_github_hosted_runners(self) -> None:
         workflow = (WORKFLOW_DIRECTORY / "ci.yml").read_text(encoding="utf-8")
