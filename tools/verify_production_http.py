@@ -75,7 +75,8 @@ def verify(base_url: str, timeout: int = 20) -> None:
     )
     for path in protected_paths:
         probe(normalized, path, {403, 404}, timeout)
-    probe(normalized, "/sign/in", {200}, timeout)
+    probe(normalized, "/sign/in", {301, 302, 303, 307, 308}, timeout)
+    probe(normalized, "/authentication/login", {200}, timeout)
     probe(normalized, "/www/index.php", {403, 404}, timeout)
 
 

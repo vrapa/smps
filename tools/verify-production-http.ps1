@@ -110,7 +110,8 @@ try {
 	}
 
 	if ($Mode -eq 'Acceptance') {
-		Invoke-StatusProbe -Path '/sign/in' -AllowedStatus @(200)
+		Invoke-StatusProbe -Path '/sign/in' -AllowedStatus @(301, 302, 303, 307, 308) -RequireSameOriginRedirect
+		Invoke-StatusProbe -Path '/authentication/login' -AllowedStatus @(200)
 		Invoke-StatusProbe -Path '/www/index.php' -AllowedStatus @(403, 404)
 	}
 

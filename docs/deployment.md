@@ -264,6 +264,22 @@ not contain a password. `KnownHostsFile` must reference the local entry whose ke
 was independently corroborated; the script uses strict host-key checking and does
 not learn a key from the network during deployment.
 
+For local read-only diagnostics that must run without an interactive SFTP
+prompt, store the password as a Windows DPAPI-protected credential:
+
+```powershell
+./tools/save-production-sftp-credential.ps1
+# When the terminal prompt is not visible in Codex Desktop:
+./tools/save-production-sftp-credential.ps1 -Gui
+```
+
+The command reads `UserName` from the ignored deployment configuration and
+prompts for the password without echoing it. It writes only
+`config/credentials/production-sftp.credential.xml`, which Git ignores and
+which can be decrypted only by the same Windows account on the same
+workstation. Do not paste the password into chat, command-line arguments, the
+PowerShell data file, or repository documentation.
+
 Select a successful `CI` run created by a push to protected `main`, then use its
 numeric run ID in one of these modes:
 

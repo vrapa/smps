@@ -62,6 +62,7 @@ class VerifyProductionHttpTest(unittest.TestCase):
         paths = [call.args[1] for call in probe.call_args_list]
         self.assertIn("/", paths)
         self.assertIn("/sign/in", paths)
+        self.assertIn("/authentication/login", paths)
         self.assertIn("/config/local.neon", paths)
         self.assertIn("/RELEASE_MANIFEST.sha256", paths)
 

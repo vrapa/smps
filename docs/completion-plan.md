@@ -37,9 +37,23 @@ site unavailable until a reviewed retry or force-full recovery.
   Main runs `35986473008` and `35987074434` verified password authentication,
   the pinned host, restricted root, create/upload/rename/download, and complete
   removal of the random probe directory.
-- [ ] Activate automatic deployment after successful `CI` on protected `main`.
-- [ ] Verify the first production deployment and HTTP acceptance, then retire
-  the obsolete hosted-runner and GitLab deployment paths.
+- [x] Activate automatic deployment after successful `CI` on protected `main`.
+  PR #57 merged as `44cacb25e0dc2a4ed7fb5fcc8cc0e0e11f55f3f0`;
+  CI run `35999280247` produced the tested artifact and automatic deployment
+  run `35999465732` transferred the complete bootstrap overlay and verified its
+  release metadata.
+- [x] Verify the first production file deployment and HTTP acceptance.
+  The first HTTP check exposed a legacy `database` section in the protected
+  production `config/local.neon` and 38 stale files left by the intentionally
+  no-delete bootstrap overlay. The configuration was backed up remotely as
+  `config/local.neon.backup-20260924-151500`, the obsolete section was removed,
+  and only files under `app` that were absent from the tested release were
+  deleted directly; no separate backup of those stale files was retained. A
+  fresh remote tree comparison found 71 expected files, no extras, and no
+  missing files. Final HTTPS acceptance passed for the home redirect, favicon,
+  legacy and canonical login URLs, and every protected path.
+- [ ] Retire the obsolete hosted-runner and GitLab deployment paths now that
+  the self-hosted GitHub deployment has been accepted.
 
 The current automatic stage is file-only and uploads versioned migration files
 with the release. It never creates database or application backups. Applying a
@@ -50,35 +64,13 @@ backup, and rollback requirements retained below document the superseded manual
 deployment design; they are not gates for this live automatic deployment.
 
 Automatic runs are guarded by the repository variable
-`AUTO_DEPLOY_ENABLED=true`. Keep it absent or false while the runner and bounded
-SFTP write test are pending. Enabling it is the final activation action and must
-occur only after those checks pass.
+`AUTO_DEPLOY_ENABLED=true`. The runner and bounded SFTP write test have passed.
 
-The first runner preflight stopped locally before opening SFTP because the
-Windows-authored helper did not have a Unix executable bit. Workflows now invoke
-the helper explicitly through Bash; the read-only and write probes remain open
-until their reruns succeed.
-
-The next preflight reached the pinned Webglobe host but authentication was
-rejected even after setting the username to the account verified manually from
-the same workstation. A secret-safe marker now distinguishes an unused
-`SSH_ASKPASS` helper from credentials rejected by the server; it never prints or
-hashes the password.
-
-The marker confirmed that OpenSSH did not invoke `SSH_ASKPASS`: the SFTP `-b`
-option enabled batch authentication before the later override was parsed. The
-helper now supplies `BatchMode=no` before loading the command file. A successful
-runner preflight is still required before activation.
-
-The next probe reached the password prompt but showed that Docker mounted its
-memory-only `/tmp` as non-executable. The runner now explicitly permits execution
-only on that 256 MB tmpfs so OpenSSH can launch the short-lived askpass provider;
-`nosuid`, `nodev`, the read-only root and dropped capabilities remain enforced.
-
-After a clean runner re-registration, the read-only and bounded write probes
-both passed from the container. No application file or persistent probe data was
-changed. The activation PR may now enable `AUTO_DEPLOY_ENABLED=true`; its merged
-`main` CI result will be the first automatic bootstrap overlay.
+During first-deployment diagnosis the variable was temporarily set to `false`
+so documentation and verifier repairs could not start another known-failing
+run. Re-enable it when the acceptance-record PR is ready to merge; its successful
+CI run must trigger the final automatic delta deployment and become the new
+recorded release SHA.
 
 ## Confirmed production target and acceptable downtime
 
