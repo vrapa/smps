@@ -35,6 +35,7 @@ foreach ($requiredText in @(
 	"'/maintenance.html'",
 	"if (`$Mode -eq 'Maintenance') { @(403, 404, 503) } else { @(403, 404) }",
 	"'/sign/in'",
+	"'/authentication/login'",
 	"'/www/index.php'",
 	'Response bodies were not read.'
 )) {

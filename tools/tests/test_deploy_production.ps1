@@ -97,6 +97,26 @@ if ($LASTEXITCODE -ne 0) {
     throw 'config/deploy.local.psd1 must be ignored by Git.'
 }
 
+& git -C $repositoryRoot check-ignore --quiet config/credentials/production-sftp.credential.xml
+if ($LASTEXITCODE -ne 0) {
+    throw 'Local credential files under config/credentials must be ignored by Git.'
+}
+
+$credentialSaver = Get-Content -LiteralPath (
+    Join-Path $repositoryRoot 'tools/save-production-sftp-credential.ps1'
+) -Raw
+foreach ($requiredSafetyText in @(
+    'Export-Clixml',
+    'DPAPI',
+    'check-ignore',
+    'Read-Host',
+    '-AsSecureString'
+)) {
+    if (-not $credentialSaver.Contains($requiredSafetyText)) {
+        throw "Credential saver is missing required safety behavior: $requiredSafetyText"
+    }
+}
+
 & git -C $repositoryRoot check-ignore --quiet .maintenance/
 if ($LASTEXITCODE -ne 0) {
     throw 'The production maintenance marker must be ignored by Git.'
