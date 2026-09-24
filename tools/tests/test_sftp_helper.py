@@ -11,6 +11,7 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 HELPER = REPOSITORY_ROOT / "tools" / "run_production_sftp.sh"
 HELPER_ARGUMENT = "tools/run_production_sftp.sh"
+RUNNER_COMPOSE = REPOSITORY_ROOT / "ops" / "github-runner" / "compose.yaml"
 
 
 def find_bash() -> str:
@@ -80,6 +81,12 @@ class SftpHelperTest(unittest.TestCase):
     def test_disables_batch_authentication_before_loading_command_file(self) -> None:
         source = HELPER.read_text(encoding="utf-8")
         self.assertLess(source.index("-o BatchMode=no"), source.index('-b "$batch_file"'))
+
+    def test_runner_tmpfs_allows_only_ephemeral_askpass_execution(self) -> None:
+        compose = RUNNER_COMPOSE.read_text(encoding="utf-8")
+        self.assertIn("/tmp:rw,exec,nosuid,nodev,size=256m,mode=1777", compose)
+        self.assertIn("read_only: true", compose)
+        self.assertIn("no-new-privileges:true", compose)
 
 
 if __name__ == "__main__":

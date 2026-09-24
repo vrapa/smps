@@ -67,6 +67,11 @@ option enabled batch authentication before the later override was parsed. The
 helper now supplies `BatchMode=no` before loading the command file. A successful
 runner preflight is still required before activation.
 
+The next probe reached the password prompt but showed that Docker mounted its
+memory-only `/tmp` as non-executable. The runner now explicitly permits execution
+only on that 256 MB tmpfs so OpenSSH can launch the short-lived askpass provider;
+`nosuid`, `nodev`, the read-only root and dropped capabilities remain enforced.
+
 ## Confirmed production target and acceptable downtime
 
 The owner confirmed on 2026-09-16 that the existing production application runs
