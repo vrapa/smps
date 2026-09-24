@@ -21,11 +21,12 @@ site unavailable until a reviewed retry or force-full recovery.
 - [x] Record the Docker runner isolation, availability, live-update and failure
   decisions.
 - [x] Add a checksum-pinned, non-root runner image and one-time registration and
-  removal commands without host-directory or Docker-socket mounts.
+  removal commands without host-directory, artifact-backup or Docker-socket
+  mounts.
 - [x] Test the runner image and verify that registration credentials are not
   retained in the image or Compose definition.
-- [ ] Add and test the manifest-diff deployment engine and workflow policy
-  checks.
+- [x] Add and test the manifest-diff deployment engine; workflow policy checks
+  remain part of the activation step.
 - [ ] Register the repository runner and verify its label and online state.
 - [ ] Run runner-originated SFTP preflight and isolated write verification.
 - [ ] Activate automatic deployment after successful `CI` on protected `main`.
