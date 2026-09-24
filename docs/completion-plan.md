@@ -51,6 +51,11 @@ Automatic runs are guarded by the repository variable
 SFTP write test are pending. Enabling it is the final activation action and must
 occur only after those checks pass.
 
+The first runner preflight stopped locally before opening SFTP because the
+Windows-authored helper did not have a Unix executable bit. Workflows now invoke
+the helper explicitly through Bash; the read-only and write probes remain open
+until their reruns succeed.
+
 ## Confirmed production target and acceptable downtime
 
 The owner confirmed on 2026-09-16 that the existing production application runs

@@ -53,7 +53,7 @@ jobs:
             'quit' \
             > "$batch_file"
 
-          sftp_output="$(tools/run_production_sftp.sh "$batch_file")"
+          sftp_output="$(bash tools/run_production_sftp.sh "$batch_file")"
           root_count="$(grep -cFx 'Remote working directory: /' <<< "$sftp_output" || true)"
           if [[ "$root_count" -ne 2 ]]; then
             echo 'The SFTP account did not remain at its expected restricted root.' >&2
@@ -78,7 +78,7 @@ jobs:
           get "$PROBE_DIRECTORY/verified.txt" "$downloaded"
           quit
           EOF
-          tools/run_production_sftp.sh "$RUNNER_TEMP/write-test.sftp"
+          bash tools/run_production_sftp.sh "$RUNNER_TEMP/write-test.sftp"
           cmp "$marker" "$downloaded"
           echo 'Isolated create, upload, rename, download, and content verification passed.'
 
@@ -93,5 +93,5 @@ jobs:
           -rmdir "$PROBE_DIRECTORY"
           quit
           EOF
-          tools/run_production_sftp.sh "$RUNNER_TEMP/cleanup-write-test.sftp"
+          bash tools/run_production_sftp.sh "$RUNNER_TEMP/cleanup-write-test.sftp"
           echo 'The isolated write probe was removed.'
